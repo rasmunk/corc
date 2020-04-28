@@ -6,23 +6,18 @@ if __name__ == "__main__":
     identity = oci.identity.IdentityClient(config)
 
     user = identity.get_user(config['user']).data
-    print(user)
     regions = identity.list_regions().data
 
     compute = oci.core.ComputeClient(config)
     compartment_id = config['tenancy']
     compartments = identity.list_compartments(compartment_id).data
-    print(len(compartments))
 
     compute.list_instances(compartment_id)
     for compartment in compartments:    
         try:
             instances = compute.list_instances(compartment.id)
-            print(instances)
         except oci.exceptions.ServiceError:
             print("Failed")
-
-    print("Compartments: {}".format(identity.list_compartments(compartment_id).data))
 
     compartment_id = "ocid1.tenancy.oc1..aaaaaaaaaw4lzr5ypcuimzmklu6ttdau4xn45n72ohgs4afcmwqpwcxgm7ca"
     instances = compute.list_instances(compartment_id)
@@ -131,8 +126,11 @@ if __name__ == "__main__":
         oci.core.models.Instance.LIFECYCLE_STATE_RUNNING
     ]
     if launch_response:
-        launch = launch_response.data
-        if launch.lifecycle_state not in good_states:
-            print("Instance launch state: {} is not in: {}".format(launch.lifecycle_state,
+        instance = launch_response.data
+        if instance.lifecycle_state not in good_states:
+            print("Instance launch state: {} is not in: {}".format(instance.lifecycle_state,
                                                                    good_states))
             exit(2)
+
+        # Get public ip
+        public_ip = instance.metadata
