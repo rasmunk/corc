@@ -1,9 +1,7 @@
----
+- hosts: compute
 
-hosts: compute
-
-tasks:
-  - name: set hostname
-    hostname:
-      name: compute_node
-    become: yes
+  tasks:
+    - name: set hostname
+      hostname:
+        name: compute_node
+      become: yes
