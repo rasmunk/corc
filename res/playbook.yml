@@ -1,7 +1,8 @@
-- hosts: compute
+- hosts: oracle-vm
 
   tasks:
-    - name: set hostname
-      hostname:
-        name: compute_node
+    - name: install
+      yum:
+        name: vim
+        state: present
       become: yes

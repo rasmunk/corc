@@ -7,6 +7,7 @@ from oci.core import ComputeClient
 from oci.identity import IdentityClient
 from oci.core.models import Instance
 from ansible.parsing.dataloader import DataLoader
+from ansible.inventory.manager import InventoryManager
 from ansible.playbook.play import Play
 from ansible.executor.task_queue_manager import TaskQueueManager
 from oci_helpers import new_client, get_compartment_id, get_instances
@@ -34,7 +35,6 @@ def run_setup_playbook(play_source):
 
 if __name__ == "__main__":
     args = get_arguments()
-
     playbook_path = os.path.join(here, "..", "res", "playbook.yml")
     # Spawn an oci instance
     compute_client = new_client(ComputeClient, profile_name=args.profile_name)
@@ -49,6 +49,10 @@ if __name__ == "__main__":
     # with shelve.open('instances.db') as db:
     #     for instance in instances:
     #         db[instance.id] = instance
+
+    loader = DataLoader()
+    # Load inventory
+    inventory_manager = InventoryManager(loader)
 
     # After being started -> run ansible playbook (wagstaff)
     # Load playbook

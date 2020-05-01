@@ -32,7 +32,7 @@ def get_instances(compute_client, compartment_id, lifecycle_state=None):
             ):
                 selected_instances.append(instance)
             elif (
-                isinstance(lifecycle_state, str) and lifecycle_state == lifecycle_state
+                isinstance(lifecycle_state, str) and instance.lifecycle_state == lifecycle_state
             ):
                 selected_instances.append(instance)
         return selected_instances
