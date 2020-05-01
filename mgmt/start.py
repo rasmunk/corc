@@ -47,7 +47,7 @@ if __name__ == "__main__":
                 selected_image = image
 
     instance_source_via_image_details = oci.core.models.InstanceSourceViaImageDetails(
-        image_id=image.id
+        image_id=selected_image.id
     )
 
     # TODO, ensure it is a GPU instance

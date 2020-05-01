@@ -8,7 +8,9 @@ from oci.identity import IdentityClient
 from oci.core.models import Instance
 from ansible.parsing.dataloader import DataLoader
 from ansible.inventory.manager import InventoryManager
+from ansible.vars.manager import VariableManager
 from ansible.playbook.play import Play
+from ansible.playbook import Playbook
 from ansible.executor.task_queue_manager import TaskQueueManager
 from oci_helpers import new_client, get_compartment_id, get_instances
 from conf import get_arguments
@@ -22,20 +24,29 @@ def load_playbook_source(path):
     return play_source
 
 
-def run_setup_playbook(play_source):
-    play = Play()
+def run_playbook(play, variable_manager=None,
+                 inventory_manager=None, loader=None):
+    passwords = dict()
+    # play = Play().load(play_source, variable_manager=variable_manager, loader=loader)
     tqm = None
     try:
-        tqm = TaskQueueManager()
+        tqm = TaskQueueManager(
+            inventory=inventory_manager,
+            variable_manager=variable_manager,
+            loader=loader,
+            passwords=passwords)
         result = tqm.run(play)
     finally:
-        if not tqm:
+        if tqm is not None:
             tqm.cleanup()
+        if loader:
+            loader.cleanup_all_tmp_files()
 
 
 if __name__ == "__main__":
     args = get_arguments()
     playbook_path = os.path.join(here, "..", "res", "playbook.yml")
+    hosts_path = os.path.join(here, "..", "res", "hosts")
     # Spawn an oci instance
     compute_client = new_client(ComputeClient, profile_name=args.profile_name)
     identity_client = new_client(IdentityClient, profile_name=args.profile_name)
@@ -50,14 +61,22 @@ if __name__ == "__main__":
     #     for instance in instances:
     #         db[instance.id] = instance
 
-    loader = DataLoader()
     # Load inventory
-    inventory_manager = InventoryManager(loader)
+    loader = DataLoader()
+    inventory_manager = InventoryManager(loader, sources=hosts_path)
+    variable_manager = VariableManager(loader=loader, inventory=inventory_manager)
 
     # After being started -> run ansible playbook (wagstaff)
     # Load playbook
-    play_source = load_playbook_source(playbook_path)
-    run_setup_playbook(play_source)
+    pb = Playbook.load(playbook_path, variable_manager=variable_manager, loader=loader)
+    plays = pb.get_plays()
+
+    for play in plays:
+        run_playbook(play,
+                     variable_manager=variable_manager,
+                     inventory_manager=inventory_manager,
+                     loader=loader
+        )
 
     ## Register the live instance -> add to shelve
     # with shelve.open(os.path.join()) as lock:

@@ -1,0 +1,10 @@
+[oracle-vm]
+158.101.196.45
+
+[oracle-vm:vars]
+ansible_ssh_user=opc
+ansible_ssh_private_key_file=/home/rasmus/.ssh/id_rsa_oracle_2
+ansible_python_interpreter=/usr/bin/python
+ansible_connection=ssh
+ansible_become_method=sudo
+ansible_become_user=root
