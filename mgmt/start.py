@@ -2,7 +2,7 @@ import argparse
 import oci
 import sys
 from oci.exceptions import ServiceError
-from oci_helpers import new_client
+from oci_helpers import new_client, create_internet_gateway, get_subnet_gateway_id
 from conf import get_arguments
 
 
@@ -66,7 +66,6 @@ if __name__ == "__main__":
 
     # List vcns
     selected_vcn = None
-    selected_subnet = None
     vcns_response = network_client.list_vcns(compartment_id)
     if vcns_response:
         vcns = vcns_response.data
@@ -84,79 +83,91 @@ if __name__ == "__main__":
         print("No VCN is available")
         exit(1)
 
-    test_vcn = network_client.get_vcn(selected_vcn.id).data
-
-    gateway_details = dict(
-        compartment_id=compartment_id,
-        display_name="Test Gateway from SDK",
-        is_enabled=True,
-        vcn_id=selected_vcn.id,
-    )
-
-    # Create new if nessesary
-    create_ig_details = oci.core.models.CreateInternetGatewayDetails(**gateway_details)
-    try:
-        # Only create the gateway if no Internet Gateway exists on the vcn
-        ig_response = network_client.create_internet_gateway(create_ig_details)
-    except ServiceError as service_error:
-        if service_error.code == "LimitExceeded":
-            ig_response = network_client.get_v
-
-    selected_gateway = None
-    if ig_response:
-        selected_gateway = ig_response.data
-
-    # Create Route table
-    route_details = dict(
-        cidr_block="0.0.0.0/0",
-        description="SDK create route",
-        network_entity_id=selected_gateway.id,
-    )
-
-    route_rules = [oci.core.models.RouteRule(**route_details)]
-
-    route_table_details = dict(
-        compartment_id=compartment_id,
-        display_name="Default route (Internet)",
-        route_rules=route_rules,
-        vcn_id=selected_vcn.id,
-    )
-    create_rt_details = oci.core.models.CreateRouteTableDetails(**route_table_details)
-    route_table_response = network_client.create_route_table(create_rt_details)
-
-    subnets_response = network_client.list_subnets(
-        compartment_id=compartment_id, vcn_id=selected_vcn.id
-    )
-
+    # If any subnets exists -> use the first one
     selected_subnet = None
-    if subnets_response:
-        subnets = subnets_response.data
-        if not subnets:
-            route_table = route_table_resposne.data
-            # Create a new subnet
-            cidr_block = "10.0.0.0/24"
-            subnet_details = dict(
-                compartment_id=compartment_id,
-                cidr_block=cidr_block,
-                route_table_id=route_table.id,
-                vcn_id=selected_vcn.id,
-            )
-            create_subnet_details = oci.core.models.CreateSubnetDetails(
-                **subnet_details
-            )
-            selected_subnet = network_client.create_subnet(create_subnet_details).data
-        else:
-            selected_subnet = subnets[0]
+    gateway_id = None
+    existing_subnets = network_client.list_subnets(
+        args.compartment_id, selected_vcn.id
+    ).data
+    if existing_subnets:
+        selected_subnet = existing_subnets[0]
+        gateway_id = get_subnet_gateway_id(
+            network_client, selected_vcn.id, selected_subnet.id, args.compartment_id
+        )
+
+    if not gateway_id:
+        gateway_details = dict(
+            compartment_id=compartment_id, is_enabled=True, vcn_id=selected_vcn.id
+        )
+
+        # No gateway exists in the existing
+        gateway = create_internet_gateway(network_client, **gateway_details)
+        if not gateway:
+            exit(1)
+
+        # Create Route Rules
+        route_details = dict(
+            cidr_block="0.0.0.0/0",
+            description="SDK create route",
+            network_entity_id=gateway.id,
+        )
+        route_rules = [oci.core.models.RouteRule(**route_details)]
+        route_table_details = dict(
+            compartment_id=compartment_id,
+            display_name="Default route (Internet)",
+            route_rules=route_rules,
+            vcn_id=selected_vcn.id,
+        )
+
+        # Create RouteTable
+        create_rt_details = oci.core.models.CreateRouteTableDetails(
+            **route_table_details
+        )
+        route_table_response = network_client.create_route_table(create_rt_details)
+        subnets_response = network_client.list_subnets(
+            compartment_id=compartment_id, vcn_id=selected_vcn.id
+        )
+
+        # Assign route table to the subnet
+        selected_subnet = None
+        if subnets_response:
+            subnets = subnets_response.data
+            if not subnets:
+                route_table = route_table_response.data
+                # Create a new subnet
+                cidr_block = "10.0.0.0/24"
+                subnet_details = dict(
+                    compartment_id=compartment_id,
+                    cidr_block=cidr_block,
+                    route_table_id=route_table.id,
+                    vcn_id=selected_vcn.id,
+                )
+                create_subnet_details = oci.core.models.CreateSubnetDetails(
+                    **subnet_details
+                )
+                selected_subnet = network_client.create_subnet(
+                    create_subnet_details
+                ).data
+            else:
+                selected_subnet = subnets[0]
+    else:
+        subnets = network_client.list_subnets(args.compartment_id, selected_vcn.id).data
+        selected_subnet = subnets[0]
+
+    if not selected_subnet:
+        print("Failed to find a valid subnet")
+        exit(1)
 
     # Create vnic
     create_vnic_details = oci.core.models.CreateVnicDetails(
         subnet_id=selected_subnet.id
     )
 
-    # Pass ssh keys
-    metadata = dict(
-        ssh_authorized_keys="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAV1C3nc4oSuSEjYS924O687qhSGRstuCygpIMtHKcU4 rasmus@debian"
-    )
+    metadata = {}
+    if args.ssh_authorized_keys:
+        metadata.update({
+            'ssh_authorized_keys': '\n'.join(args.ssh_authorized_keys)
+        })
 
     options = dict(
         compartment_id=compartment_id,
