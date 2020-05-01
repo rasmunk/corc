@@ -25,9 +25,7 @@ def load_playbook_source(path):
 
 
 def run_playbook(play, variable_manager=None,
-                 inventory_manager=None, loader=None):
-    passwords = dict()
-    # play = Play().load(play_source, variable_manager=variable_manager, loader=loader)
+                 inventory_manager=None, loader=None, passwords=None):
     tqm = None
     try:
         tqm = TaskQueueManager(
