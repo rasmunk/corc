@@ -13,7 +13,7 @@ from ansible.playbook.play import Play
 from ansible.playbook import Playbook
 from ansible.executor.task_queue_manager import TaskQueueManager
 from oci_helpers import new_client, get_compartment_id, get_instances
-from conf import get_arguments
+from args import get_arguments, OCI, ANSIBLE
 
 here = os.path.dirname(os.path.abspath(__file__))
 
@@ -42,9 +42,8 @@ def run_playbook(play, variable_manager=None,
 
 
 if __name__ == "__main__":
-    args = get_arguments()
-    playbook_path = os.path.join(here, "..", "res", "playbook.yml")
-    hosts_path = os.path.join(here, "..", "res", "hosts")
+    args = get_arguments([OCI, ANSIBLE], strip_group_prefix=True)
+
     # Spawn an oci instance
     compute_client = new_client(ComputeClient, profile_name=args.profile_name)
     identity_client = new_client(IdentityClient, profile_name=args.profile_name)
@@ -61,12 +60,12 @@ if __name__ == "__main__":
 
     # Load inventory
     loader = DataLoader()
-    inventory_manager = InventoryManager(loader, sources=hosts_path)
+    inventory_manager = InventoryManager(loader, sources=args.inventory_path)
     variable_manager = VariableManager(loader=loader, inventory=inventory_manager)
 
     # After being started -> run ansible playbook (wagstaff)
     # Load playbook
-    pb = Playbook.load(playbook_path, variable_manager=variable_manager, loader=loader)
+    pb = Playbook.load(args.playbook_path, variable_manager=variable_manager, loader=loader)
     plays = pb.get_plays()
 
     for play in plays:

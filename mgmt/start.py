@@ -3,11 +3,11 @@ import oci
 import sys
 from oci.exceptions import ServiceError
 from oci_helpers import new_client, create_internet_gateway, get_subnet_gateway_id
-from conf import get_arguments
+from args import get_arguments, OCI, COMPUTE
 
 
 if __name__ == "__main__":
-    args = get_arguments()
+    args = get_arguments([OCI, COMPUTE], strip_group_prefix=True)
     config = oci.config.from_file(profile_name=args.profile_name)
     oci.config.validate_config(config)
     identity = oci.identity.IdentityClient(config)
