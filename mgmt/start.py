@@ -31,9 +31,9 @@ if __name__ == "__main__":
     # TODO, look for required
 
     # Shape
-    operating_system = "Oracle Linux"
-    operating_system_version = "7.8"
-    target_shape = "VM.Standard2.1"
+    operating_system = args.operating_system
+    operating_system_version = args.operating_system_version
+    target_shape = args.target_shape
 
     selected_image = None
     images_response = compute_client.list_images(compartment_id)
