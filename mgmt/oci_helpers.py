@@ -107,6 +107,7 @@ def get_vcn(network_client, vcn_id=None, name=None, compartment_id=None, **kwarg
         return perform_action(func, vcn_id, **kwargs)
     return False
 
+
 def list_vcn(network_client, compartment_id, **kwargs):
     if is_composite_client(network_client):
         func = network_client.client.list_vcns
