@@ -1,7 +1,7 @@
 from oci.core import VirtualNetworkClient, VirtualNetworkClientCompositeOperations
 from oci.core.models import CreateVcnDetails, Vcn
 from args import get_arguments, OCI, NETWORK
-from oci_helpers import new_client, create_vcn, delete_vcn, get_vcn
+from oci_helpers import new_client, create_vcn, delete_vcn, get_vcn, list_vcn
 
 
 def new_vcn_stack(
@@ -40,7 +40,22 @@ def delete_vcn_stack(network_client, compartment_id, name=None, vcn_id=None):
         deleted_vcn = delete_vcn(network_client, vcn.id)
         removed_stack.update({"vcn": deleted_vcn})
 
+    # TODO create IG and Subnet
+
     return removed_stack
+
+
+def delete_compartment_vcns(network_client, compartment_id):
+
+    removed_vcns = []
+    vcns = list_vcn(network_client, compartment_id)
+    for vcn in vcns:
+        # TODO, delete all subnets first
+
+        deleted_vcn = delete_vcn(network_client, vcn.id)
+        removed_vcns.append(delete_vcn)
+
+    return removed_vcns
 
 
 if __name__ == "__main__":
@@ -63,3 +78,6 @@ if __name__ == "__main__":
         network_client, args.compartment_id, name=args.vcn_name
     )
     print("Deleted stack: {}".format(deleted_stack))
+
+    removed_vcns = delete_compartment_vcns(network_client, args.compartment_id)
+    print("Deleted vcns: {}".format(removed_vcns))
