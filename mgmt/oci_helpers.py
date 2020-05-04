@@ -1,10 +1,26 @@
 import oci
+from oci.exceptions import CompositeOperationError
 
 
-def new_client(oci_client_class, profile_name="DEFAULT"):
+def new_client(
+    oci_client_class, composite_class=None, profile_name="DEFAULT", **kwargs
+):
     config = oci.config.from_file(profile_name=profile_name)
     oci.config.validate_config(config)
-    return oci_client_class(config)
+    client = oci_client_class(config, **kwargs)
+    if composite_class:
+        return composite_class(client, **kwargs)
+    return client
+
+
+def is_composite_client(client):
+    """ Composite clients have the 'client' attribute """
+    return hasattr(client, "client")
+
+
+def is_base_client(client):
+    """Base clients have the 'base_client' attribute"""
+    return hasattr(client, "base_client")
 
 
 def get_compartment_id(compute_client, identity_client, compartment):
@@ -32,7 +48,8 @@ def get_instances(compute_client, compartment_id, lifecycle_state=None):
             ):
                 selected_instances.append(instance)
             elif (
-                isinstance(lifecycle_state, str) and instance.lifecycle_state == lifecycle_state
+                isinstance(lifecycle_state, str)
+                and instance.lifecycle_state == lifecycle_state
             ):
                 selected_instances.append(instance)
         return selected_instances
@@ -70,3 +87,68 @@ def create_internet_gateway(network_client, **gateway_details):
     except oci.exceptions.ServiceError as service_error:
         print("An internet gateway already exists")
     return None
+
+
+def get_vcn(network_client, vcn_id=None, name=None, compartment_id=None, **kwargs):
+    if not vcn_id and not name:
+        return False
+
+    if not vcn_id and name and compartment_id:
+        if is_composite_client(network_client):
+            func = network_client.client.list_vcns
+        else:
+            func = network_client.list_vcn
+
+        vcns = perform_action(func, compartment_id=compartment_id, **kwargs)
+        for vcn in vcns:
+            if vcn.display_name == name:
+                return vcn
+
+    if vcn_id:
+        if is_composite_client(network_client):
+            func = network_client.client.get_vcn
+        else:
+            func = network_client.get_vcn
+        return perform_action(func, vcn_id, **kwargs)
+    return False
+
+
+def create_vcn(network_client, compartment_id, cidr_block, **kwargs):
+    vcn_details = oci.core.models.CreateVcnDetails(
+        compartment_id=compartment_id, cidr_block=cidr_block, **kwargs
+    )
+    action_kwargs = {}
+    if is_composite_client(network_client):
+        func = network_client.create_vcn_and_wait_for_state
+        action_kwargs.update(
+            {"wait_for_states": [oci.core.models.Vcn.LIFECYCLE_STATE_AVAILABLE]}
+        )
+    else:
+        func = network_client.create_vcn
+
+    return perform_action(func, vcn_details, **action_kwargs)
+
+
+def delete_vcn(network_client, vcn_id):
+
+    action_kwargs = {}
+    if is_composite_client(network_client):
+        func = network_client.delete_vcn_and_wait_for_state
+        action_kwargs.update(
+            {"wait_for_states": [oci.core.models.Vcn.LIFECYCLE_STATE_TERMINATED]}
+        )
+    else:
+        func = network_client.delete_vcn
+
+    return perform_action(func, vcn_id, **action_kwargs)
+
+
+def perform_action(action, *args, **kwargs):
+    try:
+        result = action(*args, **kwargs)
+        if hasattr(result, "data"):
+            return result.data
+    # TODO, check for regular errors as well
+    except CompositeOperationError as err:
+        print("Failed to perform action, err: {}".format(err))
+    return False
