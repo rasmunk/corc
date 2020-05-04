@@ -24,15 +24,17 @@ def load_playbook_source(path):
     return play_source
 
 
-def run_playbook(play, variable_manager=None,
-                 inventory_manager=None, loader=None, passwords=None):
+def run_playbook(
+    play, variable_manager=None, inventory_manager=None, loader=None, passwords=None
+):
     tqm = None
     try:
         tqm = TaskQueueManager(
             inventory=inventory_manager,
             variable_manager=variable_manager,
             loader=loader,
-            passwords=passwords)
+            passwords=passwords,
+        )
         result = tqm.run(play)
     finally:
         if tqm is not None:
@@ -60,23 +62,26 @@ if __name__ == "__main__":
 
     # Load inventory
     loader = DataLoader()
+    loader.set_basedir(args.root_path)
     inventory_manager = InventoryManager(loader, sources=args.inventory_path)
     variable_manager = VariableManager(loader=loader, inventory=inventory_manager)
 
     # After being started -> run ansible playbook (wagstaff)
     # Load playbook
-    pb = Playbook.load(args.playbook_path, variable_manager=variable_manager, loader=loader)
+    pb = Playbook.load(
+        args.playbook_path, variable_manager=variable_manager, loader=loader
+    )
     plays = pb.get_plays()
 
     for play in plays:
-        run_playbook(play,
-                     variable_manager=variable_manager,
-                     inventory_manager=inventory_manager,
-                     loader=loader
+        run_playbook(
+            play,
+            variable_manager=variable_manager,
+            inventory_manager=inventory_manager,
+            loader=loader,
         )
 
     ## Register the live instance -> add to shelve
-    # with shelve.open(os.path.join()) as lock:
 
     # Pass job file
 
