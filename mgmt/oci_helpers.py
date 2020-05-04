@@ -94,12 +94,7 @@ def get_vcn(network_client, vcn_id=None, name=None, compartment_id=None, **kwarg
         return False
 
     if not vcn_id and name and compartment_id:
-        if is_composite_client(network_client):
-            func = network_client.client.list_vcns
-        else:
-            func = network_client.list_vcn
-
-        vcns = perform_action(func, compartment_id=compartment_id, **kwargs)
+        vcns = list_vcn(network_client, compartment_id, **kwargs)
         for vcn in vcns:
             if vcn.display_name == name:
                 return vcn
@@ -111,6 +106,17 @@ def get_vcn(network_client, vcn_id=None, name=None, compartment_id=None, **kwarg
             func = network_client.get_vcn
         return perform_action(func, vcn_id, **kwargs)
     return False
+
+def list_vcn(network_client, compartment_id, **kwargs):
+    if is_composite_client(network_client):
+        func = network_client.client.list_vcns
+    else:
+        func = network_client.list_vcns
+
+    vcns = perform_action(func, compartment_id=compartment_id, **kwargs)
+    if vcns:
+        return vcns
+    return []
 
 
 def create_vcn(network_client, compartment_id, cidr_block, **kwargs):
