@@ -1,8 +1,0 @@
-- hosts: oracle-vm
-
-  tasks:
-    - name: install
-      yum:
-        name: vim
-        state: present
-      become: yes
