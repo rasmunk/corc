@@ -41,7 +41,8 @@ def add_network_group(parser):
     network_group = parser.add_argument_group(title="Network arguments")
     network_group.add_argument("--network-vcn-id", default=False)
     network_group.add_argument("--network-vcn-name", default=False)
-    network_group.add_argument("--network-cidr-block", default="10.0.0.0/16")
+    network_group.add_argument("--network-vcn-cidr-block", default="10.0.0.0/16")
+    network_group.add_argument("--network-vcn-subnet-cidr-block", default="10.0.1.0/24")
 
 
 def add_cluster_group(parser):
