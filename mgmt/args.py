@@ -77,5 +77,6 @@ def get_arguments(argument_types, strip_group_prefix=False):
         return Namespace(**stripped_args)
     return args
 
+
 def parse_arguments():
     return parser.parse_args()
