@@ -1,5 +1,28 @@
 import oci
-from oci.exceptions import CompositeOperationError
+from oci.exceptions import CompositeOperationError, ServiceError
+
+
+def _get_client_func(client, func):
+    return getattr(client, func)
+
+
+def _list(client, list_method_name, *args, **kwargs):
+    if is_composite_client(client):
+        func = _get_client_func(client.client, list_method_name)
+    else:
+        func = _get_client_func(client, list_method_name)
+    items = perform_action(func, *args, **kwargs)
+    if items:
+        return items
+    return []
+
+
+def _perform_client_func_action(client, func_name, *args, **kwargs):
+    if is_composite_client(client):
+        func = _get_client_func(client.client, func_name)
+    else:
+        func = _get_client_func(client, func_name)
+    return perform_action(func, *args, **kwargs)
 
 
 def new_client(
@@ -23,41 +46,47 @@ def is_base_client(client):
     return hasattr(client, "base_client")
 
 
-def get_compartment_id(compute_client, identity_client, compartment):
-    compartment_id = config["tenancy"]
-    identity_client.get_compartment
-    compartments = identity_client.list_compartments().data
-    for compartment in compartments:
-        pass
-    return None
+def list_entities(client, list_method, *args, **kwargs):
+    return _list(client, list_method, *args, **kwargs)
 
 
-def get_instance(compute_client, compartment_id):
-    # compute_client = oci.core.ComputeClient(config)
-    return compute_client.get_instance(compartment_id).data
+def delete(client, delete_method, class_model, id, *args, **kwargs):
+    action_kwargs = kwargs
+    if is_composite_client(client):
+        # Convert to the matching composite action
+        delete_method = "{}_and_wait_for_state".format(delete_method)
+        action_kwargs.update(
+            {"wait_for_states": [class_model.LIFECYCLE_STATE_TERMINATED]}
+        )
+    func = _get_client_func(client, delete_method)
+    return perform_action(func, id, **action_kwargs)
 
 
-def get_instances(compute_client, compartment_id, lifecycle_state=None):
-    instances = compute_client.list_instances(compartment_id).data
-    if lifecycle_state:
-        selected_instances = []
-        for instance in instances:
-            if (
-                isinstance(lifecycle_state, (list, tuple, set))
-                and instance.lifecycle_state in lifecycle_state
-            ):
-                selected_instances.append(instance)
-            elif (
-                isinstance(lifecycle_state, str)
-                and instance.lifecycle_state == lifecycle_state
-            ):
-                selected_instances.append(instance)
-        return selected_instances
-    return instances
+def create(client, create_method, class_model, **action_kwargs):
+    action_kwargs = action_kwargs
+    if is_composite_client(client):
+        # Convert to the matching composite action
+        create_method = "{}_and_wait_for_state".format(create_method)
+        action_kwargs["wait_for_states"] = [class_model.LIFECYCLE_STATE_AVAILABLE]
+
+    func = _get_client_func(client, create_method)
+    return perform_action(func, **action_kwargs)
 
 
-def get_images(compute_client, compartment_id):
-    return compute_client.list_images(compartment_id).data
+def update(client, update_method, class_model, id, **action_kwargs):
+    action_kwargs = action_kwargs
+    if is_composite_client(client):
+        # Convert to the matching composite action
+        update_method = "{}_and_wait_for_state".format(update_method)
+        action_kwargs.update(
+            {"wait_for_states": [class_model.LIFECYCLE_STATE_AVAILABLE]}
+        )
+    func = _get_client_func(client, update_method)
+    return perform_action(func, id, **action_kwargs)
+
+
+def get(client, get_method, id, **action_kwargs):
+    return _perform_client_func_action(client, get_method, id, **action_kwargs)
 
 
 def get_subnet_gateway_id(network_client, vcn_id, subnet_id, compartment_id):
@@ -76,78 +105,32 @@ def get_subnet_gateway_id(network_client, vcn_id, subnet_id, compartment_id):
     return route.network_entity_id
 
 
-def create_internet_gateway(network_client, **gateway_details):
-    # HACK, should dynamically get the existing gateway, But the API doesn't seem to provide this
-    # Create new if nessesary
-    create_ig_details = oci.core.models.CreateInternetGatewayDetails(**gateway_details)
-    try:
-        # Only create the gateway if no Internet Gateway exists on the vcn
-        ig_response = network_client.create_internet_gateway(create_ig_details)
-        return ig_response.data
-    except oci.exceptions.ServiceError as service_error:
-        print("An internet gateway already exists")
-    return None
-
-
-def get_vcn(network_client, vcn_id=None, name=None, compartment_id=None, **kwargs):
-    if not vcn_id and not name:
-        return False
-
-    if not vcn_id and name and compartment_id:
-        vcns = list_vcn(network_client, compartment_id, **kwargs)
-        for vcn in vcns:
-            if vcn.display_name == name:
-                return vcn
-
-    if vcn_id:
-        if is_composite_client(network_client):
-            func = network_client.client.get_vcn
-        else:
-            func = network_client.get_vcn
-        return perform_action(func, vcn_id, **kwargs)
-    return False
-
-
-def list_vcn(network_client, compartment_id, **kwargs):
-    if is_composite_client(network_client):
-        func = network_client.client.list_vcns
-    else:
-        func = network_client.list_vcns
-
-    vcns = perform_action(func, compartment_id=compartment_id, **kwargs)
-    if vcns:
-        return vcns
-    return []
-
-
-def create_vcn(network_client, compartment_id, cidr_block, **kwargs):
-    vcn_details = oci.core.models.CreateVcnDetails(
-        compartment_id=compartment_id, cidr_block=cidr_block, **kwargs
+def prepare_route_rule(network_entity_id, **route_rule_kwargs):
+    route_rule = oci.core.models.RouteRule(
+        network_entity_id=network_entity_id, **route_rule_kwargs
     )
-    action_kwargs = {}
-    if is_composite_client(network_client):
-        func = network_client.create_vcn_and_wait_for_state
-        action_kwargs.update(
-            {"wait_for_states": [oci.core.models.Vcn.LIFECYCLE_STATE_AVAILABLE]}
-        )
+    return route_rule
+
+
+def get_kubernetes_version(container_engine_client):
+    """
+    get_kubernetes_version
+
+    Get the supported kubernetes versions from the service.  There are multiple
+    versions supported but for the example we will just use the last one in the
+    list.
+    """
+
+    func = _get_client_func(container_engine_client, "get_cluster_options")
+    response = func(cluster_option_id="all")
+
+    versions = response.data.kubernetes_versions
+    if len(versions) > 0:
+        kubernetes_version = versions[-1]
     else:
-        func = network_client.create_vcn
+        raise RuntimeError("No supported Kubernetes versions found")
 
-    return perform_action(func, vcn_details, **action_kwargs)
-
-
-def delete_vcn(network_client, vcn_id):
-
-    action_kwargs = {}
-    if is_composite_client(network_client):
-        func = network_client.delete_vcn_and_wait_for_state
-        action_kwargs.update(
-            {"wait_for_states": [oci.core.models.Vcn.LIFECYCLE_STATE_TERMINATED]}
-        )
-    else:
-        func = network_client.delete_vcn
-
-    return perform_action(func, vcn_id, **action_kwargs)
+    return kubernetes_version
 
 
 def perform_action(action, *args, **kwargs):
@@ -156,6 +139,6 @@ def perform_action(action, *args, **kwargs):
         if hasattr(result, "data"):
             return result.data
     # TODO, check for regular errors as well
-    except CompositeOperationError as err:
-        print("Failed to perform action, err: {}".format(err))
+    except (CompositeOperationError, ServiceError) as err:
+        print("Failed to perform action: {}, err: {}".format(action, err))
     return False
