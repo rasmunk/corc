@@ -121,9 +121,12 @@ def get_kubernetes_version(container_engine_client):
     list.
     """
 
-    func = _get_client_func(container_engine_client, "get_cluster_options")
-    response = func(cluster_option_id="all")
+    if is_composite_client(container_engine_client):
+        func = _get_client_func(container_engine_client.client, "get_cluster_options")
+    else:
+        func = _get_client_func(container_engine_client, "get_cluster_options")
 
+    response = func(cluster_option_id="all")
     versions = response.data.kubernetes_versions
     if len(versions) > 0:
         kubernetes_version = versions[-1]
