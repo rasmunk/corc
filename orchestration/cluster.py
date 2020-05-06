@@ -1,17 +1,24 @@
+from kubernetes import client, config
+
 from oci.container_engine import (
     ContainerEngineClient,
     ContainerEngineClientCompositeOperations,
 )
 from oci.container_engine.models import Cluster, CreateClusterDetails, WorkRequest
-from oci.container_engine.models import NodePool, CreateNodePoolDetails
+from oci.container_engine.models import (
+    NodePool,
+    CreateNodePoolDetails,
+    NodePoolPlacementConfigDetails,
+    CreateNodePoolNodeConfigDetails,
+)
 from oci_helpers import new_client, create, delete, get, list_entities
+from orchestrator import OCIOrchestrator, OCITask
 from args import get_arguments, OCI, CLUSTER, NETWORK
 
 
 def new_cluster_stack(
     container_engine_client, create_cluster_details, create_node_pool_details
 ):
-
     stack = {"cluster": None, "node_pool": None}
 
     cluster = create_cluster(container_engine_client, create_cluster_details)
@@ -22,6 +29,7 @@ def new_cluster_stack(
 
     stack["cluster"] = cluster
     create_node_pool_details.cluster_id = cluster.id
+
     node_pool = create_node_pool(container_engine_client, create_node_pool_details)
 
     if node_pool:
@@ -49,6 +57,18 @@ def create_cluster(container_engine_client, create_cluster_details):
     return cluster
 
 
+def get_cluster_by_name(container_engine_client, name, life_cycle_state=None):
+    if not life_cycle_state:
+        life_cycle_state = [Cluster.LIFECYCLE_STATE_ACTIVE]
+
+    clusters = list_entities(
+        container_engine_client,
+        "list_clusters",
+        life_cycle_state=life_cycle_state,
+        name=name,
+    )
+
+
 def delete_node_pool(container_engine_client, cluster_id, **kwargs):
     return delete(container_engine_client, "delete_node_pool", cluster_id, **kwargs)
 
@@ -64,3 +84,118 @@ def create_node_pool(container_engine_client, create_node_pool_details):
         return None
 
     return node_pool
+
+
+def _prepare_create_cluster_details(**kwargs):
+    create_cluster_details = CreateClusterDetails(**kwargs)
+    return create_cluster_details
+
+
+def _prepare_node_pool_details(**kwargs):
+    node_pool_placement = NodePoolPlacementConfigDetails(**kwargs)
+    return node_pool_placement
+
+
+CLUSTER = "CLUSTER"
+
+
+class OCIClusterOrchestrator(OCIOrchestrator):
+    def __init__(self, config):
+        super().__init__(config)
+        OCIClusterOrchestrator.validate_config(self.config)
+        # Set client
+        self.client = new_client(
+            ContainerEngineClient,
+            composite_class=ContainerEngineClientCompositeOperations,
+            profile_name=config["profile_name"],
+        )
+
+    def prepare(self):
+        cluster = get_cluster_by_name(self.client, self.config["name"])
+        if not cluster:
+            self.is_ready = False
+            create_cluster_details = _prepare_create_cluster_details(**self.config)
+            create_node_pool_details = _prepare_create_node_pool_details(**self.config)
+            cluster = new_cluster_stack(
+                self.client, create_cluster_details, create_node_pool_details
+            )
+            if not cluster:
+                return self.is_ready
+            self.is_ready = True
+        return self.id_ready
+
+    # Use kubernetes to schedule the task in the cluster
+    # def schedule(self, job):
+    #     v1 = client.CoreV1Api()
+    #     ret = v1.list_pod_for_all_namespaces(watch=False)
+
+    #     # Create kubernetes job
+
+    #     v1.deployment
+
+    @classmethod
+    def validate_config(cls, config):
+        expected_fields = [
+            "compartment_id",
+            "profile_name",
+            "name",
+            "availability_domain",
+            "size",
+        ]
+
+        for field in expected_fields:
+            if field not in config:
+                raise ValueError(
+                    "Missing field: {} in config: {}".format(field, config)
+                )
+
+
+# def create_job_object():
+#     # Configureate Pod template container
+#     container = client.V1Container(
+#         name="pi",
+#         image="perl",
+#         command=["perl", "-Mbignum=bpi", "-wle", "print bpi(2000)"])
+#     # Create and configurate a spec section
+#     template = client.V1PodTemplateSpec(
+#         metadata=client.V1ObjectMeta(labels={"app": "pi"}),
+#         spec=client.V1PodSpec(restart_policy="Never", containers=[container]))
+#     # Create the specification of deployment
+#     spec = client.V1JobSpec(
+#         template=template,
+#         backoff_limit=4)
+#     # Instantiate the job object
+#     job = client.V1Job(
+#         api_version="batch/v1",
+#         kind="Job",
+#         metadata=client.V1ObjectMeta(name=JOB_NAME),
+#         spec=spec)
+
+#     return job
+
+
+# def create_job(api_instance, job):
+#     api_response = api_instance.create_namespaced_job(
+#         body=job,
+#         namespace="default")
+#     print("Job created. status='%s'" % str(api_response.status))
+
+
+# def update_job(api_instance, job):
+#     # Update container image
+#     job.spec.template.spec.containers[0].image = "perl"
+#     api_response = api_instance.patch_namespaced_job(
+#         name=JOB_NAME,
+#         namespace="default",
+#         body=job)
+#     print("Job updated. status='%s'" % str(api_response.status))
+
+
+# def delete_job(api_instance):
+#     api_response = api_instance.delete_namespaced_job(
+#         name=JOB_NAME,
+#         namespace="default",
+#         body=client.V1DeleteOptions(
+#             propagation_policy='Foreground',
+#             grace_period_seconds=5))
+#     print("Job deleted. status='%s'" % str(api_response.status))
