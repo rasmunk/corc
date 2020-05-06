@@ -165,9 +165,7 @@ if __name__ == "__main__":
 
     metadata = {}
     if args.ssh_authorized_keys:
-        metadata.update({
-            'ssh_authorized_keys': '\n'.join(args.ssh_authorized_keys)
-        })
+        metadata.update({"ssh_authorized_keys": "\n".join(args.ssh_authorized_keys)})
 
     options = dict(
         compartment_id=compartment_id,

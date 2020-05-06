@@ -29,14 +29,17 @@ if __name__ == "__main__":
     )
 
     if args.vcn_id:
-        vcn = get(network_client, 'get_vcn', args.vcn_id)
+        vcn = get(network_client, "get_vcn", args.vcn_id)
     else:
-        vcns = list_entities(network_client, 'list_vcns', args.compartment_id)
+        vcns = list_entities(network_client, "list_vcns", args.compartment_id)
         if not vcns:
-            stack = new_vcn_stack(network_client, args.compartment_id,
-                                vcn_cidr_block=args.vcn_cidr_block,
-                                vcn_subnet_cidr_block=args.vcn_subnet_cidr_block)
-            vcns.append(stack['vnc'])
+            stack = new_vcn_stack(
+                network_client,
+                args.compartment_id,
+                vcn_cidr_block=args.vcn_cidr_block,
+                vcn_subnet_cidr_block=args.vcn_subnet_cidr_block,
+            )
+            vcns.append(stack["vnc"])
         if args.vcn_name:
             # name is not unique, so might return multiple vcns
             for _vcn in vcns:
@@ -57,9 +60,14 @@ if __name__ == "__main__":
     cluster_details = CreateClusterDetails(
         compartment_id=args.compartment_id,
         kubernetes_version=kubernetes_version,
-        vcn_id=vcn.id
+        vcn_id=vcn.id,
     )
-    cluster = create(container_engine_client, 'create_cluster', Cluster, create_cluster_details=cluster_details)
+    cluster = create(
+        container_engine_client,
+        "create_cluster",
+        Cluster,
+        create_cluster_details=cluster_details,
+    )
 
     if not cluster:
         print("Failed to create cluster")
@@ -70,11 +78,15 @@ if __name__ == "__main__":
         compartment_id=args.compartment_id,
         kubernetes_version=kubernetes_version,
         name=args.cluster_name,
-        node_shape=node_shape
+        node_shape=node_shape,
     )
 
-    node_pool = create(container_engine_client, 'create_node_pool', NodePool, create_node_pool_details=create_np_details)
+    node_pool = create(
+        container_engine_client,
+        "create_node_pool",
+        NodePool,
+        create_node_pool_details=create_np_details,
+    )
     if not node_pool:
         print("Failed to create node pool")
         exit(1)
-
