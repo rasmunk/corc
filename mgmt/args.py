@@ -5,8 +5,8 @@ OCI = "OCI"
 ANSIBLE = "ANSIBLE"
 COMPUTE = "COMPUTE"
 CLUSTER = "CLUSTER"
-NETWORK = "NETWORK"
-
+VCN = "VCN"
+SUBNET = "SUBNET"
 
 def strip_argument_prefix(arguments, prefix=""):
     return {k.replace(prefix, ""): v for k, v in arguments.items()}
@@ -37,12 +37,17 @@ def add_compute_group(parser):
     compute_group.add_argument("--compute-target-shape", default="VM.Standard2.1")
 
 
-def add_network_group(parser):
-    network_group = parser.add_argument_group(title="Network arguments")
-    network_group.add_argument("--network-vcn-id", default=False)
-    network_group.add_argument("--network-vcn-name", default=False)
-    network_group.add_argument("--network-vcn-cidr-block", default="10.0.0.0/16")
-    network_group.add_argument("--network-vcn-subnet-cidr-block", default="10.0.1.0/24")
+def add_vcn_group(parser):
+    vcn_group = parser.add_argument_group(title="VCN arguments")
+    vcn_group.add_argument("--vcn-id", default=None)
+    vcn_group.add_argument('--vcn-display-name', default=None)
+    vcn_group.add_argument('--vcn-cidr-block', default="10.0.0.0/16")
+
+
+def add_subnet_group(parser):
+    subnet_group = parser.add_argument_group(title="Subnet arguments")
+    subnet_group.add_argument("--subnet-id", default=None)
+    subnet_group.add_argument("--subnet-cidr-block", default="10.0.1.0/24")
 
 
 def add_cluster_group(parser):
@@ -52,7 +57,9 @@ def add_cluster_group(parser):
     cluster_group.add_argument("--cluster-node-shape", default="VM.Standard2.1")
     cluster_group.add_argument("--cluster-node-image", default="Oracle-Linux-7.7")
     # https://oracle-cloud-infrastructure-python-sdk.readthedocs.io/en/latest/api/cims/models/oci.cims.models.CreateResourceDetails.html?highlight=availability_domain#oci.cims.models.CreateResourceDetails.availability_domain
-    cluster_group.add_argument("--cluster-node-placement-ad-domain", default="EU_AMSTERDAM_1_AD_1")
+    cluster_group.add_argument(
+        "--cluster-node-placement-ad-domain", default="EU_AMSTERDAM_1_AD_1"
+    )
     cluster_group.add_argument("--cluster-node-size", default=1)
 
 
@@ -61,7 +68,8 @@ argument_groups = {
     ANSIBLE: add_ansible_group,
     COMPUTE: add_compute_group,
     CLUSTER: add_cluster_group,
-    NETWORK: add_network_group
+    VCN: add_vcn_group,
+    SUBNET: add_subnet_group
 }
 
 
@@ -72,7 +80,8 @@ def get_arguments(argument_types, strip_group_prefix=False):
         if argument_group in argument_groups:
             argument_groups[argument_group](parser)
 
-    args = parser.parse_args()
+    args, unknown = parser.parse_known_intermixed_args()
+    # args = parser.parse_args()
     if strip_group_prefix:
         stripped_args = {}
         for argument_group in argument_types:
