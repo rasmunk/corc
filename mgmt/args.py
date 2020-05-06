@@ -49,6 +49,11 @@ def add_cluster_group(parser):
     cluster_group = parser.add_argument_group(title="Cluster arguments")
     cluster_group.add_argument("--cluster-name", default="")
     cluster_group.add_argument("--cluster-kubernetes-version", default=None)
+    cluster_group.add_argument("--cluster-node-shape", default="VM.Standard2.1")
+    cluster_group.add_argument("--cluster-node-image", default="Oracle-Linux-7.7")
+    # https://oracle-cloud-infrastructure-python-sdk.readthedocs.io/en/latest/api/cims/models/oci.cims.models.CreateResourceDetails.html?highlight=availability_domain#oci.cims.models.CreateResourceDetails.availability_domain
+    cluster_group.add_argument("--cluster-node-placement-ad-domain", default="EU_AMSTERDAM_1_AD_1")
+    cluster_group.add_argument("--cluster-node-size", default=1)
 
 
 argument_groups = {
@@ -56,7 +61,7 @@ argument_groups = {
     ANSIBLE: add_ansible_group,
     COMPUTE: add_compute_group,
     CLUSTER: add_cluster_group,
-    NETWORK: add_network_group,
+    NETWORK: add_network_group
 }
 
 
