@@ -251,7 +251,7 @@ if __name__ == "__main__":
         args.compartment_id,
         name=args.vcn_name,
         vcn_kwargs=vars(vcn_args),
-        subnet_kwargs=vars(subnet_args)
+        subnet_kwargs=vars(subnet_args),
     )
     print("Create stack: {}".format(stack))
 

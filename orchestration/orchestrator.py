@@ -15,6 +15,9 @@ class OCIOrchestrator:
     def schedule(self, task):
         raise NotImplementedError
 
+    def tear_down(self):
+        raise NotImplementedError
+
     @classmethod
     def validate_config(cls, config):
         raise NotImplementedError

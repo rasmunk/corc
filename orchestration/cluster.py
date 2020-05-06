@@ -1,5 +1,3 @@
-from kubernetes import client, config
-
 from oci.container_engine import (
     ContainerEngineClient,
     ContainerEngineClientCompositeOperations,
@@ -11,9 +9,13 @@ from oci.container_engine.models import (
     NodePoolPlacementConfigDetails,
     CreateNodePoolNodeConfigDetails,
 )
-from oci_helpers import new_client, create, delete, get, list_entities
-from orchestrator import OCIOrchestrator, OCITask
-from args import get_arguments, OCI, CLUSTER, NETWORK
+from kubernetes import client, config
+from .oci_helpers import new_client, create, delete, get, list_entities
+from .orchestrator import OCIOrchestrator, OCITask
+from .args import get_arguments, OCI, CLUSTER
+
+
+CLUSTER = "CLUSTER"
 
 
 def new_cluster_stack(
@@ -36,6 +38,15 @@ def new_cluster_stack(
         stack["node_pool"] = node_pool
 
     return stack
+
+
+def delete_cluster_stack(container_engine_client, cluster_id, delete_vcn=False):
+    # TODO, delete associate Node Pool
+    cluster = get(container_engine_client, "get_cluster", cluster_id)
+    if not cluster:
+        return False
+
+    return delete_cluster(container_engine_client, cluster_id)
 
 
 def delete_cluster(container_engine_client, cluster_id, **kwargs):
@@ -96,9 +107,6 @@ def _prepare_node_pool_details(**kwargs):
     return node_pool_placement
 
 
-CLUSTER = "CLUSTER"
-
-
 class OCIClusterOrchestrator(OCIOrchestrator):
     def __init__(self, config):
         super().__init__(config)
@@ -109,6 +117,7 @@ class OCIClusterOrchestrator(OCIOrchestrator):
             composite_class=ContainerEngineClientCompositeOperations,
             profile_name=config["profile_name"],
         )
+        self.cluster = None
 
     def prepare(self):
         cluster = get_cluster_by_name(self.client, self.config["name"])
@@ -124,6 +133,11 @@ class OCIClusterOrchestrator(OCIOrchestrator):
             self.is_ready = True
         return self.id_ready
 
+    def tear_down(self):
+        deleted = delete_cluster_stack(self.client, self.cluster.id)
+        if deleted:
+            self.is_ready = False
+
     # Use kubernetes to schedule the task in the cluster
     # def schedule(self, job):
     #     v1 = client.CoreV1Api()
@@ -135,6 +149,9 @@ class OCIClusterOrchestrator(OCIOrchestrator):
 
     @classmethod
     def validate_config(cls, config):
+        if not isinstance(config, dict):
+            raise ValueError("config is not a dictionary")
+
         expected_fields = [
             "compartment_id",
             "profile_name",
