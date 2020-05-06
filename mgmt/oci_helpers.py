@@ -50,43 +50,52 @@ def list_entities(client, list_method, *args, **kwargs):
     return _list(client, list_method, *args, **kwargs)
 
 
-def delete(client, delete_method, class_model, id, *args, **kwargs):
+def delete(client, delete_method, id, *args, wait_for_states=None, **kwargs):
+    if not wait_for_states:
+        wait_for_states = []
+
     action_kwargs = kwargs
     if is_composite_client(client):
         # Convert to the matching composite action
         delete_method = "{}_and_wait_for_state".format(delete_method)
-        action_kwargs.update(
-            {"wait_for_states": [class_model.LIFECYCLE_STATE_TERMINATED]}
-        )
+        if hasattr(class_model, "LIFECYCLE_STATE_TERMINATED"):
+            action_kwargs["wait_for_states"] = [class_model.LIFECYCLE_STATE_TERMINATED]
+        elif hasattr(class_model, "LIFECYCLE_STATE_DELETED"):
+            action_kwargs["wait_for_states"] = [class_model.LIFECYCLE_STATE_DELETED]
     func = _get_client_func(client, delete_method)
     return perform_action(func, id, **action_kwargs)
 
 
-def create(client, create_method, class_model, **action_kwargs):
-    action_kwargs = action_kwargs
+def create(client, create_method, wait_for_states=None, **kwargs):
+    if not wait_for_states:
+        wait_for_states = []
+
+    action_kwargs = kwargs
     if is_composite_client(client):
         # Convert to the matching composite action
         create_method = "{}_and_wait_for_state".format(create_method)
-        action_kwargs["wait_for_states"] = [class_model.LIFECYCLE_STATE_AVAILABLE]
+        action_kwargs["wait_for_states"] = wait_for_states
 
     func = _get_client_func(client, create_method)
     return perform_action(func, **action_kwargs)
 
 
-def update(client, update_method, class_model, id, **action_kwargs):
-    action_kwargs = action_kwargs
+def update(client, update_method, id, wait_for_states=None, **kwargs):
+    if not wait_for_states:
+        wait_for_states = []
+
+    action_kwargs = kwargs
     if is_composite_client(client):
         # Convert to the matching composite action
         update_method = "{}_and_wait_for_state".format(update_method)
-        action_kwargs.update(
-            {"wait_for_states": [class_model.LIFECYCLE_STATE_AVAILABLE]}
-        )
+        action_kwargs["wait_for_states"] = wait_for_states
     func = _get_client_func(client, update_method)
     return perform_action(func, id, **action_kwargs)
 
 
-def get(client, get_method, id, **action_kwargs):
-    return _perform_client_func_action(client, get_method, id, **action_kwargs)
+def get(client, get_method, id, **kwargs):
+    return _perform_client_func_action(client, get_method, id, **kwargs)
+
 
 
 def get_subnet_gateway_id(network_client, vcn_id, subnet_id, compartment_id):
