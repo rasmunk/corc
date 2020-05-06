@@ -1,13 +1,10 @@
-from oci.container_engine import ContainerEngineClient, ContainerEngineClientCompositeOperations
+from oci.container_engine import (
+    ContainerEngineClient,
+    ContainerEngineClientCompositeOperations,
+)
 from oci.container_engine.models import Cluster, CreateClusterDetails, WorkRequest
 from oci.container_engine.models import NodePool, CreateNodePoolDetails
-from oci_helpers import (
-    new_client,
-    create,
-    delete,
-    get,
-    list_entities
-)
+from oci_helpers import new_client, create, delete, get, list_entities
 from args import get_arguments, OCI, CLUSTER, NETWORK
 
 
@@ -43,8 +40,7 @@ def create_cluster(container_engine_client, create_cluster_details):
     cluster = create(
         container_engine_client,
         "create_cluster",
-        wait_for_states=[WorkRequest.STATUS_SUCCEEDED,
-                         WorkRequest.STATUS_FAILED],
+        wait_for_states=[WorkRequest.STATUS_SUCCEEDED, WorkRequest.STATUS_FAILED],
         create_cluster_details=create_cluster_details,
     )
 
@@ -61,8 +57,7 @@ def create_node_pool(container_engine_client, create_node_pool_details):
     node_pool = create(
         container_engine_client,
         "create_node_pool",
-        wait_for_states=[WorkRequest.STATUS_SUCCEEDED,
-                         WorkRequest.STATUS_FAILED],
+        wait_for_states=[WorkRequest.STATUS_SUCCEEDED, WorkRequest.STATUS_FAILED],
         create_node_pool_details=create_node_pool_details,
     )
     if not node_pool:

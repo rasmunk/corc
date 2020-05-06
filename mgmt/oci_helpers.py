@@ -58,10 +58,7 @@ def delete(client, delete_method, id, *args, wait_for_states=None, **kwargs):
     if is_composite_client(client):
         # Convert to the matching composite action
         delete_method = "{}_and_wait_for_state".format(delete_method)
-        if hasattr(class_model, "LIFECYCLE_STATE_TERMINATED"):
-            action_kwargs["wait_for_states"] = [class_model.LIFECYCLE_STATE_TERMINATED]
-        elif hasattr(class_model, "LIFECYCLE_STATE_DELETED"):
-            action_kwargs["wait_for_states"] = [class_model.LIFECYCLE_STATE_DELETED]
+        action_kwargs["wait_for_states"] = wait_for_states
     func = _get_client_func(client, delete_method)
     return perform_action(func, id, **action_kwargs)
 
@@ -96,6 +93,12 @@ def update(client, update_method, id, wait_for_states=None, **kwargs):
 def get(client, get_method, id, **kwargs):
     return _perform_client_func_action(client, get_method, id, **kwargs)
 
+
+def get_vcn_by_name(network_client, compartment_id, name):
+    vcns = list_entities(network_client, "list_vcns", compartment_id)
+    for vcn in vcns:
+        if vcn.display_name == name:
+            return vcn
 
 
 def get_subnet_gateway_id(network_client, vcn_id, subnet_id, compartment_id):

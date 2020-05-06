@@ -8,6 +8,7 @@ CLUSTER = "CLUSTER"
 VCN = "VCN"
 SUBNET = "SUBNET"
 
+
 def strip_argument_prefix(arguments, prefix=""):
     return {k.replace(prefix, ""): v for k, v in arguments.items()}
 
@@ -40,8 +41,8 @@ def add_compute_group(parser):
 def add_vcn_group(parser):
     vcn_group = parser.add_argument_group(title="VCN arguments")
     vcn_group.add_argument("--vcn-id", default=None)
-    vcn_group.add_argument('--vcn-display-name', default=None)
-    vcn_group.add_argument('--vcn-cidr-block', default="10.0.0.0/16")
+    vcn_group.add_argument("--vcn-display-name", default=None)
+    vcn_group.add_argument("--vcn-cidr-block", default="10.0.0.0/16")
 
 
 def add_subnet_group(parser):
@@ -69,7 +70,7 @@ argument_groups = {
     COMPUTE: add_compute_group,
     CLUSTER: add_cluster_group,
     VCN: add_vcn_group,
-    SUBNET: add_subnet_group
+    SUBNET: add_subnet_group,
 }
 
 
