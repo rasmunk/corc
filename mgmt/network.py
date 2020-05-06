@@ -40,7 +40,10 @@ def new_vcn_stack(
         cidr_block=vcn_cidr_block, compartment_id=compartment_id, display_name=name
     )
     vcn = create(
-        network_client, "create_vcn", Vcn, create_vcn_details=create_vcn_details
+        network_client,
+        "create_vcn",
+        wait_for_states=[Vcn.LIFECYCLE_STATE_AVAILABLE],
+        create_vcn_details=create_vcn_details
     )
     if not vcn:
         print("Failed to create vcn")
@@ -52,7 +55,7 @@ def new_vcn_stack(
     gateway = create(
         network_client,
         "create_internet_gateway",
-        InternetGateway,
+        wait_for_states=[InternetGateway.LIFECYCLE_STATE_AVAILABLE],
         create_internet_gateway_details=create_ig_details,
     )
     if not gateway:
@@ -77,7 +80,7 @@ def new_vcn_stack(
     route_table = create(
         network_client,
         "create_route_table",
-        RouteTable,
+        wait_for_states=[RouteTable.LIFECYCLE_STATE_AVAILABLE],
         create_route_table_details=create_rt_details,
     )
 
@@ -88,11 +91,11 @@ def new_vcn_stack(
     subnet = create(
         network_client,
         "create_subnet",
-        Subnet,
+        wait_for_states=[Subnet.LIFECYCLE_STATE_AVAILABLE],
         create_subnet_details=create_subnet_details,
     )
 
-    stack = {"id": vcn.id, "vcn": vcn ,"worker_subnets": [], "lb_subnets": []}
+    stack = {"id": vcn.id, "vcn": vcn, "worker_subnets": [subnet], "lb_subnets": []}
     return stack
 
 
@@ -115,7 +118,9 @@ def delete_vcn_stack(network_client, compartment_id, name=None, vcn_id=None):
             network_client, "list_subnets", compartment_id, vcn.id
         )
         for subnet in vcn_subnets:
-            deleted = delete(network_client, "delete_subnet", Vcn, subnet.id)
+            deleted = delete(network_client, "delete_subnet",
+                             subnet.id,
+                             wait_for_states=[Subnet.LIFECYCLE_STATE_TERMINATED])
 
         # Delete all the routes (and disable the gateway target if they are the default which
         # means that they can't be deleted)
@@ -127,12 +132,13 @@ def delete_vcn_stack(network_client, compartment_id, name=None, vcn_id=None):
             update(
                 network_client,
                 "update_route_table",
-                RouteTable,
                 route.id,
+                wait_for_states=[RouteTable.LIFECYCLE_STATE_AVAILABLE],
                 update_route_table_details=update_details,
             )
 
-            delete(network_client, "delete_route_table", RouteTable, route.id)
+            delete(network_client, "delete_route_table", route.id,
+                   wait_for_states=[RouteTable.LIFECYCLE_STATE_TERMINATED])
 
         # Delete all gateways
         gateways = list_entities(
@@ -165,8 +171,8 @@ def delete_vcn_stack(network_client, compartment_id, name=None, vcn_id=None):
             delete(
                 network_client,
                 "delete_local_peering_gateway",
-                LocalPeeringGateway,
                 local_peering_gateway.id,
+                wait_for_states=[LocalPeeringGateway.LIFECYCLE_STATE_TERMINATED]
             )
 
         # Delete all NAT gateways
@@ -174,7 +180,8 @@ def delete_vcn_stack(network_client, compartment_id, name=None, vcn_id=None):
             network_client, "list_nat_gateways", compartment_id, vcn_id=vcn.id
         )
         for gateway in nat_gateways:
-            delete(network_client, "delete_nat_gateway", NatGateway, gateway.id)
+            delete(network_client, "delete_nat_gateway", gateway.id,
+                   wait_for_states=[NatGateway.LIFECYCLE_STATE_TERMINATED])
 
         # Delete Service Gateways
         service_gateways = list_entities(
@@ -184,11 +191,12 @@ def delete_vcn_stack(network_client, compartment_id, name=None, vcn_id=None):
             delete(
                 network_client,
                 "delete_service_gateway",
-                ServiceGateway,
                 service_gateway.id,
+                wait_for_states=[ServiceGateway.LIFECYCLE_STATE_TERMINATED]
             )
 
-        error = delete(network_client, "delete_vcn", Vcn, vcn.id)
+        error = delete(network_client, "delete_vcn", vcn.id,
+                       wait_for_states=[Vcn.LIFECYCLE_STATE_TERMINATED])
         if not error:
             removed_stack.update({"vcn": vcn.id})
     # TODO create IG and Subnet
