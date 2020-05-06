@@ -42,7 +42,6 @@ if __name__ == "__main__":
     )
 
     stack = None
-
     # Find the target vcn (id or name)
     if vcn_args.id:
         stack = get_vcn_stack(network_client, args.compartment_id, vcn_args.vcn_id)

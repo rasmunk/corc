@@ -9,7 +9,7 @@ from oci.core.models import LocalPeeringGateway
 from oci.core.models import NatGateway
 from oci.core.models import ServiceGateway
 from oci.core.models import Subnet, CreateSubnetDetails
-from args import get_arguments, OCI, NETWORK
+from args import get_arguments, OCI, NETWORK, SUBNET
 from oci_helpers import (
     new_client,
     prepare_route_rule,
@@ -108,7 +108,7 @@ def get_vcn_stack(network_client, compartment_id, vcn_id):
     return stack
 
 
-def delete_vcn_stack(network_client, compartment_id, name=None, vcn_id=None):
+def delete_vcn_stack(network_client, compartment_id, display_name=None, vcn_id=None):
     if not name and not vcn_id:
         return False
 
@@ -117,7 +117,7 @@ def delete_vcn_stack(network_client, compartment_id, name=None, vcn_id=None):
     else:
         # Find vcns with the name
         vcns = list_entities(
-            network_client, "list_vcns", compartment_id, display_name=name
+            network_client, "list_vcns", compartment_id, display_name=display_name
         )
         vcn = vcns[0]
 
@@ -237,7 +237,9 @@ def delete_compartment_vcns(network_client, compartment_id):
 
 
 if __name__ == "__main__":
-    args = get_arguments([OCI, NETWORK], strip_group_prefix=True)
+    vcn_args = get_arguments([VCN], strip_group_prefix=True)
+    subnet_args = get_arguments([SUBNET], strip_group_prefix=True)
+    args = get_arguments([OCI], strip_group_prefix=True)
     network_client = new_client(
         VirtualNetworkClient,
         composite_class=VirtualNetworkClientCompositeOperations,
@@ -248,13 +250,13 @@ if __name__ == "__main__":
         network_client,
         args.compartment_id,
         name=args.vcn_name,
-        vcn_cidr_block=args.vcn_cidr_block,
-        vcn_subnet_cidr_block=args.vcn_subnet_cidr_block,
+        vcn_kwargs=vars(vcn_args),
+        subnet_kwargs=vars(subnet_args)
     )
     print("Create stack: {}".format(stack))
 
     deleted_stack = delete_vcn_stack(
-        network_client, args.compartment_id, name=args.vcn_name
+        network_client, args.compartment_id, display_name=vcn_args.display_name
     )
     print("Deleted stack: {}".format(deleted_stack))
 
