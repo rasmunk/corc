@@ -26,7 +26,7 @@ def new_vcn_stack(
     compartment_id,
     name=None,
     vcn_cidr_block=None,
-    subnet_cidr_block=None,
+    vcn_subnet_cidr_block=None,
     **vcn_kwargs
 ):
     if not vcn_cidr_block:
@@ -83,7 +83,7 @@ def new_vcn_stack(
 
     # Create subnet
     create_subnet_details = CreateSubnetDetails(
-        compartment_id=compartment_id, cidr_block=subnet_cidr_block, vcn_id=vcn.id
+        compartment_id=compartment_id, cidr_block=vcn_subnet_cidr_block, vcn_id=vcn.id
     )
     subnet = create(
         network_client,
@@ -92,7 +92,7 @@ def new_vcn_stack(
         create_subnet_details=create_subnet_details,
     )
 
-    stack = {"id": vcn.id, "worker_subnets": [], "lb_subnets": []}
+    stack = {"id": vcn.id, "vcn": vcn ,"worker_subnets": [], "lb_subnets": []}
     return stack
 
 
@@ -217,7 +217,7 @@ if __name__ == "__main__":
         args.compartment_id,
         name=args.vcn_name,
         vcn_cidr_block=args.vcn_cidr_block,
-        subnet_cidr_block=args.vcn_subnet_cidr_block,
+        vcn_subnet_cidr_block=args.vcn_subnet_cidr_block,
     )
     print("Create stack: {}".format(stack))
 
