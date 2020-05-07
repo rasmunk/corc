@@ -9,7 +9,7 @@ from oci.core.models import LocalPeeringGateway
 from oci.core.models import NatGateway
 from oci.core.models import ServiceGateway
 from oci.core.models import Subnet, CreateSubnetDetails
-from args import get_arguments, OCI, NETWORK, SUBNET
+from args import get_arguments, OCI, SUBNET
 from oci_helpers import (
     new_client,
     prepare_route_rule,
@@ -24,16 +24,13 @@ from oci_helpers import (
 def new_vcn_stack(
     network_client, compartment_id, vcn_kwargs=None, subnet_kwargs=None,
 ):
-    if not vcn_cidr_block:
-        vcn_cidr_block = "10.0.0.0/16"
-
     if not vcn_kwargs:
-        vcn_kwargs = {}
+        vcn_kwargs = dict(cidr_block="10.0.0.0/16")
 
     if not subnet_kwargs:
-        subnet_kwargs = {}
+        subnet_kwargs = dict(cidr_block="10.0.1.0/24")
 
-    stack = {}
+    stack = dict(id=None, vcn=None, internet_gateways=[], subnets=[])
     create_vcn_details = CreateVcnDetails(compartment_id=compartment_id, **vcn_kwargs)
     vcn = create(
         network_client,
@@ -44,6 +41,9 @@ def new_vcn_stack(
     if not vcn:
         print("Failed to create vcn")
         exit(1)
+
+    stack["id"] = vcn.id
+    stack["vcn"] = vcn
 
     create_ig_details = oci.core.models.CreateInternetGatewayDetails(
         compartment_id=compartment_id, is_enabled=True, vcn_id=vcn.id
@@ -57,6 +57,7 @@ def new_vcn_stack(
     if not gateway:
         print("Failed to create gateway")
         exit(1)
+    stack["internet_gateways"].append(gateway)
 
     # Setup the route table
     route_rule = prepare_route_rule(
@@ -91,8 +92,22 @@ def new_vcn_stack(
         create_subnet_details=create_subnet_details,
     )
 
-    stack = {"id": vcn.id, "vcn": vcn, "gateways": [gateway], "subnets": [subnets]}
+    if subnet:
+        stack["subnets"].append(subnet)
+
     return stack
+
+
+def valid_vcn_stack(stack):
+
+    if not isinstance(stack, dict):
+        raise TypeError("The VCN stack must be a dictionary to be valid")
+
+    expected_fields = ["id", "vcn", "internet_gateways", "subnets"]
+    for field in expected_fields:
+        if field not in stack:
+            return False
+    return True
 
 
 def get_vcn_stack(network_client, compartment_id, vcn_id):
@@ -104,17 +119,30 @@ def get_vcn_stack(network_client, compartment_id, vcn_id):
     gateways = list_entities(
         network_client, "list_internet_gateways", compartment_id, vcn.id
     )
-    stack = {"id": vcn.id, "vcn": vcn, "gateways": gateways, "subnets": subnets}
+    stack = {
+        "id": vcn.id,
+        "vcn": vcn,
+        "internet_gateways": gateways,
+        "subnets": subnets,
+    }
     return stack
 
 
+def get_vcn_by_name(network_client, compartment_id, display_name):
+    vcns = list_entities(network_client, "list_vcns", compartment_id)
+    for vcn in vcns:
+        if vcn.display_name == display_name:
+            return vcn
+
+
 def delete_vcn_stack(network_client, compartment_id, display_name=None, vcn_id=None):
-    if not name and not vcn_id:
+    if not display_name and not vcn_id:
         return False
 
     if vcn_id:
         vcn = get(network_client, "get_vcn", vcn_id)
     else:
+        # TODO, use get_vcn_by_name
         # Find vcns with the name
         vcns = list_entities(
             network_client, "list_vcns", compartment_id, display_name=display_name
@@ -162,7 +190,10 @@ def delete_vcn_stack(network_client, compartment_id, display_name=None, vcn_id=N
         )
         for gateway in gateways:
             delete(
-                network_client, "delete_internet_gateway", InternetGateway, gateway.id
+                network_client,
+                "delete_internet_gateway",
+                gateway.id,
+                wait_for_states=[InternetGateway.LIFECYCLE_STATE_TERMINATED],
             )
 
         # Delete all security lists
@@ -170,14 +201,24 @@ def delete_vcn_stack(network_client, compartment_id, display_name=None, vcn_id=N
             network_client, "list_security_lists", compartment_id, vcn.id
         )
         for security in securities:
-            delete(network_client, "delete_security_list", SecurityList, security.id)
+            delete(
+                network_client,
+                "delete_security_list",
+                security.id,
+                wait_for_states=[SecurityList.LIFECYCLE_STATE_TERMINATED],
+            )
 
         # Delete all DHCP options
         dhcp_options = list_entities(
             network_client, "list_dhcp_options", compartment_id, vcn.id
         )
         for dhcp_option in dhcp_options:
-            delete(network_client, "delete_dhcp_options", DhcpOptions, dhcp_option.id)
+            delete(
+                network_client,
+                "delete_dhcp_options",
+                dhcp_option.id,
+                wait_for_states=[DhcpOptions.LIFECYCLE_STATE_TERMINATED],
+            )
 
         # Delete local peering gateways
         local_peering_gateways = list_entities(

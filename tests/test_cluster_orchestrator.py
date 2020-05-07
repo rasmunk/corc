@@ -1,30 +1,51 @@
-import pytest
+import sys
+import os
+
+base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.join(base_path, "orchestration"))
+
 import unittest
-from orchestration.cluster import OCIClusterOrchestrator
+from cluster import OCIClusterOrchestrator
 
 
 class TestClusterOrchestrator(unittest.TestCase):
     def setUp(self):
-        self.config = {}
+        oci_options = dict(
+            compartment_id="ocid1.tenancy.oc1..aaaaaaaakfmksyrf7hl2gfexmjpb6pbyrirm6k3ro7wd464y2pr7atpxpv4q",
+            profile_name="XNOVOTECH",
+        )
+        cluster_options = dict(name="XNOVOTECH Cluster",)
+        node_options = dict(
+            availability_domain="Xfze:eu-amsterdam-1-AD-1",
+            name="xnovotech_cluster",
+            size=1,
+            node_shape="VM.Standard2.1",
+            node_image_name="Oracle-Linux-7.7",
+        )
 
-        self.orchestrator = OCIClusterOrchestrator(self.config)
+        vcn_options = dict(cidr_block="10.0.0.0/16", display_name="XNOVOTECH Network")
+        self.options = dict(
+            oci=oci_options, cluster=cluster_options, node=node_options, vcn=vcn_options
+        )
+
+        OCIClusterOrchestrator.validate_options(self.options)
+        self.orchestrator = OCIClusterOrchestrator(self.options)
         # Should not be ready at this point
         self.assertFalse(self.orchestrator.is_ready())
-        OCIClusterOrchestrator.validate_config(self.config)
 
     def tearDown(self):
         self.orchestrator.tear_down()
         self.assertFalse(self.orchestrator.is_ready())
         self.orchestrator = None
-        self.config = None
-
-    def test_cluster_orchestrator(self):
-        pass
+        self.options = None
 
     def test_prepare_cluster(self):
-        prepared = self.orchestrator.prepare()
-        self.assertTrue(prepared)
+        self.orchestrator.prepare()
         self.assertTrue(self.orchestrator.is_ready())
 
     def test_schedule_job_on_cluster(self):
         pass
+
+
+if __name__ == "__main__":
+    unittest.main()

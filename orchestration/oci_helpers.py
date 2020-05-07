@@ -94,13 +94,6 @@ def get(client, get_method, id, **kwargs):
     return _perform_client_func_action(client, get_method, id, **kwargs)
 
 
-def get_vcn_by_name(network_client, compartment_id, name):
-    vcns = list_entities(network_client, "list_vcns", compartment_id)
-    for vcn in vcns:
-        if vcn.display_name == name:
-            return vcn
-
-
 def get_subnet_gateway_id(network_client, vcn_id, subnet_id, compartment_id):
     existing_subnets = network_client.list_subnets(compartment_id, vcn_id).data
     if not existing_subnets:

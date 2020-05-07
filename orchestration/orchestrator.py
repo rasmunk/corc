@@ -1,16 +1,16 @@
 class OCIOrchestrator:
 
-    config = None
-    is_ready = False
+    options = None
+    _is_ready = False
 
-    def __init__(self, config):
-        self.config = config
+    def __init__(self, options):
+        self.options = options
 
     def prepare(self):
         raise NotImplementedError
 
     def is_ready(self):
-        return self.is_ready
+        return self._is_ready
 
     def schedule(self, task):
         raise NotImplementedError
@@ -19,7 +19,7 @@ class OCIOrchestrator:
         raise NotImplementedError
 
     @classmethod
-    def validate_config(cls, config):
+    def validate_options(cls, options):
         raise NotImplementedError
 
 

@@ -5,6 +5,7 @@ OCI = "OCI"
 ANSIBLE = "ANSIBLE"
 COMPUTE = "COMPUTE"
 CLUSTER = "CLUSTER"
+NODE = "NODE"
 VCN = "VCN"
 SUBNET = "SUBNET"
 
@@ -55,13 +56,18 @@ def add_cluster_group(parser):
     cluster_group = parser.add_argument_group(title="Cluster arguments")
     cluster_group.add_argument("--cluster-name", default="")
     cluster_group.add_argument("--cluster-kubernetes-version", default=None)
-    cluster_group.add_argument("--cluster-node-shape", default="VM.Standard2.1")
-    cluster_group.add_argument("--cluster-node-image", default="Oracle-Linux-7.7")
-    # https://oracle-cloud-infrastructure-python-sdk.readthedocs.io/en/latest/api/cims/models/oci.cims.models.CreateResourceDetails.html?highlight=availability_domain#oci.cims.models.CreateResourceDetails.availability_domain
-    cluster_group.add_argument(
-        "--cluster-node-placement-ad-domain", default="EU_AMSTERDAM_1_AD_1"
+
+
+def add_node_group(parser):
+    node_group = parser.add_argument_group(title="Node arguments")
+    node_group.add_argument(
+        "--node-availability-domain", default="Xfze:eu-amsterdam-1-AD-1"
     )
-    cluster_group.add_argument("--cluster-node-size", default=1)
+    node_group.add_argument("--node-name", default=False)
+    node_group.add_argument("--node-size", default=1, type=int)
+    node_group.add_argument("--node-shape", default="VM.Standard2.1")
+    # https://oracle-cloud-infrastructure-python-sdk.readthedocs.io/en/latest/api/cims/models/oci.cims.models.CreateResourceDetails.html?highlight=availability_domain#oci.cims.models.CreateResourceDetails.availability_domain
+    node_group.add_argument("--node-image-name", default="Oracle-Linux-7.7")
 
 
 argument_groups = {
@@ -69,6 +75,7 @@ argument_groups = {
     ANSIBLE: add_ansible_group,
     COMPUTE: add_compute_group,
     CLUSTER: add_cluster_group,
+    NODE: add_node_group,
     VCN: add_vcn_group,
     SUBNET: add_subnet_group,
 }
