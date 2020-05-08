@@ -57,8 +57,15 @@ def delete(client, delete_method, id, *args, wait_for_states=None, **kwargs):
     action_kwargs = kwargs
     if is_composite_client(client):
         # Convert to the matching composite action
-        delete_method = "{}_and_wait_for_state".format(delete_method)
-        action_kwargs["wait_for_states"] = wait_for_states
+        pos_delete_method = "{}_and_wait_for_state".format(delete_method)
+        if hasattr(client, pos_delete_method):
+            delete_method = pos_delete_method
+            action_kwargs["wait_for_states"] = wait_for_states
+        else:
+            # Fall back to the regular client since the
+            # composite client dosen't have the method
+            client = client.client
+
     func = _get_client_func(client, delete_method)
     return perform_action(func, id, **action_kwargs)
 
@@ -70,8 +77,14 @@ def create(client, create_method, wait_for_states=None, **kwargs):
     action_kwargs = kwargs
     if is_composite_client(client):
         # Convert to the matching composite action
-        create_method = "{}_and_wait_for_state".format(create_method)
-        action_kwargs["wait_for_states"] = wait_for_states
+        pos_create_method = "{}_and_wait_for_state".format(create_method)
+        if hasattr(client, pos_create_method):
+            create_method = pos_create_method
+            action_kwargs["wait_for_states"] = wait_for_states
+        else:
+            # Fall back to the regular client since the
+            # composite client dosen't have the method
+            client = client.client
 
     func = _get_client_func(client, create_method)
     return perform_action(func, **action_kwargs)
@@ -84,8 +97,15 @@ def update(client, update_method, id, wait_for_states=None, **kwargs):
     action_kwargs = kwargs
     if is_composite_client(client):
         # Convert to the matching composite action
-        update_method = "{}_and_wait_for_state".format(update_method)
-        action_kwargs["wait_for_states"] = wait_for_states
+        pos_update_method = "{}_and_wait_for_state".format(update_method)
+        if hasattr(client, pos_update_method):
+            update_method = pos_update_method
+            action_kwargs["wait_for_states"] = wait_for_states
+        else:
+            # Fall back to the regular client since the
+            # composite client dosen't have the method
+            client = client.client
+
     func = _get_client_func(client, update_method)
     return perform_action(func, id, **action_kwargs)
 
