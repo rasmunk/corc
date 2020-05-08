@@ -14,16 +14,18 @@ class TestClusterOrchestrator(unittest.TestCase):
             compartment_id="ocid1.tenancy.oc1..aaaaaaaakfmksyrf7hl2gfexmjpb6pbyrirm6k3ro7wd464y2pr7atpxpv4q",
             profile_name="XNOVOTECH",
         )
-        cluster_options = dict(name="XNOVOTECH Cluster",)
+        cluster_options = dict(name="Test XNOVOTECH Cluster",)
         node_options = dict(
             availability_domain="Xfze:eu-amsterdam-1-AD-1",
-            name="xnovotech_cluster",
+            name="test_xnovotech_cluster",
             size=1,
             node_shape="VM.Standard2.1",
             node_image_name="Oracle-Linux-7.7",
         )
 
-        vcn_options = dict(cidr_block="10.0.0.0/16", display_name="XNOVOTECH Network")
+        vcn_options = dict(
+            cidr_block="10.0.0.0/16", display_name="Test XNOVOTECH Network"
+        )
         self.options = dict(
             oci=oci_options, cluster=cluster_options, node=node_options, vcn=vcn_options
         )
@@ -43,8 +45,13 @@ class TestClusterOrchestrator(unittest.TestCase):
         self.orchestrator.prepare()
         self.assertTrue(self.orchestrator.is_ready())
 
-    def test_schedule_job_on_cluster(self):
-        pass
+    def test_teardown_cluster(self):
+        self.assertFalse(self.orchestrator.is_ready())
+        self.orchestrator.tear_down()
+        self.assertFalse(self.orchestrator.is_ready())
+
+    def test_schedule_task(self):
+        self.assertTrue(True)
 
 
 if __name__ == "__main__":

@@ -12,8 +12,15 @@ from oci.container_engine.models import (
     CreateClusterDetails,
     CreateNodePoolDetails,
     NodePoolPlacementConfigDetails,
+    Cluster,
 )
-from cluster import new_cluster_stack, create_cluster, create_node_pool
+from cluster import (
+    new_cluster_stack,
+    create_cluster,
+    create_node_pool,
+    get_cluster_by_name,
+    delete_cluster_stack,
+)
 from oci_helpers import new_client, get, list_entities, get_kubernetes_version
 from network import new_vcn_stack, get_vcn_stack, get_vcn_by_name
 from args import get_arguments, OCI, CLUSTER, VCN, SUBNET, NODE
@@ -48,9 +55,7 @@ if __name__ == "__main__":
         if vcn:
             stack = get_vcn_stack(network_client, oci_args.compartment_id, vcn.id)
         else:
-            stack = new_vcn_stack(
-                network_client, oci_args.compartment_id, name=vcn_args.display_name
-            )
+            stack = new_vcn_stack(network_client, oci_args.compartment_id)
     else:
         exit(1)
 
@@ -69,43 +74,46 @@ if __name__ == "__main__":
     else:
         kubernetes_version = cluster.kubernetes_version
 
-    cluster = None
-    existing_clusters = list_entities(
-        container_engine_client, "list_clusters", oci_args.compartment_id
+    cluster = get_cluster_by_name(
+        container_engine_client, oci_args.compartment_id, cluster_args.name
     )
-    for _cluster in existing_clusters:
-        if _cluster.name == cluster_args.name:
-            cluster = _cluster
 
     if not cluster:
-        # Create new cluster stack
+        # Create new stack
         create_cluster_details = CreateClusterDetails(
             compartment_id=oci_args.compartment_id,
             kubernetes_version=kubernetes_version,
             name=cluster_args.name,
             vcn_id=vcn.id,
         )
-        cluster = create_cluster(container_engine_client, create_cluster_details)
 
-    node_pool_placement_config = NodePoolPlacementConfigDetails(
-        availability_domain=node_args.availability_domain, subnet_id=subnet.id
-    )
+        node_pool_placement_config = NodePoolPlacementConfigDetails(
+            availability_domain=node_args.availability_domain, subnet_id=subnet.id
+        )
 
-    create_node_pool_node_config_details = oci.container_engine.models.CreateNodePoolNodeConfigDetails(
-        size=node_args.size, placement_configs=[node_pool_placement_config]
-    )
+        create_node_pool_node_config_details = oci.container_engine.models.CreateNodePoolNodeConfigDetails(
+            size=node_args.size, placement_configs=[node_pool_placement_config]
+        )
 
-    # Associate
-    create_node_pool_details = CreateNodePoolDetails(
-        cluster_id=cluster.id,
-        compartment_id=oci_args.compartment_id,
-        kubernetes_version=kubernetes_version,
-        name=node_args.name,
-        node_shape=node_args.shape,
-        node_image_name=node_args.image_name,
-        node_config_details=create_node_pool_node_config_details,
-    )
-    print(create_node_pool_details)
+        # Associate
+        create_node_pool_details = CreateNodePoolDetails(
+            compartment_id=oci_args.compartment_id,
+            kubernetes_version=kubernetes_version,
+            name=node_args.name,
+            node_shape=node_args.shape,
+            node_image_name=node_args.image_name,
+            node_config_details=create_node_pool_node_config_details,
+        )
 
-    node_pool = create_node_pool(container_engine_client, create_node_pool_details)
-    print("Stack result: {}".format(node_pool))
+        cluster_stack = new_cluster_stack(
+            container_engine_client, create_cluster_details, create_node_pool_details
+        )
+        print(cluster_stack)
+    else:
+
+        # Delete the cluster
+        deleted = delete_cluster_stack(
+            container_engine_client, cluster.id, delete_vcn=True
+        )
+
+        print(deleted)

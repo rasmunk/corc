@@ -6,11 +6,11 @@ class OCIOrchestrator:
     def __init__(self, options):
         self.options = options
 
-    def prepare(self):
-        raise NotImplementedError
-
     def is_ready(self):
         return self._is_ready
+
+    def prepare(self):
+        raise NotImplementedError
 
     def schedule(self, task):
         raise NotImplementedError

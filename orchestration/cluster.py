@@ -59,13 +59,11 @@ def new_cluster_stack(
     cluster = create_cluster(container_engine_client, create_cluster_details)
 
     if not cluster:
-        # Cluster is required to setup the node pool
         return stack
 
+    # cluster
     stack["cluster"] = cluster
     create_node_pool_details.cluster_id = cluster.id
-
-    print(create_node_pool_details)
 
     node_pool = create_node_pool(container_engine_client, create_node_pool_details)
 
@@ -86,7 +84,12 @@ def new_cluster_stack(
 #     cluster = update_cluster
 
 
-def get_cluster_stack(container_engine_client, compartment_id, cluster_id):
+def get_cluster_stack(
+    container_engine_client, compartment_id, cluster_id, node_kwargs=None
+):
+
+    if not node_kwargs:
+        node_kwargs = dict()
 
     stack = dict(cluster=None, node_pools=[])
 
@@ -102,6 +105,7 @@ def get_cluster_stack(container_engine_client, compartment_id, cluster_id):
         "list_node_pools",
         compartment_id,
         cluster_id=cluster.id,
+        **node_kwargs,
     )
 
     if node_pools:
@@ -111,11 +115,10 @@ def get_cluster_stack(container_engine_client, compartment_id, cluster_id):
 
 
 def delete_cluster_stack(container_engine_client, cluster_id, delete_vcn=False):
-    # TODO, delete associate Node Pool
+    # Will implicitly delete the node pool as well
     cluster = get(container_engine_client, "get_cluster", cluster_id)
     if not cluster:
         return False
-
     return delete_cluster(container_engine_client, cluster_id)
 
 
@@ -129,30 +132,50 @@ def delete_cluster(container_engine_client, cluster_id, **kwargs):
     )
 
 
-def create_cluster(container_engine_client, create_cluster_details):
-    cluster = create(
+def create_cluster(container_engine_client, create_cluster_details, create_kwargs=None):
+    if not create_kwargs:
+        create_kwargs = dict(
+            wait_for_states=[
+                WorkRequest.STATUS_SUCCEEDED,
+                WorkRequest.OPERATION_TYPE_CLUSTER_CREATE,
+                WorkRequest.STATUS_FAILED,
+            ]
+        )
+
+    created_response = create(
         container_engine_client,
         "create_cluster",
-        wait_for_states=[WorkRequest.STATUS_SUCCEEDED, WorkRequest.STATUS_FAILED],
         create_cluster_details=create_cluster_details,
+        **create_kwargs,
     )
 
-    if not cluster:
+    if not created_response:
         return None
+
+    cluster = None
+    # NOTE, only supports a single cluster creation for now
+    if created_response.resources:
+        cluster_id = created_response.resources[0].identifier
+        # Get the actual created cluster
+        cluster = get(container_engine_client, "get_cluster", cluster_id)
+    else:
+        # TODO, process failed work request
+        pass
+
     return cluster
 
 
 def get_cluster_by_name(
-    container_engine_client, compartment_id, name, lifecycle_state=None
+    container_engine_client, compartment_id, name, cluster_kwargs=None
 ):
-    if not lifecycle_state:
-        lifecycle_state = [Cluster.LIFECYCLE_STATE_ACTIVE]
+    if not cluster_kwargs:
+        cluster_kwargs = dict(lifecycle_state=[Cluster.LIFECYCLE_STATE_ACTIVE])
     clusters = list_entities(
         container_engine_client,
         "list_clusters",
         compartment_id=compartment_id,
         name=name,
-        lifecycle_state=lifecycle_state,
+        **cluster_kwargs,
     )
     if clusters:
         return clusters[0]
@@ -164,14 +187,28 @@ def delete_node_pool(container_engine_client, cluster_id, **kwargs):
 
 
 def create_node_pool(container_engine_client, create_node_pool_details):
-    node_pool = create(
+    created_response = create(
         container_engine_client,
         "create_node_pool",
-        wait_for_states=[WorkRequest.STATUS_SUCCEEDED, WorkRequest.STATUS_FAILED],
+        wait_for_states=[
+            WorkRequest.STATUS_SUCCEEDED,
+            WorkRequest.OPERATION_TYPE_NODEPOOL_CREATE,
+            WorkRequest.STATUS_FAILED,
+        ],
         create_node_pool_details=create_node_pool_details,
     )
-    if not node_pool:
+    if not created_response:
         return None
+
+    node_pool = None
+    # NOTE, only supports a single cluster creation for now
+    if created_response.resources:
+        node_pool_id = created_response.resources[0].identifier
+        # Get the actual created cluster
+        node_pool = get(container_engine_client, "get_node_pool", node_pool_id)
+    else:
+        # TODO, process failed work request
+        pass
 
     return node_pool
 
@@ -258,6 +295,7 @@ class OCIClusterOrchestrator(OCIOrchestrator):
 
         self.cluster_stack = None
         self.vcn_stack = None
+        self._is_ready = False
 
     def _get_vcn_stack(self):
         stack = {}
@@ -281,7 +319,6 @@ class OCIClusterOrchestrator(OCIOrchestrator):
         return stack
 
     def prepare(self):
-
         # Ensure we have a VCN stack ready
         vcn_stack = self._get_vcn_stack()
         if not vcn_stack:
@@ -327,6 +364,17 @@ class OCIClusterOrchestrator(OCIOrchestrator):
                 self.options["oci"]["compartment_id"],
                 cluster.id,
             )
+
+            if cluster_stack["cluster"] and not cluster_stack["node_pools"]:
+                cluster_details["create_node_pool"].cluster_id = cluster_stack[
+                    "cluster"
+                ].id
+                node_pool = create_node_pool(
+                    self.container_engine_client, cluster_details["create_node_pool"]
+                )
+                if node_pool:
+                    cluster_stack["node_pool"].extend(node_pool)
+
             if valid_cluster_stack(cluster_stack):
                 self.cluster_stack = cluster_stack
 
@@ -334,27 +382,33 @@ class OCIClusterOrchestrator(OCIOrchestrator):
             self._is_ready = True
 
     def tear_down(self):
-        if self.vcn_stack:
-            vcn_stack_deleted = delete_vcn_stack(
-                self.network_client,
-                self.options["oci"]["compartment_id"],
-                vcn_id=self.vcn_stack["vcn"].id,
-            )
-            # TODO, handle better
-            if not vcn_stack_deleted:
-                return False
-
         if self.cluster_stack:
             cluster = self.cluster_stack["cluster"]
             deleted = delete_cluster_stack(self.container_engine_client, cluster.id)
             if deleted:
-                self._is_ready = False
                 self.cluster_stack = None
         else:
-            self._is_ready = False
             self.cluster_stack = None
 
+        if self.vcn_stack:
+            vcn_deleted = delete_vcn_stack(
+                self.network_client,
+                self.options["oci"]["compartment_id"],
+                vcn_id=self.vcn_stack["vcn"].id,
+            )
+            if vcn_deleted:
+                self.vcn_stack = None
+
+        if self.cluster_stack and self.vcn_stack:
+            self._is_ready = True
+        else:
+            self._is_ready = False
+
     # Use kubernetes to schedule the task in the cluster
+    def schedule(self, task):
+        if not self._is_ready:
+            return False
+
     # def schedule(self, job):
     #     v1 = client.CoreV1Api()
     #     ret = v1.list_pod_for_all_namespaces(watch=False)

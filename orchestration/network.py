@@ -110,14 +110,29 @@ def valid_vcn_stack(stack):
     return True
 
 
-def get_vcn_stack(network_client, compartment_id, vcn_id):
+def get_vcn_stack(
+    network_client, compartment_id, vcn_id, subnet_kwargs=None, gateway_kwargs=None
+):
+
+    if not subnet_kwargs:
+        subnet_kwargs = dict()
+
+    if not gateway_kwargs:
+        gateway_kwargs = dict()
+
     stack = {}
     vcn = get(network_client, "get_vcn", vcn_id)
     if not vcn:
         return stack
-    subnets = list_entities(network_client, "list_subnets", compartment_id, vcn.id)
+    subnets = list_entities(
+        network_client, "list_subnets", compartment_id, vcn.id, **subnet_kwargs
+    )
     gateways = list_entities(
-        network_client, "list_internet_gateways", compartment_id, vcn.id
+        network_client,
+        "list_internet_gateways",
+        compartment_id,
+        vcn.id,
+        **gateway_kwargs
     )
     stack = {
         "id": vcn.id,
@@ -128,8 +143,8 @@ def get_vcn_stack(network_client, compartment_id, vcn_id):
     return stack
 
 
-def get_vcn_by_name(network_client, compartment_id, display_name):
-    vcns = list_entities(network_client, "list_vcns", compartment_id)
+def get_vcn_by_name(network_client, compartment_id, display_name, **kwargs):
+    vcns = list_entities(network_client, "list_vcns", compartment_id, **kwargs)
     for vcn in vcns:
         if vcn.display_name == display_name:
             return vcn
@@ -268,9 +283,9 @@ def delete_vcn_stack(network_client, compartment_id, display_name=None, vcn_id=N
     return removed_stack
 
 
-def delete_compartment_vcns(network_client, compartment_id):
+def delete_compartment_vcns(network_client, compartment_id, **kwargs):
     removed_vcns = []
-    vcns = list_entities(network_client, "list_vcns", compartment_id)
+    vcns = list_entities(network_client, "list_vcns", compartment_id, **kwargs)
     for vcn in vcns:
         result = delete_vcn_stack(network_client, compartment_id, vcn_id=vcn.id)
         removed_vcns.append(result)
