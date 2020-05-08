@@ -9,7 +9,7 @@ from oci.core.models import LocalPeeringGateway
 from oci.core.models import NatGateway
 from oci.core.models import ServiceGateway
 from oci.core.models import Subnet, CreateSubnetDetails
-from args import get_arguments, OCI, SUBNET
+from args import get_arguments, OCI, SUBNET, VCN
 from oci_helpers import (
     new_client,
     prepare_route_rule,
