@@ -1,3 +1,4 @@
 oci
 ansible
 kubernetes
+pyyaml
