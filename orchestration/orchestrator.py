@@ -12,6 +12,9 @@ class OCIOrchestrator:
     def prepare(self):
         raise NotImplementedError
 
+    def setup_scheduler(self):
+        raise NotImplementedError
+
     def schedule(self, task):
         raise NotImplementedError
 

@@ -404,6 +404,10 @@ class OCIClusterOrchestrator(OCIOrchestrator):
         else:
             self._is_ready = False
 
+    def setup_scheduler(self):
+        # Load kubernetes
+        pass
+
     # Use kubernetes to schedule the task in the cluster
     def schedule(self, task):
         if not self._is_ready:
