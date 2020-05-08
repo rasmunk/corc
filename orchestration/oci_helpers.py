@@ -70,7 +70,7 @@ def delete(client, delete_method, id, *args, wait_for_states=None, **kwargs):
     return perform_action(func, id, **action_kwargs)
 
 
-def create(client, create_method, wait_for_states=None, **kwargs):
+def create(client, create_method, *args, wait_for_states=None, **kwargs):
     if not wait_for_states:
         wait_for_states = []
 
@@ -87,7 +87,7 @@ def create(client, create_method, wait_for_states=None, **kwargs):
             client = client.client
 
     func = _get_client_func(client, create_method)
-    return perform_action(func, **action_kwargs)
+    return perform_action(func, *args, **action_kwargs)
 
 
 def update(client, update_method, id, wait_for_states=None, **kwargs):
