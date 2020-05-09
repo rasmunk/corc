@@ -443,7 +443,9 @@ class OCIClusterOrchestrator(OCIOrchestrator):
             "node_image_name",
         ]
 
-        expected_vcn_keys = ["cidr_block", "display_name"]
+        expected_vcn_keys = ["cidr_block", "dns_label", "display_name"]
+
+        expected_subnet_keys = ["dns_label"]
 
         # TODO, this and vcn cidr_block should be optional
         optional_subnet_keys = ["cidr_block"]
@@ -453,6 +455,7 @@ class OCIClusterOrchestrator(OCIOrchestrator):
             "cluster": expected_cluster_keys,
             "node": expected_node_keys,
             "vcn": expected_vcn_keys,
+            "subnet": expected_subnet_keys,
         }
 
         for group, keys in expected_groups.items():

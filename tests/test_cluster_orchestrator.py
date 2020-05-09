@@ -24,10 +24,19 @@ class TestClusterOrchestrator(unittest.TestCase):
         )
 
         vcn_options = dict(
-            cidr_block="10.0.0.0/16", display_name="Test XNOVOTECH Network"
+            cidr_block="10.0.0.0/16",
+            display_name="Test XNOVOTECH Network",
+            dns_label="xnovotech",
         )
+
+        subnet_options = dict(dns_label="workers")
+
         self.options = dict(
-            oci=oci_options, cluster=cluster_options, node=node_options, vcn=vcn_options
+            oci=oci_options,
+            cluster=cluster_options,
+            node=node_options,
+            vcn=vcn_options,
+            subnet=subnet_options,
         )
 
         OCIClusterOrchestrator.validate_options(self.options)
