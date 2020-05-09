@@ -11,6 +11,7 @@ from oci.container_engine.models import (
     NodePoolPlacementConfigDetails,
     CreateNodePoolNodeConfigDetails,
 )
+from orchestration.kubernetes.config import kube_config_loaded
 from kubernetes import client, config
 from oci_helpers import (
     new_client,
@@ -158,9 +159,6 @@ def create_cluster(container_engine_client, create_cluster_details, create_kwarg
         cluster_id = created_response.resources[0].identifier
         # Get the actual created cluster
         cluster = get(container_engine_client, "get_cluster", cluster_id)
-    else:
-        # TODO, process failed work request
-        pass
 
     return cluster
 
@@ -206,9 +204,6 @@ def create_node_pool(container_engine_client, create_node_pool_details):
         node_pool_id = created_response.resources[0].identifier
         # Get the actual created cluster
         node_pool = get(container_engine_client, "get_node_pool", node_pool_id)
-    else:
-        # TODO, process failed work request
-        pass
 
     return node_pool
 
@@ -292,6 +287,7 @@ class OCIClusterOrchestrator(OCIOrchestrator):
             composite_class=VirtualNetworkClientCompositeOperations,
             profile_name=options["oci"]["profile_name"],
         )
+        self.scheduler_client = None
 
         self.cluster_stack = None
         self.vcn_stack = None
@@ -406,13 +402,39 @@ class OCIClusterOrchestrator(OCIOrchestrator):
 
     def setup_scheduler(self):
         # Load kubernetes
-        pass
+        if kube_config_loaded():
+            # Setup scheduler client
+            self.scheduler_client = client.BatchV1Api()
 
     # Use kubernetes to schedule the task in the cluster
     def schedule(self, task):
-        if not self._is_ready:
+        if not self.is_ready():
             return False
 
+        if not self.scheduler_client:
+            return False
+
+        job = prepare_job(task)
+        if not job:
+            return False
+
+        # Ready to schedule
+        job_created = create_job(self.scheduler_client, job)
+        if not job_created:
+            return False
+
+        self.running_job = job_created
+        return True
+
+    # def get(self):
+    #     # Get the finished job result
+    #   if self.finished():
+    #       get_job_result()
+
+    # def poll(self):
+    #     # Get a job report
+    #     if self.running_job:
+    #         get_job_status()
     # def schedule(self, job):
     #     v1 = client.CoreV1Api()
     #     ret = v1.list_pod_for_all_namespaces(watch=False)

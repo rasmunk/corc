@@ -83,7 +83,10 @@ def new_vcn_stack(
 
     # Create subnet
     create_subnet_details = CreateSubnetDetails(
-        compartment_id=compartment_id, vcn_id=vcn.id, **subnet_kwargs
+        compartment_id=compartment_id,
+        vcn_id=vcn.id,
+        route_table_id=route_table.id,
+        **subnet_kwargs
     )
     subnet = create(
         network_client,
@@ -302,19 +305,19 @@ if __name__ == "__main__":
         profile_name=args.profile_name,
     )
 
-    stack = new_vcn_stack(
-        network_client,
-        args.compartment_id,
-        name=args.vcn_name,
-        vcn_kwargs=vars(vcn_args),
-        subnet_kwargs=vars(subnet_args),
-    )
-    print("Create stack: {}".format(stack))
+    # stack = new_vcn_stack(
+    #     network_client,
+    #     args.compartment_id,
+    #     name=vcn_args.vcn_name,
+    #     vcn_kwargs=vars(vcn_args),
+    #     subnet_kwargs=vars(subnet_args),
+    # )
+    # print("Create stack: {}".format(stack))
 
-    deleted_stack = delete_vcn_stack(
-        network_client, args.compartment_id, display_name=vcn_args.display_name
-    )
-    print("Deleted stack: {}".format(deleted_stack))
+    # deleted_stack = delete_vcn_stack(
+    #     network_client, args.compartment_id, display_name=vcn_args.display_name
+    # )
+    # print("Deleted stack: {}".format(deleted_stack))
 
     removed_vcns = delete_compartment_vcns(network_client, args.compartment_id)
     print("Deleted vcns: {}".format(removed_vcns))

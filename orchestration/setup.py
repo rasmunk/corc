@@ -1,4 +1,5 @@
 import argparse
+import copy
 import oci
 from oci.core.virtual_network_client import VirtualNetworkClient
 from oci.core.virtual_network_client_composite_operations import (
@@ -55,7 +56,17 @@ if __name__ == "__main__":
         if vcn:
             stack = get_vcn_stack(network_client, oci_args.compartment_id, vcn.id)
         else:
-            stack = new_vcn_stack(network_client, oci_args.compartment_id)
+            vcn_kwargs = copy.deepcopy(vars(vcn_args))
+            subnet_kwargs = copy.deepcopy(vars(subnet_args))
+            vcn_kwargs.pop("id")
+            subnet_kwargs.pop("id")
+
+            stack = new_vcn_stack(
+                network_client,
+                oci_args.compartment_id,
+                vcn_kwargs=vcn_kwargs,
+                subnet_kwargs=subnet_kwargs,
+            )
     else:
         exit(1)
 
@@ -108,12 +119,14 @@ if __name__ == "__main__":
         cluster_stack = new_cluster_stack(
             container_engine_client, create_cluster_details, create_node_pool_details
         )
-        print(cluster_stack)
+        cluster = cluster_stack["cluster"]
     else:
-
         # Delete the cluster
         deleted = delete_cluster_stack(
             container_engine_client, cluster.id, delete_vcn=True
         )
 
         print(deleted)
+
+    cluster = get(container_engine_client, "get_cluster", cluster.id)
+    print(cluster)
