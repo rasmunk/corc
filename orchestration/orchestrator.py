@@ -9,13 +9,10 @@ class OCIOrchestrator:
     def is_ready(self):
         return self._is_ready
 
-    def prepare(self):
+    def poll(self):
         raise NotImplementedError
 
-    def setup_scheduler(self):
-        raise NotImplementedError
-
-    def schedule(self, task):
+    def setup(self):
         raise NotImplementedError
 
     def tear_down(self):

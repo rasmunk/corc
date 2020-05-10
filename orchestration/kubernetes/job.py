@@ -1,19 +1,19 @@
 def prepare_job(kube_client, **task):
 
-    container = client.V1Container(**task,)
+    container = kube_client.V1Container(**task)
 
     # Create and configurate a spec section
-    template = client.V1PodTemplateSpec(
-        metadata=client.V1ObjectMeta(labels={"app": "pi"}),
-        spec=client.V1PodSpec(restart_policy="Never", containers=[container]),
+    template = kube_client.V1PodTemplateSpec(
+        metadata=kube_client.V1ObjectMeta(labels={"app": "pi"}),
+        spec=kube_client.V1PodSpec(restart_policy="Never", containers=[container]),
     )
     # Create the specification of deployment
-    spec = client.V1JobSpec(template=template, backoff_limit=4)
+    spec = kube_client.V1JobSpec(template=template, backoff_limit=4)
     # Instantiate the job object
-    job = client.V1Job(
+    job = kube_client.V1Job(
         api_version="batch/v1",
         kind="Job",
-        metadata=client.V1ObjectMeta(name=JOB_NAME),
+        metadata=kube_client.V1ObjectMeta(name=JOB_NAME),
         spec=spec,
     )
     return job

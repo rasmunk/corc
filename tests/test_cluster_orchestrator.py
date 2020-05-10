@@ -50,17 +50,14 @@ class TestClusterOrchestrator(unittest.TestCase):
         self.orchestrator = None
         self.options = None
 
-    def test_prepare_cluster(self):
-        self.orchestrator.prepare()
+    def test_setup_cluster(self):
+        self.orchestrator.setup()
         self.assertTrue(self.orchestrator.is_ready())
 
     def test_teardown_cluster(self):
         self.assertFalse(self.orchestrator.is_ready())
         self.orchestrator.tear_down()
         self.assertFalse(self.orchestrator.is_ready())
-
-    def test_schedule_task(self):
-        self.assertTrue(True)
 
 
 if __name__ == "__main__":

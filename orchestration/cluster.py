@@ -6,13 +6,10 @@ from oci.container_engine import (
 )
 from oci.container_engine.models import Cluster, CreateClusterDetails, WorkRequest
 from oci.container_engine.models import (
-    NodePool,
     CreateNodePoolDetails,
     NodePoolPlacementConfigDetails,
     CreateNodePoolNodeConfigDetails,
 )
-from orchestration.kubernetes.config import kube_config_loaded
-from kubernetes import client, config
 from oci_helpers import (
     new_client,
     create,
@@ -21,7 +18,7 @@ from oci_helpers import (
     list_entities,
     get_kubernetes_version,
 )
-from orchestrator import OCIOrchestrator, OCITask
+from orchestrator import OCIOrchestrator
 from network import (
     new_vcn_stack,
     get_vcn_stack,
@@ -29,10 +26,7 @@ from network import (
     get_vcn_by_name,
     delete_vcn_stack,
 )
-from args import get_arguments, OCI, CLUSTER
 
-
-CLUSTER = "CLUSTER"
 
 # FIXME, no node_pools should be allowed
 def valid_cluster_stack(stack):
@@ -287,7 +281,6 @@ class OCIClusterOrchestrator(OCIOrchestrator):
             composite_class=VirtualNetworkClientCompositeOperations,
             profile_name=options["oci"]["profile_name"],
         )
-        self.scheduler_client = None
 
         self.cluster_stack = None
         self.vcn_stack = None
@@ -314,7 +307,10 @@ class OCIClusterOrchestrator(OCIOrchestrator):
         )
         return stack
 
-    def prepare(self):
+    def poll(self):
+        pass
+
+    def setup(self):
         # Ensure we have a VCN stack ready
         vcn_stack = self._get_vcn_stack()
         if not vcn_stack:
@@ -399,49 +395,6 @@ class OCIClusterOrchestrator(OCIOrchestrator):
             self._is_ready = True
         else:
             self._is_ready = False
-
-    def setup_scheduler(self):
-        # Load kubernetes
-        if kube_config_loaded():
-            # Setup scheduler client
-            self.scheduler_client = client.BatchV1Api()
-
-    # Use kubernetes to schedule the task in the cluster
-    def schedule(self, task):
-        if not self.is_ready():
-            return False
-
-        if not self.scheduler_client:
-            return False
-
-        job = prepare_job(task)
-        if not job:
-            return False
-
-        # Ready to schedule
-        job_created = create_job(self.scheduler_client, job)
-        if not job_created:
-            return False
-
-        self.running_job = job_created
-        return True
-
-    # def get(self):
-    #     # Get the finished job result
-    #   if self.finished():
-    #       get_job_result()
-
-    # def poll(self):
-    #     # Get a job report
-    #     if self.running_job:
-    #         get_job_status()
-    # def schedule(self, job):
-    #     v1 = client.CoreV1Api()
-    #     ret = v1.list_pod_for_all_namespaces(watch=False)
-
-    #     # Create kubernetes job
-
-    #     v1.deployment
 
     @classmethod
     def validate_options(cls, options):
