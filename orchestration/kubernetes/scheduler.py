@@ -5,9 +5,6 @@ from orchestration.kubernetes.job import create_job, prepare_job
 
 
 class KubenetesScheduler(Scheduler):
-
-    jobs = []
-
     def __init__(self):
         loaded = kube_config_loaded()
         if not loaded:
@@ -32,7 +29,6 @@ class KubenetesScheduler(Scheduler):
             return False
 
         self.pending_jobs.append(job_created)
-
         return True
 
     def start(self):
