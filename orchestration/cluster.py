@@ -10,7 +10,8 @@ from oci.container_engine.models import (
     NodePoolPlacementConfigDetails,
     CreateNodePoolNodeConfigDetails,
 )
-from oci_helpers import (
+
+from orchestration.oci_helpers import (
     new_client,
     create,
     delete,
@@ -18,14 +19,42 @@ from oci_helpers import (
     list_entities,
     get_kubernetes_version,
 )
-from orchestrator import OCIOrchestrator
-from network import (
+from orchestration.util import parse_yaml
+from orchestration.kubernetes.config import save_kube_config, load_kube_config
+from orchestration.orchestrator import OCIOrchestrator
+from orchestration.network import (
     new_vcn_stack,
     get_vcn_stack,
     valid_vcn_stack,
     get_vcn_by_name,
     delete_vcn_stack,
 )
+
+
+def refresh_kube_config(cluster_id, profile_name="DEFAULT"):
+    container_engine_client = new_client(
+        ContainerEngineClient,
+        composite_class=ContainerEngineClientCompositeOperations,
+        profile_name=profile_name
+    )
+
+    # Try to load the existing
+    # Create or refresh the kubernetes config
+    kube_config = create(container_engine_client, "create_kubeconfig", cluster_id)
+    if kube_config and hasattr(kube_config, "text"):
+        config_dict = parse_yaml(kube_config.text)
+        # HACK, add profile to user args
+        if profile_name:
+            profile_args = ["--profile", profile_name]
+            config_dict["users"][0]["user"]["exec"]["args"].extend(profile_args)
+        if save_kube_config(config_dict):
+            loaded = load_kube_config()
+
+    loaded = load_kube_config()
+    if not loaded:
+        # The new/refreshed config failed to load
+        return False
+    return True
 
 
 # FIXME, no node_pools should be allowed
@@ -68,15 +97,10 @@ def new_cluster_stack(
     return stack
 
 
-# def update_cluster_stack(
-#     container_engine_client,
-#     create_cluster_details,
-#     create_node_pool_details
-#     ):
-
-#     stack = dict(cluster=None, node_pools=[])
-
-#     cluster = update_cluster
+def update_cluster_stack(
+    container_engine_client, update_cluster_details, update_node_pool_details
+):
+    raise NotImplementedError
 
 
 def get_cluster_stack(
