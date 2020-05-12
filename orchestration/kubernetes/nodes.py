@@ -3,13 +3,13 @@ from orchestration.kubernetes.config import load_kube_config
 
 ROUND_ROBIN = "ROUND_ROBIN"
 
+
 def list_nodes(api_instance, **kwargs):
     # Can accept label selector
     return api_instance.list_node(**kwargs)
 
 
 class NodeManager:
-
     def __init__(self):
         loaded = load_kube_config()
         if not loaded:
@@ -38,7 +38,6 @@ class NodeManager:
             self.last_selected_index = next_index
             return selected
         return None
-
 
     def select(self, selection_type=ROUND_ROBIN):
         if not self.nodes:

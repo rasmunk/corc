@@ -35,7 +35,7 @@ def refresh_kube_config(cluster_id, profile_name="DEFAULT"):
     container_engine_client = new_client(
         ContainerEngineClient,
         composite_class=ContainerEngineClientCompositeOperations,
-        profile_name=profile_name
+        profile_name=profile_name,
     )
 
     # Try to load the existing

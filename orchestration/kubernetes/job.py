@@ -9,7 +9,7 @@ def prepare_job(container_kwargs=None, pod_spec_kwargs=None):
     if not pod_spec_kwargs:
         pod_spec_kwargs = {}
 
-    if 'name' not in container_kwargs:
+    if "name" not in container_kwargs:
         print("missing name from container_kwargs")
         return False
 
@@ -22,10 +22,8 @@ def prepare_job(container_kwargs=None, pod_spec_kwargs=None):
     template = client.V1PodTemplateSpec(
         metadata=client.V1ObjectMeta(labels={"app": "pi"}),
         spec=client.V1PodSpec(
-            restart_policy="Never",
-            containers=[container],
-            **pod_spec_kwargs
-            ),
+            restart_policy="Never", containers=[container], **pod_spec_kwargs
+        ),
     )
     # Create the specification of deployment
     spec = client.V1JobSpec(template=template, backoff_limit=4)
@@ -33,7 +31,7 @@ def prepare_job(container_kwargs=None, pod_spec_kwargs=None):
     job = client.V1Job(
         api_version="batch/v1",
         kind="Job",
-        metadata=client.V1ObjectMeta(name=container_kwargs['name']),
+        metadata=client.V1ObjectMeta(name=container_kwargs["name"]),
         spec=spec,
     )
     return job

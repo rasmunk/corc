@@ -14,6 +14,7 @@ def load_kube_config():
         print("Failed to load kube config: {}".format(err))
     return False
 
+
 def save_kube_config(config_dict, config_file=None, user_exec_args=None):
     if not isinstance(config_dict, dict):
         return False
