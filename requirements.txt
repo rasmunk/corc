@@ -2,3 +2,4 @@ oci
 ansible
 kubernetes
 pyyaml
+boto3

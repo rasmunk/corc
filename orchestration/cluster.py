@@ -328,6 +328,7 @@ class OCIClusterOrchestrator(OCIOrchestrator):
             self.network_client,
             self.options["oci"]["compartment_id"],
             vcn_kwargs=self.options["vcn"],
+            subnet_kwargs=self.options["subnet"],
         )
         return stack
 
@@ -447,14 +448,14 @@ class OCIClusterOrchestrator(OCIOrchestrator):
         expected_subnet_keys = ["dns_label"]
 
         # TODO, this and vcn cidr_block should be optional
-        optional_subnet_keys = ["cidr_block"]
+        optional_subnet_keys = ["cidr_block", "display_name"]
 
         expected_groups = {
             "oci": expected_oci_keys,
             "cluster": expected_cluster_keys,
             "node": expected_node_keys,
             "vcn": expected_vcn_keys,
-            "subnet": expected_subnet_keys,
+            "subnet": expected_subnet_keys + optional_subnet_keys,
         }
 
         for group, keys in expected_groups.items():

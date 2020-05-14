@@ -1,41 +1,45 @@
-from kubernetes import client, config
+from kubernetes import client
 from orchestration.scheduler import Scheduler
-from orchestration.kubernetes.config import kube_config_loaded
+from orchestration.kubernetes.config import load_kube_config
 from orchestration.kubernetes.job import create_job, prepare_job
+from orchestration.kubernetes.secret import prepare_secret
+from orchestration.kubernetes.storage import prepare_volume
 
 
 class KubenetesScheduler(Scheduler):
     def __init__(self):
-        loaded = kube_config_loaded()
+        loaded = load_kube_config()
         if not loaded:
-            raise RuntimeError
+            raise RuntimeError("Failed to load the kubernetes config")
         self.client = client.BatchV1Api()
 
-        self.pending_jobs = []
-        self.running_jobs = []
-        self.finished_jobs = []
+    def prepare(self, **config):
+        if not config:
+            return False
 
-    def submit(self, task):
+        secrets_prepared = prepare_secret(**config)
+        if not secrets_prepared:
+            return False
+
+        volume_prepared = prepare_volume(**config)
+        if not volume_prepared:
+            return False
+
+        return True
+
+    def submit(self, **task):
         if not task:
             return False
 
-        job = prepare_job(task)
+        job = prepare_job(**task)
         if not job:
             return False
 
-        # Ready to schedule
-        job_created = create_job(self.scheduler_client, job)
+        # Schedule job on cluster
+        job_created = create_job(self.client, job)
         if not job_created:
             return False
-
-        self.pending_jobs.append(job_created)
         return True
 
-    def start(self):
-        pass
-
-    def stop(self):
-        pass
-
-    def retrieve(self, job_od):
-        pass
+    def retrieve(self, job_id):
+        return self.jobs[job_id]

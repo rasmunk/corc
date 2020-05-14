@@ -1,5 +1,5 @@
 import os
-from util import dump_yaml
+from orchestration.util import dump_yaml
 
 from kubernetes import client, config
 from kubernetes.config import ConfigException

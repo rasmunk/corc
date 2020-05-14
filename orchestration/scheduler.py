@@ -1,11 +1,8 @@
 class Scheduler:
+    def prepare(self, config):
+        raise NotImplementedError
+
     def submit(self, task):
-        raise NotImplementedError
-
-    def start(self):
-        raise NotImplementedError
-
-    def stop(self):
         raise NotImplementedError
 
     def retrieve(self, job_id):
