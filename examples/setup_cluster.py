@@ -20,8 +20,7 @@ def prepare_options():
         name="test_xnovotech_cluster",
         size=1,
         node_shape="VM.Standard2.1",
-        node_image_name="Oracle-Linux-7.7",
-        ssh_public_key="ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCpRktqNSSLq1ARcMAuuTq3I8/K3CgcPJ3CVlXfU2mxg1zSrIwFOEb+foW2jUqEFcwdCmY/gI+XxBaJHxQLIqzowl0C4d6FVtbnRCfNShSbWr4p7xY0FDJvDMD7B7f7XT8zQoCX7Qnugo/afTPxz1R8mAfLFKU97Cy5zr3Bh8mW/ipgKNfH573k50Qe9CN/S9GjtGB2bGPZGSIFpQ6tfmkssBQIkmym7UxfNgQfeV/1drc02GTqH850d7jIXsMCO8XpxQaeVl/G+1/wwAxv+Nna2s143wH6MmAzrklRyb1jQ+ip/fhVF+l4Kk8a2E+DmWsBWj5vmpRLL7hS2MHPszkp rasmus@debian",
+        node_image_name="Oracle-Linux-7.7"
     )
 
     vcn_options = dict(
