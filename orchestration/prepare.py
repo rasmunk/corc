@@ -1,18 +1,13 @@
-import argparse
 import os
-import oci
-import shelve
-import fcntl
 from oci.core import ComputeClient
 from oci.identity import IdentityClient
 from oci.core.models import Instance
 from ansible.parsing.dataloader import DataLoader
 from ansible.inventory.manager import InventoryManager
 from ansible.vars.manager import VariableManager
-from ansible.playbook.play import Play
 from ansible.playbook import Playbook
 from ansible.executor.task_queue_manager import TaskQueueManager
-from oci_helpers import new_client, get_compartment_id, get_instances
+from oci_helpers import new_client, get_instances
 from args import get_arguments, OCI, ANSIBLE
 
 here = os.path.dirname(os.path.abspath(__file__))
@@ -35,7 +30,7 @@ def run_playbook(
             loader=loader,
             passwords=passwords,
         )
-        result = tqm.run(play)
+        _ = tqm.run(play)
     finally:
         if tqm is not None:
             tqm.cleanup()
@@ -54,11 +49,6 @@ if __name__ == "__main__":
         args.compartment_id,
         lifecycle_state=Instance.LIFECYCLE_STATE_RUNNING,
     )
-
-    # Save instances to the db
-    # with shelve.open('instances.db') as db:
-    #     for instance in instances:
-    #         db[instance.id] = instance
 
     # Load inventory
     loader = DataLoader()
@@ -80,15 +70,3 @@ if __name__ == "__main__":
             inventory_manager=inventory_manager,
             loader=loader,
         )
-
-    ## Register the live instance -> add to shelve
-
-    # Pass job file
-
-    # Schdule the container on the wagstaff instance with the job file
-
-    # Run simulation inside the container
-
-    # transfer back the results
-
-    # Terminate the instance upon completion

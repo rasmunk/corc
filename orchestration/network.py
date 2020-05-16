@@ -173,15 +173,15 @@ def delete_vcn_stack(network_client, compartment_id, display_name=None, vcn_id=N
             network_client, "list_subnets", compartment_id, vcn.id
         )
         for subnet in vcn_subnets:
-            deleted = delete(
+            delete(
                 network_client,
                 "delete_subnet",
                 subnet.id,
                 wait_for_states=[Subnet.LIFECYCLE_STATE_TERMINATED],
             )
 
-        # Delete all the routes (and disable the gateway target if they are the default which
-        # means that they can't be deleted)
+        # Delete all the routes (and disable the gateway target
+        # if they are the default which means that they can't be deleted)
         routes = list_entities(
             network_client, "list_route_tables", compartment_id, vcn.id
         )

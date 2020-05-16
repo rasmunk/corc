@@ -1,8 +1,5 @@
-import argparse
 import oci
-import sys
-from oci.exceptions import ServiceError
-from oci_helpers import new_client, create_internet_gateway, get_subnet_gateway_id
+from oci_helpers import create_internet_gateway, get_subnet_gateway_id
 from args import get_arguments, OCI, COMPUTE
 
 

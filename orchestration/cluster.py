@@ -362,8 +362,6 @@ class OCIClusterOrchestrator(OCIOrchestrator):
         if not cluster:
             self._is_ready = False
             # Ensure that we don't change the state options
-            options = copy.deepcopy(self.options)
-
             cluster_stack = new_cluster_stack(
                 self.container_engine_client,
                 cluster_details["create_cluster"],
@@ -443,6 +441,8 @@ class OCIClusterOrchestrator(OCIOrchestrator):
             "node_image_name",
         ]
 
+        optional_node_keys = ["ssh_public_key"]
+
         expected_vcn_keys = ["cidr_block", "dns_label", "display_name"]
 
         expected_subnet_keys = ["dns_label"]
@@ -453,7 +453,7 @@ class OCIClusterOrchestrator(OCIOrchestrator):
         expected_groups = {
             "oci": expected_oci_keys,
             "cluster": expected_cluster_keys,
-            "node": expected_node_keys,
+            "node": expected_node_keys + optional_node_keys,
             "vcn": expected_vcn_keys,
             "subnet": expected_subnet_keys + optional_subnet_keys,
         }

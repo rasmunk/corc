@@ -8,6 +8,8 @@ CLUSTER = "CLUSTER"
 NODE = "NODE"
 VCN = "VCN"
 SUBNET = "SUBNET"
+JOB = "JOB"
+S3 = "S3"
 
 
 def strip_argument_prefix(arguments, prefix=""):
@@ -16,6 +18,27 @@ def strip_argument_prefix(arguments, prefix=""):
 
 def _get_arguments(arguments, startswith=""):
     return {k: v for k, v in arguments.items() if k.startswith(startswith)}
+
+
+def add_job_group(parser):
+    job_group = parser.add_argument_group(title="JOB arguments")
+    job_group.add_argument("--job-name", default="DEFAULT")
+    job_group.add_argument("--job-command", default="")
+    job_group.add_argument("--job-args", nargs="*", default="")
+    job_group.add_argument("--job-verbose-output", default=True)
+    job_group.add_argument("--job-s3-upload-path", default=False)
+
+
+def add_s3_group(parser):
+    s3_group = parser.add_argument_group(title="S3 arguments")
+    s3_group.add_argument("--s3-credentials", default="~/.aws/credentials")
+    s3_group.add_argument("--s3-config", default="~/.aws/config")
+    s3_group.add_argument("--s3-endpoint-url", default=False)
+    s3_group.add_argument("--s3-bucket-name", default=False)
+    s3_group.add_argument("--s3-input-path", default=False)
+    s3_group.add_argument("--s3-bucket-input-prefix", default="input")
+    s3_group.add_argument("--s3-output-path", default="/tmp/output")
+    s3_group.add_argument("--s3-bucket-output-prefix", default="output")
 
 
 def add_oci_group(parser):
@@ -80,6 +103,8 @@ argument_groups = {
     NODE: add_node_group,
     VCN: add_vcn_group,
     SUBNET: add_subnet_group,
+    JOB: add_job_group,
+    S3: add_s3_group,
 }
 
 
@@ -100,7 +125,3 @@ def get_arguments(argument_types, strip_group_prefix=False):
             stripped_args.update(group_args)
         return Namespace(**stripped_args)
     return args
-
-
-def parse_arguments():
-    return parser.parse_args()

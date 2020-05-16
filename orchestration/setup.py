@@ -1,4 +1,3 @@
-import argparse
 import copy
 import oci
 from oci.core.virtual_network_client import VirtualNetworkClient
@@ -13,16 +12,13 @@ from oci.container_engine.models import (
     CreateClusterDetails,
     CreateNodePoolDetails,
     NodePoolPlacementConfigDetails,
-    Cluster,
 )
 from cluster import (
     new_cluster_stack,
-    create_cluster,
-    create_node_pool,
     get_cluster_by_name,
     delete_cluster_stack,
 )
-from oci_helpers import new_client, get, list_entities, get_kubernetes_version
+from oci_helpers import new_client, get, get_kubernetes_version
 from network import new_vcn_stack, get_vcn_stack, get_vcn_by_name
 from args import get_arguments, OCI, CLUSTER, VCN, SUBNET, NODE
 
@@ -83,7 +79,7 @@ if __name__ == "__main__":
     if not cluster_args.kubernetes_version:
         kubernetes_version = get_kubernetes_version(container_engine_client)
     else:
-        kubernetes_version = cluster.kubernetes_version
+        kubernetes_version = cluster_args.kubernetes_version
 
     cluster = get_cluster_by_name(
         container_engine_client, oci_args.compartment_id, cluster_args.name

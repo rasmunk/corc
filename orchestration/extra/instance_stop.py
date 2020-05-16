@@ -1,4 +1,3 @@
-import argparse
 import oci
 from args import get_arguments, OCI, COMPUTE
 from oci_helpers import get_instances, new_client

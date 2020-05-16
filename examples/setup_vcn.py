@@ -19,7 +19,7 @@ def prepare_options():
 
     vcn_options = dict(
         cidr_block="10.0.0.0/16",
-        display_name="Test XNOVOTECH Network (2)",
+        display_name="Test XNOVOTECH Network",
         dns_label="xnovotech",
     )
 
