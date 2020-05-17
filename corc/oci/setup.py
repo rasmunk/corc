@@ -18,7 +18,7 @@ from cluster import (
     get_cluster_by_name,
     delete_cluster_stack,
 )
-from oci_helpers import new_client, get, get_kubernetes_version
+from helpers import new_client, get, get_kubernetes_version
 from network import new_vcn_stack, get_vcn_stack, get_vcn_by_name
 from args import get_arguments, OCI, CLUSTER, VCN, SUBNET, NODE
 

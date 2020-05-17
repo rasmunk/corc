@@ -1,13 +1,9 @@
 import os
-from oci.core import ComputeClient
-from oci.identity import IdentityClient
-from oci.core.models import Instance
 from ansible.parsing.dataloader import DataLoader
 from ansible.inventory.manager import InventoryManager
 from ansible.vars.manager import VariableManager
 from ansible.playbook import Playbook
 from ansible.executor.task_queue_manager import TaskQueueManager
-from oci_helpers import new_client, get_instances
 from args import get_arguments, OCI, ANSIBLE
 
 here = os.path.dirname(os.path.abspath(__file__))
@@ -40,16 +36,6 @@ def run_playbook(
 
 if __name__ == "__main__":
     args = get_arguments([OCI, ANSIBLE], strip_group_prefix=True)
-
-    # Spawn an oci instance
-    compute_client = new_client(ComputeClient, profile_name=args.profile_name)
-    identity_client = new_client(IdentityClient, profile_name=args.profile_name)
-    instances = get_instances(
-        compute_client,
-        args.compartment_id,
-        lifecycle_state=Instance.LIFECYCLE_STATE_RUNNING,
-    )
-
     # Load inventory
     loader = DataLoader()
     loader.set_basedir(args.root_path)

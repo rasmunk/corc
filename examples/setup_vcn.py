@@ -7,7 +7,7 @@ from oci.core import VirtualNetworkClient, VirtualNetworkClientCompositeOperatio
 base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(base_path)
 
-from corc.oci_helpers import new_client
+from corc.helpers import new_client
 from corc.network import new_vcn_stack
 
 

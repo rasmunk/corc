@@ -11,7 +11,7 @@ from oci.container_engine.models import (
     CreateNodePoolNodeConfigDetails,
 )
 
-from corc.oci_helpers import (
+from corc.helpers import (
     new_client,
     create,
     delete,
