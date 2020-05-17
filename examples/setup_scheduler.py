@@ -7,7 +7,7 @@ import time
 
 # Import base
 base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append(os.path.join(base_path, "orchestration"))
+sys.path.append(os.path.join(base_path, "corc"))
 sys.path.append(base_path)
 
 from oci.container_engine import (
@@ -23,9 +23,9 @@ from kubernetes.client import (
 )
 from kubernetes.client.rest import ApiException
 from cluster import refresh_kube_config, new_client, get_cluster_by_name
-from orchestration.kubernetes.scheduler import KubenetesScheduler
-from orchestration.kubernetes.nodes import NodeManager
-from orchestration.args import get_arguments, S3
+from corc.kubernetes.scheduler import KubenetesScheduler
+from corc.kubernetes.nodes import NodeManager
+from corc.args import get_arguments, S3
 
 
 here = os.path.dirname(os.path.abspath(__file__))

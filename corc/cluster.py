@@ -11,7 +11,7 @@ from oci.container_engine.models import (
     CreateNodePoolNodeConfigDetails,
 )
 
-from orchestration.oci_helpers import (
+from corc.oci_helpers import (
     new_client,
     create,
     delete,
@@ -19,10 +19,10 @@ from orchestration.oci_helpers import (
     list_entities,
     get_kubernetes_version,
 )
-from orchestration.util import parse_yaml
-from orchestration.kubernetes.config import save_kube_config, load_kube_config
-from orchestration.orchestrator import OCIOrchestrator
-from orchestration.network import (
+from corc.util import parse_yaml
+from corc.kubernetes.config import save_kube_config, load_kube_config
+from corc.orchestrator import Orchestrator
+from corc.network import (
     new_vcn_stack,
     get_vcn_stack,
     valid_vcn_stack,
@@ -291,7 +291,7 @@ def _gen_cluster_stack_details(vnc_id, subnets, kubernetes_version, **options):
     return cluster_details
 
 
-class OCIClusterOrchestrator(OCIOrchestrator):
+class OCIClusterOrchestrator(Orchestrator):
     def __init__(self, options):
         super().__init__(options)
         # Set client

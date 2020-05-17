@@ -1,8 +1,8 @@
 from kubernetes import client
-from orchestration.scheduler import Scheduler
-from orchestration.kubernetes.config import load_kube_config
-from orchestration.kubernetes.job import create_job, prepare_job
-from orchestration.kubernetes.storage import (
+from corc.scheduler import Scheduler
+from corc.kubernetes.config import load_kube_config
+from corc.kubernetes.job import create_job, prepare_job
+from corc.kubernetes.storage import (
     prepare_volume,
     prepare_secret,
     create_secret,

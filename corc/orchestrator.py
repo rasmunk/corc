@@ -1,4 +1,4 @@
-class OCIOrchestrator:
+class Orchestrator:
 
     options = None
     _is_ready = False
@@ -21,10 +21,3 @@ class OCIOrchestrator:
     @classmethod
     def validate_options(cls, options):
         raise NotImplementedError
-
-
-class OCITask:
-
-    is_ready = False
-    is_scheduled = False
-    is_completed = False

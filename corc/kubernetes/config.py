@@ -1,5 +1,5 @@
 import os
-from orchestration.util import dump_yaml
+from corc.util import dump_yaml
 from kubernetes import config
 from kubernetes.config import ConfigException
 from kubernetes.config.kube_config import KUBE_CONFIG_DEFAULT_LOCATION

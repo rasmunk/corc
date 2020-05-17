@@ -6,7 +6,7 @@ base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(base_path)
 
 
-from orchestration.cluster import OCIClusterOrchestrator
+from corc.cluster import OCIClusterOrchestrator
 
 
 def prepare_options():

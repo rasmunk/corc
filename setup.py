@@ -23,23 +23,22 @@ with open(os.path.join(cur_dir, "version.py")) as f:
 
 long_description = open("README.rst").read()
 setup(
-    name="oci_orchestration",
+    name="corc",
     version=version_ns["__version__"],
-    description="A set of helper functions to "
-    "orchestrate Oracle Cloud Infrastructure entities",
+    description="A tool for managing cloud resources and scheduling compute tasks",
     long_description=long_description,
     author="Rasmus Munk",
     author_email="munk1@live.dk",
     packages=find_packages(),
-    url="https://github.com/rasmunk/oci_orchestration",
+    url="https://github.com/rasmunk/corc",
     license="MIT",
-    keywords=["OCI", "Orchestration"],
+    keywords=["Cloud", "Orchstration", "Compute"],
     install_requires=read_req("requirements.txt"),
     extras_require={
         "test": read_req("requirements-dev.txt"),
         "dev": read_req("requirements-dev.txt"),
     },
-    entry_points={"console_scripts": ["orchestration = orchestration.cli:run_cli"]},
+    entry_points={"console_scripts": ["corc = corc.cli:run_corc"]},
     classifiers=[
         "Intended Audience :: Developers",
         "Intended Audience :: System Administrators",

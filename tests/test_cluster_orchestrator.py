@@ -2,7 +2,7 @@ import sys
 import os
 
 base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append(os.path.join(base_path, "orchestration"))
+sys.path.append(os.path.join(base_path, "corc"))
 
 import unittest
 from cluster import OCIClusterOrchestrator
