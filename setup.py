@@ -38,7 +38,7 @@ setup(
         "test": read_req("requirements-dev.txt"),
         "dev": read_req("requirements-dev.txt"),
     },
-    entry_points={"console_scripts": ["corc = corc.cli:run_corc"]},
+    entry_points={"console_scripts": ["corc = corc.cli:cli"]},
     classifiers=[
         "Intended Audience :: Developers",
         "Intended Audience :: System Administrators",

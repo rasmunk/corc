@@ -3,4 +3,3 @@ ansible
 kubernetes
 pyyaml
 boto3
-job_io
