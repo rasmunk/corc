@@ -1,4 +1,7 @@
 class Scheduler:
+    def provision_storage(self, config):
+        raise NotImplementedError
+
     def prepare(self, config):
         raise NotImplementedError
 

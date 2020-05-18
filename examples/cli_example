@@ -1,0 +1,1 @@
+corc --oci --compartment-id job run --enable-storage --up

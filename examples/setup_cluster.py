@@ -20,7 +20,7 @@ def prepare_options():
         name="test_xnovotech_cluster",
         size=1,
         node_shape="VM.Standard2.1",
-        node_image_name="Oracle-Linux-7.7"
+        node_image_name="Oracle-Linux-7.7",
     )
 
     vcn_options = dict(

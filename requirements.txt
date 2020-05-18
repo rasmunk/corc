@@ -1,5 +1,5 @@
 oci
 ansible
 kubernetes
-pyyaml
+PyYAML
 boto3

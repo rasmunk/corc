@@ -11,7 +11,7 @@ from oci.container_engine.models import (
     CreateNodePoolNodeConfigDetails,
 )
 
-from corc.helpers import (
+from corc.oci.helpers import (
     new_client,
     create,
     delete,
@@ -22,7 +22,7 @@ from corc.helpers import (
 from corc.util import parse_yaml
 from corc.kubernetes.config import save_kube_config, load_kube_config
 from corc.orchestrator import Orchestrator
-from corc.network import (
+from corc.oci.network import (
     new_vcn_stack,
     get_vcn_stack,
     valid_vcn_stack,

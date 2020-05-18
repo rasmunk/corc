@@ -1,15 +1,20 @@
 import argparse
 from argparse import Namespace
-
-OCI = "OCI"
-ANSIBLE = "ANSIBLE"
-COMPUTE = "COMPUTE"
-CLUSTER = "CLUSTER"
-NODE = "NODE"
-VCN = "VCN"
-SUBNET = "SUBNET"
-JOB = "JOB"
-S3 = "S3"
+from corc.defaults import (
+    ANSIBLE,
+    AWS,
+    CLUSTER,
+    COMPUTE,
+    EXECUTE,
+    JOB,
+    NODE,
+    OCI,
+    RUN,
+    STORAGE,
+    SUBNET,
+    S3,
+    VCN,
+)
 
 
 def strip_argument_prefix(arguments, prefix=""):
@@ -20,45 +25,36 @@ def _get_arguments(arguments, startswith=""):
     return {k: v for k, v in arguments.items() if k.startswith(startswith)}
 
 
-def add_run_group(parser):
-    job_group = parser.add_argument_group(title="Run arguments")
-    job_group.add_argument("command", default="")
-    job_group.add_argument("args", nargs="*", default="")
-    job_group.add_argument("--name")
-    job_group.add_argument("--verbose", default=True)
-    # job_group.add_argument("--upload-results-to-s3")
-    # job_group.add_argument("--job-s3-upload-path", default=False)
-
-
 def add_oci_group(parser):
     oci_group = parser.add_argument_group(title="OCI arguments")
-    oci_group.add_argument("--profile", default="DEFAULT")
-    oci_group.add_argument("--compartment-id", default=False)
+    oci_group.add_argument("--oci-profile-name", default="DEFAULT")
+    oci_group.add_argument("--oci-compartment-id", default=False)
 
 
 def add_aws_group(parser):
     aws_group = parser.add_argument_group(title="AWS arguments")
-    aws_group.add_argument("--id", default=False)
 
 
-def add_platform_group(parser):
-    platform_group = parser.add_mutually_exclusive_group()
-    platform_group.add_argument('--oci', action='store_true', default=True)
-    platform_group.add_argument('--aws', action='store_true', default=False)
-    # add_oci_group(parser)
-    # add_aws_group(parser)
+def add_job_meta_group(parser):
+    meta_group = parser.add_argument_group(title="Job metadata")
+    meta_group.add_argument("--job-name", default="job")
+
+
+def add_execute_group(parser):
+    execute_group = parser.add_argument_group(title="Execute arguments")
+    execute_group.add_argument("execute_command", default="")
+    execute_group.add_argument("--execute-args", nargs="*", default="")
+    execute_group.add_argument("--execute-verbose", default=False)
+    execute_group.add_argument("--execute-output-path", default="/tmp/output")
 
 
 def add_s3_group(parser):
     s3_group = parser.add_argument_group(title="S3 Arguments")
-    s3_group.add_argument("--enable-s3", action='store_true', default=True)
-    s3_group.add_argument("--credentials", default="~/.aws/credentials")
-    s3_group.add_argument("--config", default="~/.aws/config")
+    s3_group.add_argument("--credentials-file", default="~/.aws/credentials")
+    s3_group.add_argument("--config-file", default="~/.aws/config")
     s3_group.add_argument("--endpoint-url", default=False)
     s3_group.add_argument("--bucket-name", default=False)
-    s3_group.add_argument("--input-path", default=False)
     s3_group.add_argument("--bucket-input-prefix", default="input")
-    s3_group.add_argument("--output-path", default="/tmp/output")
     s3_group.add_argument("--bucket-output-prefix", default="output")
 
 
@@ -96,6 +92,9 @@ def add_cluster_group(parser):
     cluster_group = parser.add_argument_group(title="Cluster arguments")
     cluster_group.add_argument("--cluster-name", default="")
     cluster_group.add_argument("--cluster-kubernetes-version", default=None)
+    cluster_group.add_argument(
+        "--cluster-image", default="nielsbohr/mccode-job-runner:latest"
+    )
 
 
 def add_node_group(parser):
@@ -110,57 +109,43 @@ def add_node_group(parser):
     node_group.add_argument("--node-image-name", default="Oracle-Linux-7.7")
 
 
-def add_instance_cli(parser):
-    instance_commands = parser.add_subparsers(title='Commands')
-    # command_group = parser.add_argument_group(title='Commands')
-    start_parser = instance_commands.add_parser('start')
-
-    start_commands = start_parser.add_subparsers(title='Platform')
-    oci_parser = start_commands.add_parser('oci')
-    add_oci_group(oci_parser)
-
-    # command_group.add_argument('start')
-    # instance_commands = parser.add_subparsers(title='COMMAND')
-    # instance_commands.
-    # start_parser = instance_commands.add_parser('start')
-    # terminate_parser = instance_commands.add_parser('terminate')
-
-
-def add_cluster_cli(parser):
-    cluster_commands = parser.add_subparsers(title='Commands')
-    start_parser = cluster_commands.add_parser('start')
-
-    start_commands = start_parser.add_subparsers(title='Platform')
-    oci_parser = start_commands.add_parser('oci')
-    add_oci_group(oci_parser)
-
-    aws_parser = start_commands.add_parser('aws')
-    terminate_parser = cluster_commands.add_parser('terminate')
-
-
-def add_job_cli(parser):
-    job_commands = parser.add_subparsers(title='Commands')
-    run_parser = job_commands.add_parser('run')
-    add_run_group(run_parser)
-    add_s3_group(run_parser)
-
-    stop_parser = job_commands.add_parser('stop')
+def add_storage_group(parser):
+    storage_group = parser.add_argument_group(title="Storage arguments")
+    storage_providers = storage_group.add_mutually_exclusive_group()
+    storage_providers.add_argument("--storage-s3", default=False)
+    storage_group.add_argument("--storage-endpoint", default="")
+    storage_group.add_argument("--storage-upload-path", default="/tmp/output")
+    storage_group.add_argument("--storage-mount-path", default="/tmp/output")
+    add_s3_group(storage_group)
 
 
 argument_groups = {
-    OCI: add_oci_group,
     ANSIBLE: add_ansible_group,
-    COMPUTE: add_compute_group,
+    AWS: add_aws_group,
     CLUSTER: add_cluster_group,
+    COMPUTE: add_compute_group,
+    EXECUTE: add_execute_group,
+    JOB: add_job_meta_group,
     NODE: add_node_group,
-    VCN: add_vcn_group,
+    OCI: add_oci_group,
+    STORAGE: add_storage_group,
     SUBNET: add_subnet_group,
-    JOB: add_run_group,
     S3: add_s3_group,
+    VCN: add_vcn_group,
 }
 
 
-def get_arguments(argument_types, strip_group_prefix=False, parser=None):
+def extract_arguments(arguments, argument_types, strip_group_prefix=True):
+    if strip_group_prefix:
+        stripped_args = {}
+        for argument_group in argument_types:
+            group_args = _get_arguments(vars(arguments), argument_group.lower())
+            group_args = strip_argument_prefix(group_args, argument_group.lower() + "_")
+            stripped_args.update(group_args)
+        return Namespace(**stripped_args)
+
+
+def get_arguments(argument_types, strip_group_prefix=True, parser=None):
     if not parser:
         parser = argparse.ArgumentParser()
 

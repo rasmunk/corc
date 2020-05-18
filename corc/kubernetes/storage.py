@@ -29,3 +29,16 @@ def create_volume(api_instance, volume, namespace="default"):
         body=volume, namespace=namespace
     )
     return api_response
+
+
+class StorageProvider:
+    def __init__(self, config):
+        self.config = config
+        self.core_api = client.CoreV1Api()
+
+    def provision(self):
+        pass
+        # Provision secrets
+        # for
+
+        # Provision volumes

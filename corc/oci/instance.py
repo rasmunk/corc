@@ -2,6 +2,7 @@ import oci
 from helpers import create_internet_gateway, get_subnet_gateway_id
 from args import get_arguments, OCI, COMPUTE
 
+
 def stop():
     args = get_arguments([OCI, COMPUTE], strip_group_prefix=True)
     config = oci.config.from_file(profile_name=args.profile_name)
@@ -37,7 +38,6 @@ def stop():
     ]
     for instance in terminate_instances:
         assert instance.lifecycle_state in terminated_states
-
 
 
 if __name__ == "__main__":

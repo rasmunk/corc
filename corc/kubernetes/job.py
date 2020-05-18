@@ -39,7 +39,7 @@ def prepare_job(container_kwargs=None, pod_spec_kwargs=None):
 
 def create_job(api_instance, job):
     api_response = api_instance.create_namespaced_job(body=job, namespace="default")
-    print("Job created. status='%s'" % str(api_response))
+    # print("Job created. status='%s'" % str(api_response))
     return api_response
 
 
