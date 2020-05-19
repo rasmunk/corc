@@ -37,7 +37,7 @@ def add_aws_group(parser):
 
 def add_job_meta_group(parser):
     meta_group = parser.add_argument_group(title="Job metadata")
-    meta_group.add_argument("--job-name", default="job")
+    meta_group.add_argument("--job-name", default=False)
 
 
 def add_execute_group(parser):
@@ -50,12 +50,12 @@ def add_execute_group(parser):
 
 def add_s3_group(parser):
     s3_group = parser.add_argument_group(title="S3 Arguments")
-    s3_group.add_argument("--credentials-file", default="~/.aws/credentials")
-    s3_group.add_argument("--config-file", default="~/.aws/config")
-    s3_group.add_argument("--endpoint-url", default=False)
-    s3_group.add_argument("--bucket-name", default=False)
-    s3_group.add_argument("--bucket-input-prefix", default="input")
-    s3_group.add_argument("--bucket-output-prefix", default="output")
+    s3_group.add_argument("--s3-profile-name", default="default")
+    s3_group.add_argument("--s3-credentials-file", default="~/.aws/credentials")
+    s3_group.add_argument("--s3-config-file", default="~/.aws/config")
+    s3_group.add_argument("--s3-bucket-name", default="")
+    s3_group.add_argument("--s3-bucket-input-prefix", default="input")
+    s3_group.add_argument("--s3-bucket-output-prefix", default="output")
 
 
 def add_ansible_group(parser):
@@ -112,11 +112,12 @@ def add_node_group(parser):
 def add_storage_group(parser):
     storage_group = parser.add_argument_group(title="Storage arguments")
     storage_providers = storage_group.add_mutually_exclusive_group()
-    storage_providers.add_argument("--storage-s3", default=False)
+    storage_providers.add_argument("--storage-s3", default=False, action="store_true")
     storage_group.add_argument("--storage-endpoint", default="")
-    storage_group.add_argument("--storage-upload-path", default="/tmp/output")
-    storage_group.add_argument("--storage-mount-path", default="/tmp/output")
-    add_s3_group(storage_group)
+    storage_group.add_argument("--storage-credentials-path", default="/mnt/creds")
+    storage_group.add_argument("--storage-upload-path", default="")
+    storage_group.add_argument("--storage-input-path", default="/tmp/input")
+    storage_group.add_argument("--storage-output-path", default="/tmp/output")
 
 
 argument_groups = {
@@ -143,6 +144,7 @@ def extract_arguments(arguments, argument_types, strip_group_prefix=True):
             group_args = strip_argument_prefix(group_args, argument_group.lower() + "_")
             stripped_args.update(group_args)
         return Namespace(**stripped_args)
+    return {}
 
 
 def get_arguments(argument_types, strip_group_prefix=True, parser=None):

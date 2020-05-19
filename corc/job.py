@@ -1,4 +1,4 @@
-from corc.defaults import AWS, OCI, JOB, RUN, STORAGE, CLUSTER, EXECUTE
+from corc.defaults import AWS, OCI, JOB, RUN, STORAGE, CLUSTER, EXECUTE, S3
 from corc.cli.args import extract_arguments
 from corc.oci.job import run as oci_run
 
@@ -9,7 +9,8 @@ def run(args):
     cluster_args = vars(extract_arguments(args, [CLUSTER]))
     job_args = vars(extract_arguments(args, [JOB]))
     execute_args = vars(extract_arguments(args, [EXECUTE]))
-    storage_args = vars(extract_arguments(args, [STORAGE]))
+    staging_args = vars(extract_arguments(args, [STORAGE]))
+    s3_args = vars(extract_arguments(args, [S3]))
 
     if oci_args:
         return oci_run(
@@ -17,7 +18,8 @@ def run(args):
             execute_kwargs=execute_args,
             job_kwargs=job_args,
             oci_kwargs=oci_args,
-            storage_kwargs=storage_args,
+            staging_kwargs=staging_args,
+            storage_kwargs=s3_args,
         )
 
     if aws_args:

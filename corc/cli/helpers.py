@@ -7,6 +7,7 @@ from corc.cli.args import (
     add_job_meta_group,
     add_oci_group,
     add_storage_group,
+    add_s3_group,
 )
 from corc.job import run
 
@@ -18,6 +19,7 @@ def add_job_cli(parser):
     add_cluster_group(run_parser)
     add_execute_group(run_parser)
     add_storage_group(run_parser)
+    add_s3_group(run_parser)
     run_parser.set_defaults(func=run)
     stop_parser = job_commands.add_parser("stop")
 

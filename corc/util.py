@@ -18,3 +18,18 @@ def dump_yaml(path, data):
     except IOError as err:
         print("Failed to dump yaml: {} - {}".format(path, err))
     return False
+
+
+def validate_config(config, required_fields=None):
+    if not required_fields:
+        required_fields = {}
+    for var, _type in required_fields.items():
+        if var not in config:
+            raise KeyError("{} variable is missing from config: {}".format(var, config))
+        if not isinstance(config[var], _type):
+            raise ValueError(
+                "variable: {} value: {} is of incorrect type: {}".format(
+                    var, config[var], type(config[var])
+                )
+            )
+    return True

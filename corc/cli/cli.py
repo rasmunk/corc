@@ -29,9 +29,9 @@ def run():
 
     args = parser.parse_args()
     # Execute default funciton
-    print(args)
     if hasattr(args, "func"):
         args.func(args)
+    return None
 
 
 if __name__ == "__main__":

@@ -14,7 +14,10 @@ S3 = "S3"
 VCN = "VCN"
 
 # Storage credentials secret name
-STORAGE_CREDENTIALS_SECRET = "storage.credentials"
+STORAGE_CREDENTIALS_NAME = "storage-credentials"
 
 # Kubernetes defaults
 KUBERNETES_NAMESPACE = "default"
+
+# Job defaults
+JOB_DEFAULT_NAME = "job"
