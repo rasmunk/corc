@@ -6,3 +6,11 @@ required_staging_fields = {
     "input_path": str,
     "output_path": str,
 }
+
+required_staging_values = {
+    "endpoint": True,
+    "credentials_path": True,
+    "upload_path": False,
+    "input_path": False,
+    "output_path": True,
+}

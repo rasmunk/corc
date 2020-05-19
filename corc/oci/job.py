@@ -23,10 +23,11 @@ from corc.defaults import (
     KUBERNETES_NAMESPACE,
     JOB_DEFAULT_NAME,
 )
-from corc.util import validate_config
-from corc.storage.staging import required_staging_fields
+from corc.util import validate_dict_types, validate_dict_values
+from corc.storage.staging import required_staging_fields, required_staging_values
 from corc.storage.s3 import (
     required_s3_fields,
+    required_s3_values,
     bucket_exists,
     upload_to_s3,
     upload_directory_to_s3,
@@ -91,16 +92,16 @@ def run(
     volumes = []
     # Maintained by the container
     volume_mounts = []
+    # Prepare config for the scheduler
+    scheduler_config = {}
 
-    storage_provider = None
-    if staging_kwargs and storage_kwargs:
-        validate_config(staging_kwargs, required_staging_fields)
-
+    valid_staging_types = validate_dict_types(staging_kwargs, required_staging_fields)
+    valid_staging_values = validate_dict_values(staging_kwargs, required_staging_values)
+    if valid_staging_types and valid_staging_values:
         # Means that results should be exported to the specified storage
         # Create kubernetes secrets
         core_api = client.CoreV1Api()
         storage_api = client.StorageV1Api()
-        scheduler_config = {}
 
         # Storage endpoint credentials secret
         try:
@@ -133,10 +134,10 @@ def run(
         )
         volume_mounts.append(secret_mount)
 
+        valid_storage_types = validate_dict_types(storage_kwargs, required_s3_fields)
+        valid_storage_values = validate_dict_values(storage_kwargs, required_s3_values)
         # External Storage
-        if storage_kwargs:
-            validate_config(storage_kwargs, required_s3_fields)
-
+        if valid_storage_types and valid_storage_values:
             # S3 storage
             s3_credentials_config = None
             # Look for s3 credentials and config files

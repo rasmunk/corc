@@ -10,6 +10,15 @@ required_s3_fields = {
     "profile_name": str,
 }
 
+required_s3_values = {
+    "bucket_name": False,
+    "bucket_input_prefix": False,
+    "bucket_output_prefix": False,
+    "config_file": True,
+    "credentials_file": True,
+    "profile_name": True,
+}
+
 
 def upload_to_s3(s3_client, local_path, s3_path, bucket_name):
     if not os.path.exists(local_path):
