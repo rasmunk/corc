@@ -199,7 +199,6 @@ def run(
 
             if "upload_path" in staging_kwargs and staging_kwargs["upload_path"]:
                 # Upload local path to the bucket as designated input for the job
-
                 if os.path.exists(staging_kwargs["upload_path"]):
                     if os.path.isdir(staging_kwargs["upload_path"]):
                         uploaded = upload_directory_to_s3(

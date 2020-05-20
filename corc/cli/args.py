@@ -50,12 +50,12 @@ def add_execute_group(parser):
 
 def add_s3_group(parser):
     s3_group = parser.add_argument_group(title="S3 Arguments")
-    s3_group.add_argument("--s3-profile-name", default="default")
-    s3_group.add_argument("--s3-credentials-file", default="~/.aws/credentials")
-    s3_group.add_argument("--s3-config-file", default="~/.aws/config")
     s3_group.add_argument("--s3-bucket-name", default="")
     s3_group.add_argument("--s3-bucket-input-prefix", default="input")
     s3_group.add_argument("--s3-bucket-output-prefix", default="output")
+    s3_group.add_argument("--s3-config-file", default="~/.aws/config")
+    s3_group.add_argument("--s3-credentials-file", default="~/.aws/credentials")
+    s3_group.add_argument("--s3-profile-name", default="default")
 
 
 def add_ansible_group(parser):

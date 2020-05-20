@@ -12,7 +12,6 @@ NAME = "corc"
 
 
 def run():
-    # usage_msg = "%(prog)s [OPTIONS] COMMAND [ARGS]"
     parser = argparse.ArgumentParser(prog=NAME)
     # Platform
     add_platform_group(parser)
