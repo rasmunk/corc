@@ -82,10 +82,13 @@ def run(
         "job_io",
         "--job-name",
         job_kwargs["name"],
-        "--job-command",
         execute_kwargs["command"],
-        "--job-args",
+        "--execute-args",
         " ".join(execute_kwargs["args"]),
+        "--execute-capture",
+        execute_kwargs["capture"],
+        "--execute-output-path",
+        execute_kwargs["output_path"]
     ]
 
     # Maintained by the pod

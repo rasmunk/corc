@@ -44,7 +44,7 @@ def add_execute_group(parser):
     execute_group = parser.add_argument_group(title="Execute arguments")
     execute_group.add_argument("execute_command", default="")
     execute_group.add_argument("--execute-args", nargs="*", default="")
-    execute_group.add_argument("--execute-verbose", default=False)
+    execute_group.add_argument("--execute-capture", action='store_true', default=True)
     execute_group.add_argument("--execute-output-path", default="/tmp/output")
 
 
