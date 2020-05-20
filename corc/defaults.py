@@ -1,3 +1,6 @@
+# Package name
+PACKAGE_NAME = "corc"
+
 # Argument group defaults
 ANSIBLE = "ANSIBLE"
 AWS = "AWS"

@@ -1,5 +1,6 @@
 import argparse
 import sys
+from corc.defaults import PACKAGE_NAME
 from corc.cli.helpers import (
     add_job_cli,
     add_cluster_cli,
@@ -8,11 +9,8 @@ from corc.cli.helpers import (
 )
 
 
-NAME = "corc"
-
-
 def run():
-    parser = argparse.ArgumentParser(prog=NAME)
+    parser = argparse.ArgumentParser(prog=PACKAGE_NAME)
     # Platform
     add_platform_group(parser)
 
