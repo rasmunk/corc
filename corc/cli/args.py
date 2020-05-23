@@ -9,7 +9,6 @@ from corc.defaults import (
     JOB,
     NODE,
     OCI,
-    RUN,
     STORAGE,
     SUBNET,
     S3,
@@ -32,7 +31,8 @@ def add_oci_group(parser):
 
 
 def add_aws_group(parser):
-    aws_group = parser.add_argument_group(title="AWS arguments")
+    pass
+    # aws_group = parser.add_argument_group(title="AWS arguments")
 
 
 def add_job_meta_group(parser):

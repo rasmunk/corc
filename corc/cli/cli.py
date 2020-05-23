@@ -1,5 +1,4 @@
 import argparse
-import sys
 from corc.defaults import PACKAGE_NAME
 from corc.cli.helpers import (
     add_job_cli,

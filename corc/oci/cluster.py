@@ -1,4 +1,3 @@
-import copy
 from oci.core import VirtualNetworkClient, VirtualNetworkClientCompositeOperations
 from oci.container_engine import (
     ContainerEngineClient,

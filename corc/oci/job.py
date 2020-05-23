@@ -1,8 +1,6 @@
-import os
-import oci
-import time
-
 import boto3
+import os
+import time
 from botocore.configloader import load_config
 from botocore.credentials import ConfigProvider
 from oci.container_engine import (
@@ -34,7 +32,7 @@ from corc.storage.s3 import (
 )
 from corc.kubernetes.nodes import NodeManager
 from corc.kubernetes.scheduler import KubenetesScheduler
-from corc.oci.cluster import get_cluster_by_name, refresh_kube_config, list_entities
+from corc.oci.cluster import get_cluster_by_name, refresh_kube_config
 from corc.oci.helpers import new_client
 
 
@@ -56,7 +54,6 @@ def run(
         profile_name=oci_kwargs["profile_name"],
     )
 
-    config = oci.config.from_file(profile_name=oci_kwargs["profile_name"])
     cluster = get_cluster_by_name(
         container_engine_client,
         oci_kwargs["compartment_id"],
@@ -106,7 +103,7 @@ def run(
         # Means that results should be exported to the specified storage
         # Create kubernetes secrets
         core_api = client.CoreV1Api()
-        storage_api = client.StorageV1Api()
+        # storage_api = client.StorageV1Api()
 
         # Storage endpoint credentials secret
         try:
@@ -144,7 +141,6 @@ def run(
         # External Storage
         if valid_storage_types and valid_storage_values:
             # S3 storage
-            s3_credentials_config = None
             # Look for s3 credentials and config files
             s3_config = load_config(storage_kwargs["config_file"])
 

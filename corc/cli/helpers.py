@@ -1,4 +1,3 @@
-import argparse
 from corc.defaults import AWS, OCI
 from corc.cli.args import (
     add_aws_group,
@@ -21,19 +20,21 @@ def add_job_cli(parser):
     add_storage_group(run_parser)
     add_s3_group(run_parser)
     run_parser.set_defaults(func=run)
-    stop_parser = job_commands.add_parser("stop")
+    # stop_parser = job_commands.add_parser("stop")
 
 
 def add_cluster_cli(parser):
-    cluster_commands = parser.add_subparsers(title="Commands")
-    start_parser = cluster_commands.add_parser("start")
-    terminate_parser = cluster_commands.add_parser("terminate")
+    pass
+    # cluster_commands = parser.add_subparsers(title="Commands")
+    # start_parser = cluster_commands.add_parser("start")
+    # terminate_parser = cluster_commands.add_parser("terminate")
 
 
 def add_instance_cli(parser):
-    instance_commands = parser.add_subparsers(title="Commands")
+    pass
+    # instance_commands = parser.add_subparsers(title="Commands")
     # command_group = parser.add_argument_group(title='Commands')
-    start_parser = instance_commands.add_parser("start")
+    # start_parser = instance_commands.add_parser("start")
 
     # command_group.add_argument('start')
     # instance_commands = parser.add_subparsers(title='COMMAND')

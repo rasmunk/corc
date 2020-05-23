@@ -1,4 +1,4 @@
-from corc.defaults import AWS, OCI, JOB, RUN, STORAGE, CLUSTER, EXECUTE, S3
+from corc.defaults import AWS, OCI, JOB, STORAGE, CLUSTER, EXECUTE, S3
 from corc.cli.args import extract_arguments
 from corc.oci.job import run as oci_run
 

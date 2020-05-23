@@ -1,18 +1,13 @@
 import oci
-from helpers import create_internet_gateway, get_subnet_gateway_id
-from args import get_arguments, OCI, COMPUTE
+from corc.helpers import create_internet_gateway, get_subnet_gateway_id, new_client
+from corc.cli.args import get_arguments, OCI, COMPUTE
 
 
 def stop():
     args = get_arguments([OCI, COMPUTE], strip_group_prefix=True)
     config = oci.config.from_file(profile_name=args.profile_name)
     oci.config.validate_config(config)
-    identity = oci.identity.IdentityClient(config)
-
     compute_client = new_client(oci.core.ComputeClient, profile_name=args.profile_name)
-    identity_client = new_client(
-        oci.identity.IdentityClient, profile_name=args.profile_name
-    )
 
     instances = get_instances(
         compute_client,
