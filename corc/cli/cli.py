@@ -25,7 +25,7 @@ def run():
     add_job_cli(job_parser)
 
     args = parser.parse_args()
-    # Execute default funciton
+    # Execute default function
     if hasattr(args, "func"):
         args.func(args)
     return None

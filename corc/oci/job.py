@@ -78,18 +78,20 @@ def run(
     # Ensure we have the newest config
     scheduler = KubenetesScheduler()
 
-    job_io_args = [
-        "job_io",
+    jobio_args = [
+        "jobio",
+        "run",
         "--job-name",
         job_kwargs["name"],
         execute_kwargs["command"],
         "--execute-args",
         " ".join(execute_kwargs["args"]),
-        "--execute-capture",
-        execute_kwargs["capture"],
         "--execute-output-path",
-        execute_kwargs["output_path"]
+        execute_kwargs["output_path"],
     ]
+
+    if "capture" in execute_kwargs and execute_kwargs["capture"]:
+        jobio_args.append("--execute-capture")
 
     # Maintained by the pod
     volumes = []
@@ -231,7 +233,7 @@ def run(
                         )
                     )
 
-            job_io_args.extend(
+            jobio_args.extend(
                 [
                     "--s3-profile-name",
                     storage_kwargs["profile_name"],
@@ -258,10 +260,10 @@ def run(
     container_spec = dict(
         name=job_kwargs["name"],
         image=cluster_kwargs["image"],
-        args=job_io_args,
+        args=jobio_args,
         volume_mounts=volume_mounts,
     )
-    # args=job_io_args,
+    # args=jobio_args,
     pod_spec = dict(node_name=node.metadata.name, volumes=volumes, dns_policy="Default")
     task = dict(container_kwargs=container_spec, pod_spec_kwargs=pod_spec)
 
