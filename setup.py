@@ -25,7 +25,7 @@ long_description = open("README.rst").read()
 setup(
     name="corc",
     version=version_ns["__version__"],
-    description="A tool for managing cloud resources" " and scheduling compute tasks",
+    description="A tool for managing cloud resources and scheduling compute tasks",
     long_description=long_description,
     author="Rasmus Munk",
     author_email="munk1@live.dk",
