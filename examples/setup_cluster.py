@@ -1,12 +1,4 @@
-import sys
-import os
-
-# Import base
-base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append(base_path)
-
-
-from corc.cluster import OCIClusterOrchestrator
+from corc.oci.cluster import OCIClusterOrchestrator
 
 
 def prepare_options():
@@ -52,4 +44,4 @@ if __name__ == "__main__":
     options = prepare_options()
     oci_orchestrator = setup_orchestrator(options)
     oci_orchestrator.setup()
-    # oci_orchestrator.tear_down()
+    oci_orchestrator.tear_down()
