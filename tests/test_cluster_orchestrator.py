@@ -1,5 +1,5 @@
 import unittest
-from croc.oci.cluster import OCIClusterOrchestrator
+from corc.oci.cluster import OCIClusterOrchestrator
 
 
 class TestClusterOrchestrator(unittest.TestCase):
