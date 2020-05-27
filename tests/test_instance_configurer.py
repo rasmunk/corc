@@ -52,6 +52,8 @@ class TestInstanceConfigurer(unittest.TestCase):
         self.options = None
 
     def test_instance_ansible_configure(self):
+        options = dict()
+
         configurer = AnsibleConfigurer()
 
 

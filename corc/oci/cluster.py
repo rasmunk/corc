@@ -447,7 +447,7 @@ class OCIClusterOrchestrator(Orchestrator):
     @classmethod
     def validate_options(cls, options):
         if not isinstance(options, dict):
-            raise ValueError("options is not a dictionary")
+            raise TypeError("options is not a dictionary")
 
         expected_oci_keys = [
             "compartment_id",
