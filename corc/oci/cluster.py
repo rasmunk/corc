@@ -27,6 +27,7 @@ from corc.oci.network import (
     valid_vcn_stack,
     get_vcn_by_name,
     delete_vcn_stack,
+    refresh_vcn_stack,
 )
 
 
@@ -331,6 +332,15 @@ class OCIClusterOrchestrator(Orchestrator):
         )
         return stack
 
+    def _refresh_vcn_stack(self, vcn_stack):
+        stack = refresh_vcn_stack(
+            self.network_client,
+            self.options["oci"]["compartment_id"],
+            vcn_kwargs=self.options["vcn"],
+            subnet_kwargs=self.options["subnet"],
+        )
+        return stack
+
     def poll(self):
         pass
 
@@ -343,11 +353,15 @@ class OCIClusterOrchestrator(Orchestrator):
         if valid_vcn_stack(vcn_stack):
             self.vcn_stack = vcn_stack
         else:
-            raise ValueError("Did not receive a proper VCN stack: {}".format(vcn_stack))
+            vcn_stack = self._refresh_vcn_stack(vcn_stack)
+            if not valid_vcn_stack(vcn_stack):
+                raise RuntimeError(
+                    "Failed to fix the broken VCN stack: {}".format(vcn_stack)
+                )
 
         kubernetes_version = get_kubernetes_version(self.container_engine_client)
         cluster_details = _gen_cluster_stack_details(
-            self.vcn_stack["vcn"].id,
+            self.vcn_stack["id"],
             self.vcn_stack["subnets"],
             kubernetes_version,
             **self.options,
@@ -387,7 +401,7 @@ class OCIClusterOrchestrator(Orchestrator):
                     self.container_engine_client, cluster_details["create_node_pool"]
                 )
                 if node_pool:
-                    cluster_stack["node_pool"].extend(node_pool)
+                    cluster_stack["node_pools"].extend(node_pool)
 
             if valid_cluster_stack(cluster_stack):
                 self.cluster_stack = cluster_stack
@@ -396,6 +410,14 @@ class OCIClusterOrchestrator(Orchestrator):
             self._is_ready = True
 
     def tear_down(self):
+        if not self.cluster_stack:
+            # refresh
+            self.cluster_stack = get_cluster_by_name(
+                self.container_engine_client,
+                self.options["oci"]["compartment_id"],
+                self.options["cluster"]["name"],
+            )
+
         if self.cluster_stack:
             cluster = self.cluster_stack["cluster"]
             deleted = delete_cluster_stack(self.container_engine_client, cluster.id)
@@ -404,11 +426,15 @@ class OCIClusterOrchestrator(Orchestrator):
         else:
             self.cluster_stack = None
 
+        if not self.vcn_stack:
+            # refresh
+            self.vcn_stack = self._get_vcn_stack()
+
         if self.vcn_stack:
             vcn_deleted = delete_vcn_stack(
                 self.network_client,
                 self.options["oci"]["compartment_id"],
-                vcn_id=self.vcn_stack["vcn"].id,
+                vcn_id=self.vcn_stack["id"],
             )
             if vcn_deleted:
                 self.vcn_stack = None
@@ -444,10 +470,10 @@ class OCIClusterOrchestrator(Orchestrator):
 
         expected_vcn_keys = ["cidr_block", "dns_label", "display_name"]
 
-        expected_subnet_keys = ["dns_label"]
+        expected_subnet_keys = ["dns_label", "display_name"]
 
         # TODO, this and vcn cidr_block should be optional
-        optional_subnet_keys = ["cidr_block", "display_name"]
+        optional_subnet_keys = ["cidr_block"]
 
         expected_groups = {
             "oci": expected_oci_keys,

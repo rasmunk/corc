@@ -2,13 +2,17 @@ from corc.defaults import AWS, OCI
 from corc.cli.args import (
     add_aws_group,
     add_cluster_group,
+    add_compute_group,
     add_execute_group,
     add_job_meta_group,
     add_oci_group,
+    add_subnet_group,
     add_storage_group,
     add_s3_group,
+    add_vcn_group,
 )
 from corc.job import run
+from corc.instance import launch_instance
 
 
 def add_job_cli(parser):
@@ -31,10 +35,12 @@ def add_cluster_cli(parser):
 
 
 def add_instance_cli(parser):
-    pass
-    # instance_commands = parser.add_subparsers(title="Commands")
-    # command_group = parser.add_argument_group(title='Commands')
-    # start_parser = instance_commands.add_parser("start")
+    instance_commands = parser.add_subparsers(title="Commands")
+    launch_parser = instance_commands.add_parser("launch")
+    add_compute_group(launch_parser)
+    add_vcn_group(launch_parser)
+    add_subnet_group(launch_parser)
+    launch_parser.set_defaults(func=launch_instance)
 
     # command_group.add_argument('start')
     # instance_commands = parser.add_subparsers(title='COMMAND')
