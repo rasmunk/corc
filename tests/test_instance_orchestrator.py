@@ -17,23 +17,18 @@ class TestInstanceOrchestrator(unittest.TestCase):
             display_name="Test Node",
         )
 
-        compute_metadata_options = dict(
-            ssh_authorized_keys=[
-                "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCpRktqNSSLq1ARcMAuuTq3I8/K3CgcPJ3CVlXfU2mxg1zSrIwFOEb+foW2jUqEFcwdCmY/gI+XxBaJHxQLIqzowl0C4d6FVtbnRCfNShSbWr4p7xY0FDJvDMD7B7f7XT8zQoCX7Qnugo/afTPxz1R8mAfLFKU97Cy5zr3Bh8mW/ipgKNfH573k50Qe9CN/S9GjtGB2bGPZGSIFpQ6tfmkssBQIkmym7UxfNgQfeV/1drc02GTqH850d7jIXsMCO8XpxQaeVl/G+1/wwAxv+Nna2s143wH6MmAzrklRyb1jQ+ip/fhVF+l4Kk8a2E+DmWsBWj5vmpRLL7hS2MHPszkp"
-            ]
-        )
-
         vcn_options = dict(
-            cidr_block="10.0.0.0/16",
             display_name="Test Instance Network",
             dns_label="xnovotech",
         )
-        subnet_options = dict(display_name="Test Instance Subnet", dns_label="workers")
+        subnet_options = dict(
+            display_name="Test Instance Subnet",
+            dns_label="workers"
+        )
 
         self.options = dict(
             oci=oci_options,
             compute=compute_options,
-            compute_metadata=compute_metadata_options,
             vcn=vcn_options,
             subnet=subnet_options,
         )
