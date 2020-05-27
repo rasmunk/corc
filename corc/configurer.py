@@ -11,10 +11,7 @@ def load_playbook_source(path):
     return play_source
 
 
-class AnsibleConfigurer
-
+class AnsibleConfigurer:
     def __init__(self, options):
         self.options = options
         self.loader = DataLoader()
-    
-    

@@ -15,7 +15,7 @@ class TestInstanceConfigurer(unittest.TestCase):
             shape="VM.Standard2.1",
             operating_system="CentOS",
             operating_system_version="7",
-            display_name="Test Node"
+            display_name="Test Node",
         )
 
         compute_metadata_options = dict(
@@ -44,7 +44,6 @@ class TestInstanceConfigurer(unittest.TestCase):
         # Should not be ready at this point
         self.orchestrator.setup()
         self.assertTrue(self.orchestrator.is_ready())
-
 
     def tearDown(self):
         self.orchestrator.tear_down()

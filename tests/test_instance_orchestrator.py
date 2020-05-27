@@ -17,14 +17,8 @@ class TestInstanceOrchestrator(unittest.TestCase):
             display_name="Test Node",
         )
 
-        vcn_options = dict(
-            display_name="Test Instance Network",
-            dns_label="xnovotech",
-        )
-        subnet_options = dict(
-            display_name="Test Instance Subnet",
-            dns_label="workers"
-        )
+        vcn_options = dict(display_name="Test Instance Network", dns_label="xnovotech",)
+        subnet_options = dict(display_name="Test Instance Subnet", dns_label="workers")
 
         self.options = dict(
             oci=oci_options,
