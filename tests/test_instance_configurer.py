@@ -1,6 +1,13 @@
+import os
 import unittest
 from corc.configurer import AnsibleConfigurer
 from corc.oci.instance import OCIInstanceOrchestrator
+
+
+# ansible_repo_path = os.path.join(os.sep, "home", "rasmus", "repos", "nbi_machines")
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+playbook_path = os.path.join(current_dir, "res", "configurer", "playbook.yml")
 
 
 class TestInstanceConfigurer(unittest.TestCase):
@@ -45,16 +52,12 @@ class TestInstanceConfigurer(unittest.TestCase):
         self.orchestrator.setup()
         self.assertTrue(self.orchestrator.is_ready())
 
-    def tearDown(self):
-        self.orchestrator.tear_down()
-        self.assertFalse(self.orchestrator.is_ready())
-        self.orchestrator = None
-        self.options = None
-
     def test_instance_ansible_configure(self):
-        options = dict()
-
-        configurer = AnsibleConfigurer()
+        # Extract the ip of the instance
+        endpoint = self.orchestrator.endpoint()
+        options = dict(playbook_path=playbook_path, hosts=[endpoint],)
+        configurer = AnsibleConfigurer(options)
+        configurer.apply()
 
 
 if __name__ == "__main__":

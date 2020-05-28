@@ -1,3 +1,4 @@
+import os
 from ansible.parsing.dataloader import DataLoader
 from ansible.inventory.manager import InventoryManager
 from ansible.vars.manager import VariableManager
@@ -34,17 +35,33 @@ class AnsibleConfigurer:
     def __init__(self, options):
         self.options = options
         self.loader = DataLoader()
-        self.inventory_manager = InventoryManager(
-            self.loader, sources=self.options["inventory_path"]
-        )
+        if "inventory_path" in self.options:
+            sources = self.options["inventory_path"]
+        else:
+            sources = None
+
+        self.inventory_manager = InventoryManager(self.loader, sources=sources)
+        self.inventory_manager.add_group("compute")
+
         self.variable_manager = VariableManager(
             loader=self.loader, inventory=self.inventory_manager
         )
+        for host in self.options["hosts"]:
+            self.inventory_manager.add_host(host, group="compute", port="22")
+
+        self.variable_manager.set_host_variable(host, "ansible_connection", "ssh")
+        self.variable_manager.set_host_variable(host, "ansible_user", "opc")
+        self.variable_manager.set_host_variable(host, "ansible_become", "yes")
+        self.variable_manager.set_host_variable(host, "ansible_become_method", "sudo")
+        self.variable_manager.set_host_variable(
+            host,
+            "ansible_ssh_private_key_file",
+            os.path.join(os.sep, "home", "rasmus", ".ssh", "id_rsa_oracle_2"),
+        )
+        self.variable_manager.set_host_variable(host, "verbosity", 3)
 
     def apply(self):
-
         playbook_path = self.options["playbook_path"]
-
         playbook = Playbook.load(
             playbook_path, variable_manager=self.variable_manager, loader=self.loader
         )

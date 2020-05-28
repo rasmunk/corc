@@ -65,14 +65,10 @@ def add_ansible_group(parser):
     ansible_group.add_argument("--ansible-inventory-path", default=False)
 
 
-def add_metadata_group(parser):
-    metadata_group = parser.add_argument_group(title="Metadata arguments")
-
-
 def add_compute_group(parser):
     compute_group = parser.add_argument_group(title="Compute arguments")
     compute_group.add_argument("--compute-ssh-authorized-keys", nargs="+", default=[])
-    compute_group.add_argument("--compute-ad", default="lfcb:EU-FRANKFURT-1-AD-1")
+    compute_group.add_argument("--compute-ad", default="Xfze:eu-amsterdam-1-AD-1")
     compute_group.add_argument("--compute-os", default="CentOS")
     compute_group.add_argument("--compute-os-version", default="7")
     compute_group.add_argument("--compute-target-shape", default="VM.Standard2.1")
@@ -82,7 +78,7 @@ def add_vcn_group(parser):
     vcn_group = parser.add_argument_group(title="VCN arguments")
     vcn_group.add_argument("--vcn-id", default=None)
     vcn_group.add_argument("--vcn-dns-label", default=None)
-    vcn_group.add_argument("--vcn-display-name", default=None)
+    vcn_group.add_argument("--vcn-display-name", default="VCN Network")
     vcn_group.add_argument("--vcn-cidr-block", default="10.0.0.0/16")
 
 
