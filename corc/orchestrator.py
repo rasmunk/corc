@@ -9,6 +9,9 @@ class Orchestrator:
     def is_ready(self):
         return self._is_ready
 
+    def endpoint(self, select=None):
+        raise NotImplementedError
+
     def poll(self):
         raise NotImplementedError
 

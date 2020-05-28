@@ -343,6 +343,25 @@ class OCIInstanceOrchestrator(Orchestrator):
         )
         return stack
 
+    def endpoint(self, select=None):
+        # Return the endpoint that is being orchestrated
+        public_endpoint = None
+        if self.instance:
+            vnic_attachments = list_entities(
+                self.compute_client,
+                "list_vnic_attachments",
+                self.options["oci"]["compartment_id"],
+                instance_id=self.instance.id,
+            )
+            # For now just pick the first attachment
+            for vnic_attach in vnic_attachments:
+                vnic = get(self.network_client, "get_vnic", vnic_attach.vnic_id)
+                if hasattr(vnic, "public_ip") and vnic.public_ip:
+                    public_endpoint = vnic.public_ip
+                    break
+
+        return public_endpoint
+
     def setup(self):
         # Ensure we have a VCN stack ready
         vcn_stack = self._get_vcn_stack()
