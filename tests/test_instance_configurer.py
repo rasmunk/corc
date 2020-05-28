@@ -13,12 +13,12 @@ playbook_path = os.path.join(current_dir, "res", "configurer", "playbook.yml")
 class TestInstanceConfigurer(unittest.TestCase):
     def setUp(self):
         oci_options = dict(
-            compartment_id="ocid1.tenancy.oc1..aaaaaaaakfmksyrf7hl2gfexmjpb6pbyrirm6k3ro7wd464y2pr7atpxpv4q",
-            profile_name="XNOVOTECH",
+            compartment_id="ocid1.compartment.oc1..aaaaaaaashnazvohptud5up2i5dxbqbsnwp3bgcubjj75qkqw3zvgxlvoq5a",
+            profile_name="KU",
         )
 
         compute_options = dict(
-            availability_domain="Xfze:eu-amsterdam-1-AD-1",
+            availability_domain="lfcb:EU-FRANKFURT-1-AD-1",
             shape="VM.Standard2.1",
             operating_system="CentOS",
             operating_system_version="7",
@@ -33,8 +33,8 @@ class TestInstanceConfigurer(unittest.TestCase):
 
         vcn_options = dict(
             cidr_block="10.0.0.0/16",
-            display_name="Test Instance Network",
-            dns_label="xnovotech",
+            display_name="Test Instance Network 2",
+            dns_label="ku",
         )
         subnet_options = dict(display_name="Test Instance Subnet", dns_label="workers")
 

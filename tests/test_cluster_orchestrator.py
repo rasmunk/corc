@@ -5,22 +5,20 @@ from corc.oci.cluster import OCIClusterOrchestrator
 class TestClusterOrchestrator(unittest.TestCase):
     def setUp(self):
         oci_options = dict(
-            compartment_id="ocid1.tenancy.oc1..aaaaaaaakfmksyrf7hl2gfexmjpb6pbyrirm6k3ro7wd464y2pr7atpxpv4q",
-            profile_name="XNOVOTECH",
+            compartment_id="ocid1.compartment.oc1..aaaaaaaashnazvohptud5up2i5dxbqbsnwp3bgcubjj75qkqw3zvgxlvoq5a",
+            profile_name="KU",
         )
-        cluster_options = dict(name="Test XNOVOTECH Cluster",)
+        cluster_options = dict(name="Test KU Cluster",)
         node_options = dict(
-            availability_domain="Xfze:eu-amsterdam-1-AD-1",
-            name="test_xnovotech_cluster",
+            availability_domain="lfcb:EU-FRANKFURT-1-AD-1",
+            name="test_ku_cluster",
             size=1,
             node_shape="VM.Standard2.1",
-            node_image_name="Oracle-Linux-7.7",
+            node_image_name="Oracle-Linux-7.7-2020.03.20-0",
         )
 
         vcn_options = dict(
-            cidr_block="10.0.0.0/16",
-            display_name="Test XNOVOTECH Network",
-            dns_label="xnovotech",
+            cidr_block="10.0.0.0/16", display_name="Test KU Network 1", dns_label="ku",
         )
 
         subnet_options = dict(dns_label="workers")
