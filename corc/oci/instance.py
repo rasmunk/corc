@@ -235,7 +235,9 @@ def _gen_instance_stack_details(vcn_id, subnet_id, images, shapes, **options):
     create_vnic_details = _prepare_vnic_details(subnet_id=subnet_id)
 
     # Extract metadata
-    metadata = _prepare_metadata(**options["compute_metadata"])
+    metadata = {}
+    if "compute_metadata" in options:
+        metadata = _prepare_metadata(**options["compute_metadata"])
 
     if "shape" in options["compute"]:
         options["compute"].pop("shape")
