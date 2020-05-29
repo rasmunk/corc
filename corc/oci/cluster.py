@@ -182,7 +182,7 @@ def create_cluster(container_engine_client, create_cluster_details, create_kwarg
 
 
 def get_cluster_by_name(
-    container_engine_client, compartment_id, name, cluster_kwargs=None
+    container_engine_client, compartment_id, display_name, cluster_kwargs=None
 ):
     if not cluster_kwargs:
         cluster_kwargs = dict(lifecycle_state=[Cluster.LIFECYCLE_STATE_ACTIVE])
@@ -226,7 +226,7 @@ def create_node_pool(container_engine_client, create_node_pool_details):
     return node_pool
 
 
-def _prepare_create_cluster_details(**kwargs):
+def prepare_create_cluster_details(**kwargs):
     cluster_kwargs = {
         k: v for k, v in kwargs.items() if hasattr(CreateClusterDetails, k)
     }
@@ -234,7 +234,7 @@ def _prepare_create_cluster_details(**kwargs):
     return create_cluster_details
 
 
-def _prepare_node_pool_placement_config(**kwargs):
+def prepare_node_pool_placement_config(**kwargs):
     node_pool_kwargs = {
         k: v for k, v in kwargs.items() if hasattr(NodePoolPlacementConfigDetails, k)
     }
@@ -242,24 +242,24 @@ def _prepare_node_pool_placement_config(**kwargs):
     return NodePoolPlacementConfigDetails(**node_pool_kwargs)
 
 
-def _prepare_create_node_pool_config(**kwargs):
+def prepare_create_node_pool_config(**kwargs):
     create_node_pool_config_kwargs = {
         k: v for k, v in kwargs.items() if hasattr(CreateNodePoolNodeConfigDetails, k)
     }
     return CreateNodePoolNodeConfigDetails(**create_node_pool_config_kwargs)
 
 
-def _prepare_create_node_pool_details(**kwargs):
+def prepare_create_node_pool_details(**kwargs):
     create_node_pool_details = {
         k: v for k, v in kwargs.items() if hasattr(CreateNodePoolDetails, k)
     }
     return CreateNodePoolDetails(**create_node_pool_details)
 
 
-def _gen_cluster_stack_details(vnc_id, subnets, kubernetes_version, **options):
+def gen_cluster_stack_details(vnc_id, subnets, kubernetes_version, **options):
     cluster_details = {}
 
-    create_cluster_details = _prepare_create_cluster_details(
+    create_cluster_details = prepare_create_cluster_details(
         vcn_id=vnc_id,
         kubernetes_version=kubernetes_version,
         **options["oci"],
@@ -271,16 +271,16 @@ def _gen_cluster_stack_details(vnc_id, subnets, kubernetes_version, **options):
     if subnets:
         for subnet in subnets:
             node_pool_place_configs.append(
-                _prepare_node_pool_placement_config(
+                prepare_node_pool_placement_config(
                     subnet_id=subnet.id, **options["node"]
                 )
             )
 
-    node_config_details = _prepare_create_node_pool_config(
+    node_config_details = prepare_create_node_pool_config(
         size=options["node"]["size"], placement_configs=node_pool_place_configs,
     )
 
-    create_node_pool_details = _prepare_create_node_pool_details(
+    create_node_pool_details = prepare_create_node_pool_details(
         node_config_details=node_config_details,
         kubernetes_version=kubernetes_version,
         **options["oci"],
@@ -360,7 +360,7 @@ class OCIClusterOrchestrator(Orchestrator):
                 )
 
         kubernetes_version = get_kubernetes_version(self.container_engine_client)
-        cluster_details = _gen_cluster_stack_details(
+        cluster_details = gen_cluster_stack_details(
             self.vcn_stack["id"],
             self.vcn_stack["subnets"],
             kubernetes_version,
