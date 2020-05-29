@@ -298,18 +298,30 @@ def delete_vcn_stack(network_client, compartment_id, display_name=None, vcn_id=N
         )
         vcn = vcns[0]
 
-    removed_stack = {}
+    remove_stack = {
+        "id": False,
+        "vcn": False,
+        "subnets": [],
+        "route_tables": [],
+        "internet_gateways": [],
+        "security_lists": [],
+        "dhcp_options": [],
+        "local_peering_gateways": [],
+        "nat_gateways": [],
+        "service_gateways": []
+    }
     if vcn:
         vcn_subnets = list_entities(
             network_client, "list_subnets", compartment_id, vcn.id
         )
         for subnet in vcn_subnets:
-            delete(
+            deleted = delete(
                 network_client,
                 "delete_subnet",
                 subnet.id,
                 wait_for_states=[Subnet.LIFECYCLE_STATE_TERMINATED],
             )
+            remove_stack["subnets"].append(deleted)
 
         # Delete all the routes (and disable the gateway target
         # if they are the default which means that they can't be deleted)
@@ -326,95 +338,102 @@ def delete_vcn_stack(network_client, compartment_id, display_name=None, vcn_id=N
                 update_route_table_details=update_details,
             )
 
-            delete(
+            deleted = delete(
                 network_client,
                 "delete_route_table",
                 route.id,
                 wait_for_states=[RouteTable.LIFECYCLE_STATE_TERMINATED],
             )
+            remove_stack["route_tables"].append(deleted)
 
         # Delete all gateways
         gateways = list_entities(
             network_client, "list_internet_gateways", compartment_id, vcn.id
         )
         for gateway in gateways:
-            delete(
+            deleted = delete(
                 network_client,
                 "delete_internet_gateway",
                 gateway.id,
                 wait_for_states=[InternetGateway.LIFECYCLE_STATE_TERMINATED],
             )
+            remove_stack["internet_gateways"].append(deleted)
 
         # Delete all security lists
         securities = list_entities(
             network_client, "list_security_lists", compartment_id, vcn.id
         )
         for security in securities:
-            delete(
+            deleted = delete(
                 network_client,
                 "delete_security_list",
                 security.id,
                 wait_for_states=[SecurityList.LIFECYCLE_STATE_TERMINATED],
             )
+            remove_stack["security_lists"].append(deleted)
 
         # Delete all DHCP options
         dhcp_options = list_entities(
             network_client, "list_dhcp_options", compartment_id, vcn.id
         )
         for dhcp_option in dhcp_options:
-            delete(
+            deleted = delete(
                 network_client,
                 "delete_dhcp_options",
                 dhcp_option.id,
                 wait_for_states=[DhcpOptions.LIFECYCLE_STATE_TERMINATED],
             )
+            remove_stack["dhcp_options"].append(deleted)
 
         # Delete local peering gateways
         local_peering_gateways = list_entities(
             network_client, "list_local_peering_gateways", compartment_id, vcn.id
         )
         for local_peering_gateway in local_peering_gateways:
-            delete(
+            deleted = delete(
                 network_client,
                 "delete_local_peering_gateway",
                 local_peering_gateway.id,
                 wait_for_states=[LocalPeeringGateway.LIFECYCLE_STATE_TERMINATED],
             )
+            remove_stack["local_peering_gateways"].append(deleted)
 
         # Delete all NAT gateways
         nat_gateways = list_entities(
             network_client, "list_nat_gateways", compartment_id, vcn_id=vcn.id
         )
         for gateway in nat_gateways:
-            delete(
+            deleted = delete(
                 network_client,
                 "delete_nat_gateway",
                 gateway.id,
                 wait_for_states=[NatGateway.LIFECYCLE_STATE_TERMINATED],
             )
+            remove_stack["nat_gateways"].append(deleted)
 
         # Delete Service Gateways
         service_gateways = list_entities(
             network_client, "list_service_gateways", compartment_id, vcn_id=vcn.id
         )
         for service_gateway in service_gateways:
-            delete(
+            deleted = delete(
                 network_client,
                 "delete_service_gateway",
                 service_gateway.id,
                 wait_for_states=[ServiceGateway.LIFECYCLE_STATE_TERMINATED],
             )
+            remove_stack["service_gateways"].append(deleted)
 
-        error = delete(
+        deleted = delete(
             network_client,
             "delete_vcn",
             vcn.id,
             wait_for_states=[Vcn.LIFECYCLE_STATE_TERMINATED],
         )
-        if not error:
-            removed_stack.update({"vcn": vcn.id})
-    # TODO create IG and Subnet
-    return removed_stack
+        remove_stack["id"] = vcn.id
+        remove_stack["vcn"] = deleted
+
+    return remove_stack
 
 
 def delete_compartment_vcns(network_client, compartment_id, **kwargs):
