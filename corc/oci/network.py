@@ -308,7 +308,7 @@ def delete_vcn_stack(network_client, compartment_id, display_name=None, vcn_id=N
         "dhcp_options": [],
         "local_peering_gateways": [],
         "nat_gateways": [],
-        "service_gateways": []
+        "service_gateways": [],
     }
     if vcn:
         vcn_subnets = list_entities(
