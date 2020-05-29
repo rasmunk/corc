@@ -24,6 +24,7 @@ class TestClusterStack(unittest.TestCase):
             profile_name="KU",
         )
         cluster_options = dict(name="Test KU Cluster",)
+        # TODO, invalid node_image_name -> find the correct one
         node_options = dict(
             availability_domain="lfcb:EU-FRANKFURT-1-AD-1",
             name="test_ku_cluster",
