@@ -1,7 +1,7 @@
 import os
 import unittest
 from oci.core import VirtualNetworkClient, VirtualNetworkClientCompositeOperations
-from corc.oci.helpers import new_client, get
+from corc.oci.helpers import new_client, get, list_entities
 from corc.oci.network import (
     new_vcn_stack,
     delete_vcn_stack,
@@ -41,12 +41,18 @@ class TestVCNStack(unittest.TestCase):
 
     def tearDown(self):
         # Delete all vcn with display_name
-        deleted = delete_vcn_stack(
+        vcns = list_entities(
             self.network_client,
+            "list_vcns",
             self.options["oci"]["compartment_id"],
             display_name=self.vcn_display_name,
         )
-        self.assertTrue(deleted)
+
+        for vcn in vcns:
+            deleted = delete_vcn_stack(
+                self.network_client, self.options["oci"]["compartment_id"], vcn=vcn
+            )
+            self.assertTrue(deleted)
 
     def test_vcn_stack(self):
         # Extract the ip of the instance

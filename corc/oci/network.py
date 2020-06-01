@@ -284,19 +284,12 @@ def get_vcn_by_name(network_client, compartment_id, display_name, **kwargs):
             return vcn
 
 
-def delete_vcn_stack(network_client, compartment_id, display_name=None, vcn_id=None):
-    if not display_name and not vcn_id:
-        return False
+def delete_vcn_stack(network_client, compartment_id, vcn_id=None, vcn=None):
+    if not vcn_id and not vcn:
+        raise ValueError("Either vcn_id or vcn must be provided")
 
     if vcn_id:
         vcn = get(network_client, "get_vcn", vcn_id)
-    else:
-        # TODO, use get_vcn_by_name
-        # Find vcns with the name
-        vcns = list_entities(
-            network_client, "list_vcns", compartment_id, display_name=display_name
-        )
-        vcn = vcns[0]
 
     remove_stack = {
         "id": False,

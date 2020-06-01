@@ -30,10 +30,8 @@ class TestClusterStack(unittest.TestCase):
             profile_name="KU",
         )
         cluster_options = dict(name="Test KU Cluster",)
-        # TODO, invalid node_image_name -> find the correct one
 
         image_options = dict(display_name="Oracle-Linux-7.7-2020.03.23-0",)
-
         node_options = dict(
             availability_domain="lfcb:EU-FRANKFURT-1-AD-1",
             name="test_ku_cluster",
@@ -80,6 +78,21 @@ class TestClusterStack(unittest.TestCase):
         deleted = delete_cluster_stack(
             self.container_engine_client, self.cluster_stack["id"], delete_vcn=True
         )
+        self.assertTrue(deleted)
+
+        # Delete all vcn with display_name
+        vcns = list_entities(
+            self.network_client,
+            "list_vcns",
+            self.options["oci"]["compartment_id"],
+            display_name=self.options["vcn"]["display_name"],
+        )
+
+        for vcn in vcns:
+            deleted = delete_vcn_stack(
+                self.network_client, self.options["oci"]["compartment_id"], vcn=vcn
+            )
+            self.assertTrue(deleted)
 
     def test_cluster_stack(self):
         # Need vcn stack for the cluster stack
@@ -151,7 +164,7 @@ class TestClusterStack(unittest.TestCase):
         new_cluster_name = get_cluster_by_name(
             self.container_engine_client,
             self.options["oci"]["compartment_id"],
-            self.cluster_stack["display_name"],
+            self.cluster_stack["cluster"].name,
         )
 
         self.assertEqual(self.cluster_stack["id"], new_cluster_id.id)

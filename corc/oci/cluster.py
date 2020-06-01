@@ -93,14 +93,15 @@ def new_cluster_stack(
 
     # cluster
     stack["cluster"] = cluster
-    create_node_pool_details.cluster_id = cluster.id
+    if hasattr(cluster, "id"):
+        stack["id"] = cluster.id
+        create_node_pool_details.cluster_id = cluster.id
 
     node_pool = create_node_pool(container_engine_client, create_node_pool_details)
 
     if node_pool:
         stack["node_pools"].append(node_pool)
 
-    stack["id"] = cluster.id
     return stack
 
 
@@ -117,16 +118,18 @@ def get_cluster_stack(
     if not node_kwargs:
         node_kwargs = dict()
 
-    stack = dict(cluster=None, node_pools=[])
+    stack = dict(id=None, cluster=None, node_pools=[])
 
     cluster = get(container_engine_client, "get_cluster", cluster_id)
     if not cluster:
         return stack
 
     stack["cluster"] = cluster
+    if hasattr(cluster, "id"):
+        stack["id"] = cluster.id
 
-    # Get node pools
-    node_pools = list_entities(
+    # Get node pools (NodePoolSummaries)
+    node_pool_summaries = list_entities(
         container_engine_client,
         "list_node_pools",
         compartment_id,
@@ -134,9 +137,10 @@ def get_cluster_stack(
         **node_kwargs,
     )
 
-    if node_pools:
-        stack["node_pools"].extend(node_pools)
-
+    for summary in node_pool_summaries:
+        node_pool = get(container_engine_client, "get_node_pool", summary.id)
+        if node_pool:
+            stack["node_pools"].append(node_pool)
     return stack
 
 
@@ -189,10 +193,12 @@ def create_cluster(container_engine_client, create_cluster_details, create_kwarg
 
 
 def get_cluster_by_name(
-    container_engine_client, compartment_id, display_name, cluster_kwargs=None
+    container_engine_client, compartment_id, name, cluster_kwargs=None
 ):
     if not cluster_kwargs:
         cluster_kwargs = dict(lifecycle_state=[Cluster.LIFECYCLE_STATE_ACTIVE])
+
+    # ClusterSummaries
     clusters = list_entities(
         container_engine_client,
         "list_clusters",
@@ -201,7 +207,9 @@ def get_cluster_by_name(
         **cluster_kwargs,
     )
     if clusters:
-        return clusters[0]
+        # Convert to cluster type
+        cluster = get(container_engine_client, "get_cluster", clusters[0].id)
+        return cluster
     return None
 
 
