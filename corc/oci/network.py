@@ -429,6 +429,7 @@ def delete_vcn_stack(network_client, compartment_id, display_name=None, vcn_id=N
             "delete_vcn",
             vcn.id,
             wait_for_states=[Vcn.LIFECYCLE_STATE_TERMINATED],
+            waiter_kwargs=dict(succeed_on_not_found=True),
         )
         remove_stack["id"] = vcn.id
         remove_stack["vcn"] = deleted

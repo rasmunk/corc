@@ -1,6 +1,11 @@
 import os
 import unittest
-from oci.core import VirtualNetworkClient, VirtualNetworkClientCompositeOperations
+from oci.core import (
+    ComputeClient,
+    ComputeClientCompositeOperations,
+    VirtualNetworkClient,
+    VirtualNetworkClientCompositeOperations,
+)
 from oci.container_engine import (
     ContainerEngineClient,
     ContainerEngineClientCompositeOperations,
@@ -13,6 +18,7 @@ from corc.oci.cluster import (
     delete_cluster_stack,
     valid_cluster_stack,
     gen_cluster_stack_details,
+    list_entities,
 )
 from corc.oci.network import new_vcn_stack, delete_vcn_stack, valid_vcn_stack
 
@@ -25,16 +31,20 @@ class TestClusterStack(unittest.TestCase):
         )
         cluster_options = dict(name="Test KU Cluster",)
         # TODO, invalid node_image_name -> find the correct one
+
+        image_options = dict(display_name="Oracle-Linux-7.7-2020.03.23-0",)
+
         node_options = dict(
             availability_domain="lfcb:EU-FRANKFURT-1-AD-1",
             name="test_ku_cluster",
             size=1,
             node_shape="VM.Standard2.1",
-            node_image_name="Oracle-Linux-7.7",
+            image=image_options,
         )
-
         vcn_options = dict(
-            cidr_block="10.0.0.0/16", display_name="Test KU Network 1", dns_label="ku",
+            cidr_block="10.0.0.0/16",
+            display_name="Test Cluster Stack Network",
+            dns_label="ku",
         )
 
         subnet_options = dict(dns_label="workers")
@@ -45,6 +55,12 @@ class TestClusterStack(unittest.TestCase):
             node=node_options,
             vcn=vcn_options,
             subnet=subnet_options,
+        )
+
+        self.compute_client = new_client(
+            ComputeClient,
+            composite_class=ComputeClientCompositeOperations,
+            profile_name=self.options["oci"]["profile_name"],
         )
 
         self.network_client = new_client(
@@ -60,11 +76,10 @@ class TestClusterStack(unittest.TestCase):
         )
 
     def tearDown(self):
+        # Validate that the vcn stack is gone
         deleted = delete_cluster_stack(
             self.container_engine_client, self.cluster_stack["id"], delete_vcn=True
         )
-
-        # Validate that the vcn stack is gone
 
     def test_cluster_stack(self):
         # Need vcn stack for the cluster stack
@@ -75,11 +90,36 @@ class TestClusterStack(unittest.TestCase):
             subnet_kwargs=self.options["subnet"],
         )
         self.assertTrue(valid_vcn_stack(self.vcn_stack))
-        # Prepare cluster details
 
+        # Available images
+        available_images = list_entities(
+            self.compute_client,
+            "list_images",
+            self.options["oci"]["compartment_id"],
+            **self.options["node"]["image"]
+        )
+
+        if not available_images:
+            raise ValueError(
+                "No valid image could be found with options: {}".format(
+                    self.options["image"]
+                )
+            )
+
+        if len(available_images) > 1:
+            raise ValueError(
+                "More than 1 image was found with options: {}".format(
+                    self.options["image"]
+                )
+            )
+
+        image = available_images[0]
+
+        # Prepare cluster details
         cluster_details = gen_cluster_stack_details(
             self.vcn_stack["id"],
             self.vcn_stack["subnets"],
+            image,
             get_kubernetes_version(self.container_engine_client),
             **self.options
         )

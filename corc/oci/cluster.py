@@ -1,4 +1,9 @@
-from oci.core import VirtualNetworkClient, VirtualNetworkClientCompositeOperations
+from oci.core import (
+    ComputeClient,
+    ComputeClientCompositeOperations,
+    VirtualNetworkClient,
+    VirtualNetworkClientCompositeOperations,
+)
 from oci.container_engine import (
     ContainerEngineClient,
     ContainerEngineClientCompositeOperations,
@@ -8,6 +13,7 @@ from oci.container_engine.models import (
     CreateNodePoolDetails,
     NodePoolPlacementConfigDetails,
     CreateNodePoolNodeConfigDetails,
+    NodeSourceViaImageDetails,
 )
 
 from corc.oci.helpers import (
@@ -63,7 +69,7 @@ def valid_cluster_stack(stack):
     if not isinstance(stack, dict):
         raise TypeError("The Cluster stack must be a dictionary to be valid")
 
-    expected_fields = ["cluster", "node_pools"]
+    expected_fields = ["id", "cluster", "node_pools"]
     for field in expected_fields:
         if field not in stack:
             return False
@@ -79,7 +85,7 @@ def new_cluster_stack(
     create_node_pool_details,
     discover_vcn=False,
 ):
-    stack = dict(cluster=None, node_pools=[])
+    stack = dict(id=None, cluster=None, node_pools=[])
     cluster = create_cluster(container_engine_client, create_cluster_details)
 
     if not cluster:
@@ -94,6 +100,7 @@ def new_cluster_stack(
     if node_pool:
         stack["node_pools"].append(node_pool)
 
+    stack["id"] = cluster.id
     return stack
 
 
@@ -226,6 +233,21 @@ def create_node_pool(container_engine_client, create_node_pool_details):
     return node_pool
 
 
+def prepare_node_source_details(image, **kwargs):
+    if not image:
+        raise RuntimeError("No image was provided")
+
+    node_source_details = {
+        k: v for k, v in kwargs.items() if hasattr(NodeSourceViaImageDetails, k)
+    }
+
+    node_source_details = NodeSourceViaImageDetails(
+        image_id=image.id, **node_source_details
+    )
+
+    return node_source_details
+
+
 def prepare_create_cluster_details(**kwargs):
     cluster_kwargs = {
         k: v for k, v in kwargs.items() if hasattr(CreateClusterDetails, k)
@@ -250,13 +272,14 @@ def prepare_create_node_pool_config(**kwargs):
 
 
 def prepare_create_node_pool_details(**kwargs):
+    # Discover the image_id if the name is provided
     create_node_pool_details = {
         k: v for k, v in kwargs.items() if hasattr(CreateNodePoolDetails, k)
     }
     return CreateNodePoolDetails(**create_node_pool_details)
 
 
-def gen_cluster_stack_details(vnc_id, subnets, kubernetes_version, **options):
+def gen_cluster_stack_details(vnc_id, subnets, image, kubernetes_version, **options):
     cluster_details = {}
 
     create_cluster_details = prepare_create_cluster_details(
@@ -280,6 +303,11 @@ def gen_cluster_stack_details(vnc_id, subnets, kubernetes_version, **options):
         size=options["node"]["size"], placement_configs=node_pool_place_configs,
     )
 
+    # Convert the deprecrated image name, to the proper source details
+    node_source_details = prepare_node_source_details(image, **options["node"]["image"])
+    if node_source_details:
+        options["node"]["node_source_details"] = node_source_details
+
     create_node_pool_details = prepare_create_node_pool_details(
         node_config_details=node_config_details,
         kubernetes_version=kubernetes_version,
@@ -294,7 +322,12 @@ def gen_cluster_stack_details(vnc_id, subnets, kubernetes_version, **options):
 class OCIClusterOrchestrator(Orchestrator):
     def __init__(self, options):
         super().__init__(options)
-        # Set client
+        # Set clients
+        self.compute_client = new_client(
+            ComputeClient,
+            composite_class=ComputeClientCompositeOperations,
+            profile_name=oci_kwargs["profile_name"],
+        )
         self.container_engine_client = new_client(
             ContainerEngineClient,
             composite_class=ContainerEngineClientCompositeOperations,
@@ -359,10 +392,16 @@ class OCIClusterOrchestrator(Orchestrator):
                     "Failed to fix the broken VCN stack: {}".format(vcn_stack)
                 )
 
+        # Available images
+        available_images = list_entities(
+            self.compute_client, "list_images", self.options["oci"]["compartment_id"]
+        )
+
         kubernetes_version = get_kubernetes_version(self.container_engine_client)
         cluster_details = gen_cluster_stack_details(
             self.vcn_stack["id"],
             self.vcn_stack["subnets"],
+            available_images,
             kubernetes_version,
             **self.options,
         )

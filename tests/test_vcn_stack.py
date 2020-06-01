@@ -18,11 +18,18 @@ class TestVCNStack(unittest.TestCase):
             profile_name="KU",
         )
 
+        self.vcn_display_name = "Test VCN Network"
+        self.subnet_display_name = "Test VCN Subnet"
+
         vcn_options = dict(
-            cidr_block="10.0.0.0/16", display_name="Unique VCN Name", dns_label="ku",
+            cidr_block="10.0.0.0/16",
+            display_name=self.vcn_display_name,
+            dns_label="ku",
         )
 
-        subnet_options = dict(display_name="Test Instance Subnet", dns_label="workers")
+        subnet_options = dict(
+            display_name=self.subnet_display_name, dns_label="workers"
+        )
 
         self.options = dict(oci=oci_options, vcn=vcn_options, subnet=subnet_options,)
 
@@ -33,11 +40,13 @@ class TestVCNStack(unittest.TestCase):
         )
 
     def tearDown(self):
+        # Delete all vcn with display_name
         deleted = delete_vcn_stack(
             self.network_client,
             self.options["oci"]["compartment_id"],
-            vcn_id=self.vcn_stack["id"],
+            display_name=self.vcn_display_name,
         )
+        self.assertTrue(deleted)
 
     def test_vcn_stack(self):
         # Extract the ip of the instance

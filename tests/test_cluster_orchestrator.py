@@ -18,7 +18,9 @@ class TestClusterOrchestrator(unittest.TestCase):
         )
 
         vcn_options = dict(
-            cidr_block="10.0.0.0/16", display_name="Test KU Network 1", dns_label="ku",
+            cidr_block="10.0.0.0/16",
+            display_name="Test Cluster Network",
+            dns_label="ku",
         )
 
         subnet_options = dict(dns_label="workers")
