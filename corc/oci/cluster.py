@@ -312,7 +312,7 @@ def gen_cluster_stack_details(vnc_id, subnets, image, kubernetes_version, **opti
     )
 
     # Convert the deprecrated image name, to the proper source details
-    node_source_details = prepare_node_source_details(image, **options["node"]["image"])
+    node_source_details = prepare_node_source_details(image)
     if node_source_details:
         options["node"]["node_source_details"] = node_source_details
 
@@ -334,7 +334,7 @@ class OCIClusterOrchestrator(Orchestrator):
         self.compute_client = new_client(
             ComputeClient,
             composite_class=ComputeClientCompositeOperations,
-            profile_name=oci_kwargs["profile_name"],
+            profile_name=options["oci"]["profile_name"],
         )
         self.container_engine_client = new_client(
             ContainerEngineClient,
@@ -402,14 +402,33 @@ class OCIClusterOrchestrator(Orchestrator):
 
         # Available images
         available_images = list_entities(
-            self.compute_client, "list_images", self.options["oci"]["compartment_id"]
+            self.compute_client,
+            "list_images",
+            self.options["oci"]["compartment_id"],
+            **self.options["node"]["image"]
         )
+
+        if not available_images:
+            raise ValueError(
+                "No valid image could be found with options: {}".format(
+                    self.options["image"]
+                )
+            )
+
+        if len(available_images) > 1:
+            raise ValueError(
+                "More than 1 image was found with options: {}".format(
+                    self.options["image"]
+                )
+            )
+
+        image = available_images[0]
 
         kubernetes_version = get_kubernetes_version(self.container_engine_client)
         cluster_details = gen_cluster_stack_details(
             self.vcn_stack["id"],
             self.vcn_stack["subnets"],
-            available_images,
+            image,
             kubernetes_version,
             **self.options,
         )
@@ -510,7 +529,7 @@ class OCIClusterOrchestrator(Orchestrator):
             "name",
             "size",
             "node_shape",
-            "node_image_name",
+            "image",
         ]
 
         optional_node_keys = ["ssh_public_key"]

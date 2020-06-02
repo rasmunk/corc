@@ -8,18 +8,20 @@ class TestClusterOrchestrator(unittest.TestCase):
             compartment_id="ocid1.compartment.oc1..aaaaaaaashnazvohptud5up2i5dxbqbsnwp3bgcubjj75qkqw3zvgxlvoq5a",
             profile_name="KU",
         )
-        cluster_options = dict(name="Test KU Cluster",)
+        cluster_options = dict(name="Test KU Orchestration Cluster",)
+
+        image_options = dict(display_name="Oracle-Linux-7.7-2020.03.23-0",)
         node_options = dict(
             availability_domain="lfcb:EU-FRANKFURT-1-AD-1",
-            name="test_ku_cluster",
+            name="test_ku_cluster_orchestration",
             size=1,
             node_shape="VM.Standard2.1",
-            node_image_name="Oracle-Linux-7.7-2020.03.20-0",
+            image=image_options
         )
 
         vcn_options = dict(
             cidr_block="10.0.0.0/16",
-            display_name="Test Cluster Network",
+            display_name="Test Cluster Orchestration Network",
             dns_label="ku",
         )
 
