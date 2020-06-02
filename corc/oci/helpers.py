@@ -36,8 +36,11 @@ def new_client(
     if "OCI_USER" in os.environ:
         env_config.update(dict(user=os.environ["OCI_USER"]))
 
-    if "OCI_KEY" in os.environ:
-        env_config.update(dict(key_file=os.environ["OCI_KEY"]))
+    if "OCI_KEY_FILE" in os.environ:
+        env_config.update(dict(key_file=os.environ["OCI_KEY_FILE"]))
+
+    if "OCI_KEY_CONTENT" in os.environ:
+        env_config.update(dict(key_content=os.environ["OCI_KEY_CONTENT"]))
 
     if "OCI_FINGERPRINT" in os.environ:
         env_config.update(dict(fingerprint=os.environ["OCI_FINGERPRINT"]))
