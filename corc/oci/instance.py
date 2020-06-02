@@ -71,8 +71,8 @@ def get_instance_by_name(compute_client, compartment_id, display_name, kwargs=No
         compute_client,
         "list_instances",
         compartment_id,
-        kwargs,
         display_name=display_name,
+        **kwargs,
     )
     if instances:
         return instances[0]
@@ -376,7 +376,7 @@ class OCIInstanceOrchestrator(Orchestrator):
             subnet.id,
             available_images,
             available_shapes,
-            self.options,
+            **self.options,
         )
 
         instance = None

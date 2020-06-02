@@ -12,10 +12,17 @@ playbook_path = os.path.join(current_dir, "res", "configurer", "playbook.yml")
 
 class TestInstanceConfigurer(unittest.TestCase):
     def setUp(self):
+        # Load compartment_id from the env
+        if "OCI_COMPARTMENT_ID" not in os.environ:
+            raise ValueError("Missing required environment variable OCI_COMPARTMENT_ID")
+
+        if "OCI_PROFILE_NAME" in os.environ:
+            profile_name = os.environ["OCI_PROFILE_NAME"]
+        else:
+            profile_name = "DEFAULT"
+
         oci_options = dict(
-            compartment_id="ocid1.compartment.oc1..aaaaaaaashnazvohptud5u"
-            "p2i5dxbqbsnwp3bgcubjj75qkqw3zvgxlvoq5a",
-            profile_name="KU",
+            compartment_id=os.environ["OCI_COMPARTMENT_ID"], profile_name=profile_name,
         )
 
         compute_options = dict(
@@ -26,16 +33,19 @@ class TestInstanceConfigurer(unittest.TestCase):
             display_name="Test Node",
         )
 
-        compute_metadata_options = dict(
-            ssh_authorized_keys=[
-                "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCpRktqNSSLq1ARcMAuuTq3I8/K3CgcPJ3"
-                "CVlXfU2mxg1zSrIwFOEb+foW2jUqEFcwdCmY/gI+XxBaJHxQLIqzowl0C4d6FVtbnRCfNSh"
-                "SbWr4p7xY0FDJvDMD7B7f7XT8zQoCX7Qnugo/afTPxz1R8mAfLFKU97Cy5zr3Bh8mW/ipgK"
-                "NfH573k50Qe9CN/S9GjtGB2bGPZGSIFpQ6tfmkssBQIkmym7UxfNgQfeV/1drc02GTqH850"
-                "d7jIXsMCO8XpxQaeVl/G+1/wwAxv+Nna2s143wH6MmAzrklRyb1jQ+ip/fhVF+l4Kk8a2E+"
-                "DmWsBWj5vmpRLL7hS2MHPszkp"
-            ]
-        )
+        pub_file = None
+        # TODO, add OCI_INSTANCE_PUB_FILE
+
+        if "OCI_INSTANCE_PUB_KEY" in os.environ:
+            pub_file = os.environ["OCI_INSTANCE_PUB_KEY"]
+
+        if not pub_file:
+            raise ValueError(
+                "Either OCI_INSTANCE_PUB_KEY or OCI_INSTANCE_PUB_FILE "
+                "environment variable must be set"
+            )
+
+        compute_metadata_options = dict(ssh_authorized_keys=[pub_file])
 
         vcn_options = dict(
             cidr_block="10.0.0.0/16",

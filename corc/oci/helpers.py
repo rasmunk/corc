@@ -1,3 +1,4 @@
+import os
 import oci
 from oci.exceptions import CompositeOperationError, ServiceError
 
@@ -28,9 +29,44 @@ def _perform_client_func_action(client, func_name, *args, **kwargs):
 def new_client(
     oci_client_class, composite_class=None, profile_name="DEFAULT", **kwargs
 ):
-    config = oci.config.from_file(profile_name=profile_name)
-    oci.config.validate_config(config)
-    client = oci_client_class(config, **kwargs)
+    # Try from environment, if not rely on config file
+
+    env_config = {}
+
+    if "OCI_USER" in os.environ:
+        env_config.update(dict(user=os.environ["OCI_USER"]))
+
+    if "OCI_KEY" in os.environ:
+        env_config.update(dict(key_file=os.environ["OCI_KEY"]))
+
+    if "OCI_FINGERPRINT" in os.environ:
+        env_config.update(dict(fingerprint=os.environ["OCI_FINGERPRINT"]))
+
+    if "OCI_TENANCY" in os.environ:
+        env_config.update(dict(tenancy=os.environ["OCI_TENANCY"]))
+
+    if "OCI_REGION" in os.environ:
+        env_config.update(dict(region=os.environ["OCI_REGION"]))
+
+    if "OCI_PASS_PHRASE" in os.environ:
+        env_config.update(dict(pass_phrase=os.environ["OCI_PASS_PHRASE"]))
+
+    client_config = None
+    try:
+        oci.config.validate_config(env_config)
+        client_config = env_config
+    except oci.exceptions.InvalidConfig:
+        pass
+    if not client_config:
+        # Try to load from the config_file instead
+        file_config = oci.config.from_file(profile_name=profile_name)
+        oci.config.validate_config(file_config)
+        client_config = file_config
+
+    if not client_config:
+        raise ValueError("The OCI client config must be loaded at this point")
+
+    client = oci_client_class(client_config, **kwargs)
     if composite_class:
         return composite_class(client, **kwargs)
     return client

@@ -1,13 +1,21 @@
+import os
 import unittest
 from corc.oci.cluster import OCIClusterOrchestrator
 
 
 class TestClusterOrchestrator(unittest.TestCase):
     def setUp(self):
+        # Load compartment_id from the env
+        if "OCI_COMPARTMENT_ID" not in os.environ:
+            raise ValueError("Missing required environment variable OCI_COMPARTMENT_ID")
+
+        if "OCI_PROFILE_NAME" in os.environ:
+            profile_name = os.environ["OCI_PROFILE_NAME"]
+        else:
+            profile_name = "DEFAULT"
+
         oci_options = dict(
-            compartment_id="ocid1.compartment.oc1..aaaaaaaashnazvohptud5up2i5dxbqbsnwp3b"
-            "gcubjj75qkqw3zvgxlvoq5a",
-            profile_name="KU",
+            compartment_id=os.environ["OCI_COMPARTMENT_ID"], profile_name=profile_name,
         )
         cluster_options = dict(name="Test KU Orchestration Cluster",)
 

@@ -1,4 +1,3 @@
-import os
 from ansible.parsing.dataloader import DataLoader
 from ansible.inventory.manager import InventoryManager
 from ansible.vars.manager import VariableManager
@@ -53,10 +52,9 @@ class AnsibleConfigurer:
         self.variable_manager.set_host_variable(host, "ansible_user", "opc")
         self.variable_manager.set_host_variable(host, "ansible_become", "yes")
         self.variable_manager.set_host_variable(host, "ansible_become_method", "sudo")
+        # TODO, dynamically discover the local priv key
         self.variable_manager.set_host_variable(
-            host,
-            "ansible_ssh_private_key_file",
-            os.path.join(os.sep, "home", "rasmus", ".ssh", "id_rsa_oracle_2"),
+            host, "ansible_ssh_private_key_file", None
         )
         self.variable_manager.set_host_variable(host, "verbosity", 3)
 
