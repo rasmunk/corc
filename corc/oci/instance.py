@@ -80,31 +80,32 @@ def get_instance_by_name(compute_client, compartment_id, display_name, kwargs=No
 
 
 def launch_instance(compute_kwargs={}, oci_kwargs={}, subnet_kwargs={}, vcn_kwargs={}):
-    compute_client = new_client(
-        ComputeClient,
-        composite_class=ComputeClientCompositeOperations,
-        profile_name=oci_kwargs["profile_name"],
-    )
+    raise NotImplementedError
+    # compute_client = new_client(
+    #     ComputeClient,
+    #     composite_class=ComputeClientCompositeOperations,
+    #     profile_name=oci_kwargs["profile_name"],
+    # )
 
-    identity_client = new_client(
-        IdentityClient,
-        composite_class=IdentityClientCompositeOperations,
-        profile_name=oci_kwargs["profile_name"],
-    )
+    # identity_client = new_client(
+    #     IdentityClient,
+    #     composite_class=IdentityClientCompositeOperations,
+    #     profile_name=oci_kwargs["profile_name"],
+    # )
 
-    network_client = new_client(
-        VirtualNetworkClient,
-        composite_class=VirtualNetworkClientCompositeOperations,
-        profile_name=oci_kwargs["profile_name"],
-    )
+    # network_client = new_client(
+    #     VirtualNetworkClient,
+    #     composite_class=VirtualNetworkClientCompositeOperations,
+    #     profile_name=oci_kwargs["profile_name"],
+    # )
 
-    # AD
-    selected_availability_domain = None
-    available_domains = list_entities(
-        identity_client,
-        "list_availability_domains",
-        compartment_id=oci_kwargs["compartment_id"],
-    )
+    # # AD
+    # selected_availability_domain = None
+    # available_domains = list_entities(
+    #     identity_client,
+    #     "list_availability_domains",
+    #     compartment_id=oci_kwargs["compartment_id"],
+    # )
 
     # for domain in available_domains:
     #     if domain.name == compute_kwargs["ad"]:
