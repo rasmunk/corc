@@ -6,7 +6,8 @@ python:
 - '3.7'
 - '3.8'
 before_install:
-- sudo openssl aes-256-cbc -K $encrypted_251d1f868e05_key -iv $encrypted_251d1f868e05_iv
+- mkdir $TRAVIS_BUILD_DIR/.oci
+- openssl aes-256-cbc -K $encrypted_251d1f868e05_key -iv $encrypted_251d1f868e05_iv
   -in test_api_info.enc -out $TRAVIS_BUILD_DIR/.oci/test_api_info -d
 install:
 - pip install -r tests/requirements.txt
