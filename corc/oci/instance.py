@@ -106,60 +106,60 @@ def launch_instance(compute_kwargs={}, oci_kwargs={}, subnet_kwargs={}, vcn_kwar
         compartment_id=oci_kwargs["compartment_id"],
     )
 
-    for domain in available_domains:
-        if domain.name == compute_kwargs["ad"]:
-            selected_availability_domain = domain
+    # for domain in available_domains:
+    #     if domain.name == compute_kwargs["ad"]:
+    #         selected_availability_domain = domain
 
-    if not selected_availability_domain:
-        print("Failed to find the selected AD: {}".format(compute_kwargs["ad"]))
-        print("Available are: {}".format(available_domains))
-        return False
+    # if not selected_availability_domain:
+    #     print("Failed to find the selected AD: {}".format(compute_kwargs["ad"]))
+    #     print("Available are: {}".format(available_domains))
+    #     return False
 
-    # Available images
-    available_images = list_entities(
-        self.compute_client, "list_images", self.options["oci"]["compartment_id"]
-    )
+    # # Available images
+    # available_images = list_entities(
+    #     compute_client, "list_images", oci_kwargs["compartment_id"]
+    # )
 
-    available_shapes = list_entities(
-        self.compute_client, "list_shapes", self.options["oci"]["compartment_id"]
-    )
+    # available_shapes = list_entities(
+    #     compute_client, "list_shapes", oci_kwargs["compartment_id"]
+    # )
 
-    instance_details = _gen_instance_stack_details(
-        self.vcn_stack["vcn"].id,
-        subnet.id,
-        available_images,
-        available_shapes,
-        self.options,
-    )
+    # instance_details = _gen_instance_stack_details(
+    #     self.vcn_stack["vcn"].id,
+    #     subnet.id,
+    #     available_images,
+    #     available_shapes,
+    #     self.options,
+    # )
 
-    # Network (VCN)
-    selected_vcn = None
-    get_vcn_by_name(
-        network_client, oci_kwargs["compartment_id"],
-    )
+    # # Network (VCN)
+    # selected_vcn = None
+    # get_vcn_by_name(
+    #     network_client, oci_kwargs["compartment_id"],
+    # )
 
-    # VCN Subnet
-    selected_subnet = None
-    if not selected_subnet:
-        print("Failed to find the selected subnet: {}".format(subnet_kwargs["id"]))
-        return False
+    # # VCN Subnet
+    # selected_subnet = None
+    # if not selected_subnet:
+    #     print("Failed to find the selected subnet: {}".format(subnet_kwargs["id"]))
+    #     return False
 
-    # Existing or create new vnic
-    create_vnic_details = CreateVnicDetails(subnet_id=selected_subnet.id)
+    # # Existing or create new vnic
+    # create_vnic_details = CreateVnicDetails(subnet_id=selected_subnet.id)
 
-    launch_instance_details = LaunchInstanceDetails(
-        compartment_id=oci_kwargs["compartment_id"],
-        availability_domain=selected_availability_domain.name,
-        shape=selected_shape.shape,
-    )
+    # launch_instance_details = LaunchInstanceDetails(
+    #     compartment_id=oci_kwargs["compartment_id"],
+    #     availability_domain=selected_availability_domain.name,
+    #     shape=selected_shape.shape,
+    # )
 
-    instance = create_instance(
-        compute_client,
-        launch_instance_details,
-        wait_for_states=[oci.core.models.Instance.LIFECYCLE_STATE_PROVISIONING],
-    )
+    # instance = create_instance(
+    #     compute_client,
+    #     launch_instance_details,
+    #     wait_for_states=[oci.core.models.Instance.LIFECYCLE_STATE_PROVISIONING],
+    # )
 
-    print("Instance: {}".format(instance))
+    # print("Instance: {}".format(instance))
 
 
 def _prepare_source_details(available_images, **kwargs):
