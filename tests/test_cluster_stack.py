@@ -1,4 +1,3 @@
-import os
 import unittest
 from oci.core import (
     ComputeClient,
@@ -26,7 +25,8 @@ from corc.oci.network import new_vcn_stack, delete_vcn_stack, valid_vcn_stack
 class TestClusterStack(unittest.TestCase):
     def setUp(self):
         oci_options = dict(
-            compartment_id="ocid1.compartment.oc1..aaaaaaaashnazvohptud5up2i5dxbqbsnwp3bgcubjj75qkqw3zvgxlvoq5a",
+            compartment_id="ocid1.compartment.oc1..aaaaaaaashnazvohptud5up2i5dxbqbsnwp3b"
+            "gcubjj75qkqw3zvgxlvoq5a",
             profile_name="KU",
         )
         cluster_options = dict(name="Test KU Cluster",)

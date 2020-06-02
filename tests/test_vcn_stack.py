@@ -1,4 +1,3 @@
-import os
 import unittest
 from oci.core import VirtualNetworkClient, VirtualNetworkClientCompositeOperations
 from corc.oci.helpers import new_client, get, list_entities
@@ -14,7 +13,8 @@ from corc.oci.network import (
 class TestVCNStack(unittest.TestCase):
     def setUp(self):
         oci_options = dict(
-            compartment_id="ocid1.compartment.oc1..aaaaaaaashnazvohptud5up2i5dxbqbsnwp3bgcubjj75qkqw3zvgxlvoq5a",
+            compartment_id="ocid1.compartment.oc1..aaaaaaaashnazvohptud5up2i5dxbqbsnwp3b"
+            "gcubjj75qkqw3zvgxlvoq5a",
             profile_name="KU",
         )
 

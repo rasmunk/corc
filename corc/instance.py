@@ -1,13 +1,8 @@
 from corc.defaults import (
     AWS,
     OCI,
-    JOB,
-    STORAGE,
     SUBNET,
     COMPUTE,
-    CLUSTER,
-    EXECUTE,
-    S3,
     VCN,
 )
 from corc.cli.args import extract_arguments

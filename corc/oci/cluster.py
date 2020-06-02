@@ -405,7 +405,7 @@ class OCIClusterOrchestrator(Orchestrator):
             self.compute_client,
             "list_images",
             self.options["oci"]["compartment_id"],
-            **self.options["node"]["image"]
+            **self.options["node"]["image"],
         )
 
         if not available_images:

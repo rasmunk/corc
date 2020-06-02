@@ -80,4 +80,4 @@ class AnsibleConfigurer:
         if not isinstance(options, dict):
             raise TypeError("options is not a dictionary")
 
-        expected_ansible_keys = ["inventory_path", "playbook_path"]
+        # expected_ansible_keys = ["inventory_path", "playbook_path"]

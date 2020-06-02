@@ -13,7 +13,8 @@ playbook_path = os.path.join(current_dir, "res", "configurer", "playbook.yml")
 class TestInstanceConfigurer(unittest.TestCase):
     def setUp(self):
         oci_options = dict(
-            compartment_id="ocid1.compartment.oc1..aaaaaaaashnazvohptud5up2i5dxbqbsnwp3bgcubjj75qkqw3zvgxlvoq5a",
+            compartment_id="ocid1.compartment.oc1..aaaaaaaashnazvohptud5u"
+            "p2i5dxbqbsnwp3bgcubjj75qkqw3zvgxlvoq5a",
             profile_name="KU",
         )
 
@@ -27,7 +28,12 @@ class TestInstanceConfigurer(unittest.TestCase):
 
         compute_metadata_options = dict(
             ssh_authorized_keys=[
-                "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCpRktqNSSLq1ARcMAuuTq3I8/K3CgcPJ3CVlXfU2mxg1zSrIwFOEb+foW2jUqEFcwdCmY/gI+XxBaJHxQLIqzowl0C4d6FVtbnRCfNShSbWr4p7xY0FDJvDMD7B7f7XT8zQoCX7Qnugo/afTPxz1R8mAfLFKU97Cy5zr3Bh8mW/ipgKNfH573k50Qe9CN/S9GjtGB2bGPZGSIFpQ6tfmkssBQIkmym7UxfNgQfeV/1drc02GTqH850d7jIXsMCO8XpxQaeVl/G+1/wwAxv+Nna2s143wH6MmAzrklRyb1jQ+ip/fhVF+l4Kk8a2E+DmWsBWj5vmpRLL7hS2MHPszkp"
+                "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCpRktqNSSLq1ARcMAuuTq3I8/K3CgcPJ3"
+                "CVlXfU2mxg1zSrIwFOEb+foW2jUqEFcwdCmY/gI+XxBaJHxQLIqzowl0C4d6FVtbnRCfNSh"
+                "SbWr4p7xY0FDJvDMD7B7f7XT8zQoCX7Qnugo/afTPxz1R8mAfLFKU97Cy5zr3Bh8mW/ipgK"
+                "NfH573k50Qe9CN/S9GjtGB2bGPZGSIFpQ6tfmkssBQIkmym7UxfNgQfeV/1drc02GTqH850"
+                "d7jIXsMCO8XpxQaeVl/G+1/wwAxv+Nna2s143wH6MmAzrklRyb1jQ+ip/fhVF+l4Kk8a2E+"
+                "DmWsBWj5vmpRLL7hS2MHPszkp"
             ]
         )
 

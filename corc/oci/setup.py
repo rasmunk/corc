@@ -98,7 +98,7 @@ if __name__ == "__main__":
             availability_domain=node_args.availability_domain, subnet_id=subnet.id
         )
 
-        create_node_pool_node_config_details = oci.container_engine.models.CreateNodePoolNodeConfigDetails(
+        node_config_detail = oci.container_engine.models.CreateNodePoolNodeConfigDetails(
             size=node_args.size, placement_configs=[node_pool_placement_config]
         )
 
@@ -109,7 +109,7 @@ if __name__ == "__main__":
             name=node_args.name,
             node_shape=node_args.shape,
             node_image_name=node_args.image_name,
-            node_config_details=create_node_pool_node_config_details,
+            node_config_details=node_config_detail,
         )
 
         cluster_stack = new_cluster_stack(

@@ -5,7 +5,8 @@ from corc.oci.cluster import OCIClusterOrchestrator
 class TestClusterOrchestrator(unittest.TestCase):
     def setUp(self):
         oci_options = dict(
-            compartment_id="ocid1.compartment.oc1..aaaaaaaashnazvohptud5up2i5dxbqbsnwp3bgcubjj75qkqw3zvgxlvoq5a",
+            compartment_id="ocid1.compartment.oc1..aaaaaaaashnazvohptud5up2i5dxbqbsnwp3b"
+            "gcubjj75qkqw3zvgxlvoq5a",
             profile_name="KU",
         )
         cluster_options = dict(name="Test KU Orchestration Cluster",)
@@ -16,7 +17,7 @@ class TestClusterOrchestrator(unittest.TestCase):
             name="test_ku_cluster_orchestration",
             size=1,
             node_shape="VM.Standard2.1",
-            image=image_options
+            image=image_options,
         )
 
         vcn_options = dict(

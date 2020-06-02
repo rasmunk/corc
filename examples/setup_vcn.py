@@ -5,7 +5,8 @@ from corc.oci.network import new_vcn_stack
 
 def prepare_options():
     oci_options = dict(
-        compartment_id="ocid1.tenancy.oc1..aaaaaaaakfmksyrf7hl2gfexmjpb6pbyrirm6k3ro7wd464y2pr7atpxpv4q",
+        compartment_id="ocid1.tenancy.oc1..aaaaaaaakfmksyrf7hl2gfexmjpb6pbyrirm6k3ro7wd4"
+        "64y2pr7atpxpv4q",
         profile_name="XNOVOTECH",
     )
 
