@@ -14,7 +14,7 @@ stages:
   - prepare
   - cluster_tests
   - instance_orchestration_tests
-  - instance_configurer_test
+  - instance_configurer_tests
   - vcn_tests
 # Only CI if it is specified
 if: commit_message =~ ^.*\[ci\].*$
@@ -46,8 +46,8 @@ jobs:
     - <<: *instance_orchestration_tests
       python: "3.8"
 
-    - &instance_configurer_test
-      stage: instance_configurer_test
+    - &instance_configurer_tests
+      stage: instance_configurer_tests
       python: "3.6"
       before_script:
       # Generate pub key to deploy the test playbook with
@@ -56,9 +56,9 @@ jobs:
       env:
         OCI_INSTANCE_PUB_PATH=$TRAVIS_BUILD_DIR/.ssh/oci_id_rsa.pub
       script: travis_wait pytest -s -v tests/test_instance_configurer.py
-    - <<: *instance_configurer_test
+    - <<: *instance_configurer_tests
       python: "3.7"
-    - <<: *instance_configurer_test
+    - <<: *instance_configurer_tests
       python: "3.8"
 
     - &vcn_tests
