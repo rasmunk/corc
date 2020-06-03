@@ -15,6 +15,7 @@ stages:
   - instance_orchestration_tests
   - instance_configurer_test
   - vcn_tests
+# Only CI if it is specified
 if: commit_message =~ ^.*\[ci\].*$
 jobs:
   include:
