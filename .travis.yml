@@ -18,6 +18,7 @@ stages:
 jobs:
   include:
     - &prepare
+      stage: prepare
       script:
         - python setup.py check -rms
         - flake8
