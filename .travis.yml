@@ -40,7 +40,7 @@ jobs:
     - &instance_orchestration_tests
       stage: instance_orchestration_tests
       python: "3.6"
-      script: travis_wait pytest -s -v tests/test-instance_orchestrator*.py
+      script: travis_wait pytest -s -v tests/test_instance_orchestrator.py
     - <<: *instance_orchestration_tests
       python: "3.7"
     - <<: *instance_orchestration_tests
