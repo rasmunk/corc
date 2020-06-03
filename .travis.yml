@@ -17,13 +17,16 @@ stages:
 
 jobs:
   include:
-    - stage: prepare
+    - &prepare
       script:
         - python setup.py check -rms
         - flake8
-      python:
-        - "3.6"
-        - "3.7"
+    - <<: *prepare
+      python: "3.6"
+    - <<: *prepare
+      python: "3.7"
+    - <<: *prepare
+      python: "3.8"
     - stage: cluster_tests
       script:
         - travis_wait pytest -s -v tests/test_cluster_stack.py
