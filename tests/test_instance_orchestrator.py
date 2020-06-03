@@ -18,7 +18,7 @@ class TestInstanceOrchestrator(unittest.TestCase):
             compartment_id=os.environ["OCI_COMPARTMENT_ID"], profile_name=profile_name,
         )
 
-        test_name = "Test_Instance"
+        test_name = "Test_Instance_Orch"
         node_name = test_name + "_Node"
         vcn_name = test_name + "_Network"
         subnet_name = test_name + "_Subnet"

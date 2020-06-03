@@ -25,7 +25,7 @@ class TestInstanceConfigurer(unittest.TestCase):
             compartment_id=os.environ["OCI_COMPARTMENT_ID"], profile_name=profile_name,
         )
 
-        test_name = "Test_Cluster_Orch"
+        test_name = "Test_Instance_Conf"
         node_name = test_name + "_Node"
         vcn_name = test_name + "_Network"
         subnet_name = test_name + "_Subnet"
@@ -45,14 +45,26 @@ class TestInstanceConfigurer(unittest.TestCase):
         )
 
         pub_file = None
-        # TODO, add OCI_INSTANCE_PUB_FILE
+        # TODO, add OCI_INSTANCE_PUB_PATH
 
         if "OCI_INSTANCE_PUB_KEY" in os.environ:
             pub_file = os.environ["OCI_INSTANCE_PUB_KEY"]
 
+        if "OCI_INSTANCE_PUB_PATH" in os.environ:
+            pub_path = os.environ["OCI_INSTANCE_PUB_PATH"]
+            if not os.path.exists(pub_path):
+                raise ValueError(
+                    "The specified OCI_INSTANCE_PUB_PATH path: {} does not exist".format(
+                        pub_path
+                    )
+                )
+
+            with open(pub_path, "r") as pub_file:
+                pub_file = pub_file.read()
+
         if not pub_file:
             raise ValueError(
-                "Either OCI_INSTANCE_PUB_KEY or OCI_INSTANCE_PUB_FILE "
+                "Either OCI_INSTANCE_PUB_KEY or OCI_INSTANCE_PUB_PATH"
                 "environment variable must be set"
             )
 
@@ -76,6 +88,12 @@ class TestInstanceConfigurer(unittest.TestCase):
         # Should not be ready at this point
         self.orchestrator.setup()
         self.assertTrue(self.orchestrator.is_ready())
+
+    def tearDown(self):
+        self.orchestrator.tear_down()
+        self.assertFalse(self.orchestrator.is_ready())
+        self.orchestrator = None
+        self.options = None
 
     def test_instance_ansible_configure(self):
         # Extract the ip of the instance

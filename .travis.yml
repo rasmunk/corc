@@ -2,6 +2,7 @@ os: linux
 dist: bionic
 language: python
 before_install:
+# Unpack OCI info
 - openssl aes-256-cbc -K $encrypted_bdba505e7122_key -iv $encrypted_bdba505e7122_iv
   -in oci_data.tar.enc -out $TRAVIS_BUILD_DIR/oci_data.tar -d
 - tar -xvf $TRAVIS_BUILD_DIR/oci_data.tar -C $TRAVIS_BUILD_DIR/
@@ -48,6 +49,12 @@ jobs:
     - &instance_configurer_test
       stage: instance_configurer_test
       python: "3.6"
+      before_script:
+      # Generate pub key to deploy the test playbook with
+        - mkdir $TRAVIS_BUILD_DIR/.ssh/
+        - ssh-keygen -t rsa -b 4096 -N "" -f $TRAVIS_BUILD_DIR/.ssh/oci_id_rsa
+      env:
+        OCI_INSTANCE_PUB_PATH=$TRAVIS_BUILD_DIR/.ssh/oci_id_rsa.pub
       script: travis_wait pytest -s -v tests/test_instance_configurer.py
     - <<: *instance_configurer_test
       python: "3.7"

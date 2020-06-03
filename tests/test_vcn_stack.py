@@ -26,7 +26,7 @@ class TestVCNStack(unittest.TestCase):
             compartment_id=os.environ["OCI_COMPARTMENT_ID"], profile_name=profile_name,
         )
 
-        test_name = "Test_Cluster_Orch"
+        test_name = "Test_VCN"
         vcn_name = test_name + "_Network"
         subnet_name = test_name + "_Subnet"
 
