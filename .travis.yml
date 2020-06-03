@@ -74,7 +74,7 @@ jobs:
       skip_cleanup: true
       distributions: sdist bdist_wheel
       provider: pypi
-      user: rasmunk
+      user: __token__
       on:
         tags: true
         branch: master
