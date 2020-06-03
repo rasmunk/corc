@@ -13,10 +13,19 @@ install:
 - pip install -r tests/requirements.txt
 - pip install -r requirements-dev.txt
 - pip install -r requirements.txt
-script:
-- python setup.py check -rms
-- flake8
-- travis_wait pytest -s -v tests/
+jobs:
+  include:
+    - stage: sanity_check
+      script: python setup.py check -rms
+      script: flake8
+    - stage: cluster_tests
+      script: travis_wait pytest -s -v tests/test_cluster_stack.py
+    - stage: cluster_orchestrator_tests
+      script: travis_wait pytest -s -v tests/test_cluster_orchestrator.py
+    - stage: instance_tests
+      script: travis_wait pytest -s -v tests/test_instance_*.py
+    - stage: vcn_tests
+      script: travis_wait pytest -s -v tests/test_vcn_*.py
 deploy:
   skip_cleanup: true
   distributions: sdist bdist_wheel
