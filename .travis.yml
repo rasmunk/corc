@@ -9,34 +9,30 @@ before_install:
 - openssl aes-256-cbc -K $encrypted_bdba505e7122_key -iv $encrypted_bdba505e7122_iv
   -in oci_data.tar.enc -out $TRAVIS_BUILD_DIR/oci_data.tar -d
 - tar -xvf $TRAVIS_BUILD_DIR/oci_data.tar -C $TRAVIS_BUILD_DIR/
-before_script:
+install:
 - pip install -r tests/requirements.txt
 - pip install -r requirements-dev.txt
 - pip install -r requirements.txt
+stages:
+  - prepare
+  - cluster_tests
+  - instance_tests
+  - vcn_tests
 
 jobs:
   include:
-    - stage: sanity_check
-      script: python setup.py check -rms
-    - stage: style_check
-      script: flake8
+    - stage: prepare
+      script:
+        - python setup.py check -rms
+        - flake8
     - stage: cluster_tests
-      script: travis_wait pytest -s -v tests/test_cluster_stack.py
-    - stage: cluster_orchestrator_tests
-      script: travis_wait pytest -s -v tests/test_cluster_orchestrator.py
+      script:
+        - travis_wait pytest -s -v tests/test_cluster_stack.py
+        - travis_wait pytest -s -v tests/test_cluster_orchestrator.py
     - stage: instance_tests
       script: travis_wait pytest -s -v tests/test_instance_*.py
     - stage: vcn_tests
       script: travis_wait pytest -s -v tests/test_vcn_*.py
-deploy:
-  skip_cleanup: true
-  distributions: sdist bdist_wheel
-  provider: pypi
-  user: rasmunk
-  on:
-    tags: true
-    branch: master
-    python: '3.7'
 env:
   global:
   - OCI_CONFIG_DIR="$TRAVIS_BUILD_DIR/.oci"
