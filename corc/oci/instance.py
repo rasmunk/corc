@@ -341,11 +341,12 @@ class OCIInstanceOrchestrator(Orchestrator):
         if valid_vcn_stack(vcn_stack):
             self.vcn_stack = vcn_stack
         else:
-            vcn_stack = self._refresh_vcn_stack(vcn_stack)
-            if not valid_vcn_stack(vcn_stack):
-                raise RuntimeError(
-                    "Failed to fix the broken VCN stack: {}".format(vcn_stack)
-                )
+            self.vcn_stack = self._refresh_vcn_stack(vcn_stack)
+
+        if not valid_vcn_stack(self.vcn_stack):
+            raise RuntimeError(
+                "Failed to fix the broken VCN stack: {}".format(vcn_stack)
+            )
 
         # Find the selected subnet in the VCN
         subnet = get_subnet_by_name(
