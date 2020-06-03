@@ -32,39 +32,27 @@ def new_client(
     # Try from environment, if not rely on config file
 
     env_config = {}
+    file_location = oci.config.DEFAULT_LOCATION
 
-    if "OCI_USER" in os.environ:
-        env_config.update(dict(user=os.environ["OCI_USER"]))
+    if "OCI_CONFIG_PATH" in os.environ:
+        file_location = os.environ["OCI_CONFIG_PATH"]
 
-    if "OCI_KEY_FILE" in os.environ:
-        env_config.update(dict(key_file=os.environ["OCI_KEY_FILE"]))
-
-    if "OCI_KEY_CONTENT" in os.environ:
-        env_config.update(dict(key_content=os.environ["OCI_KEY_CONTENT"]))
-
-    if "OCI_FINGERPRINT" in os.environ:
-        env_config.update(dict(fingerprint=os.environ["OCI_FINGERPRINT"]))
-
-    if "OCI_TENANCY" in os.environ:
-        env_config.update(dict(tenancy=os.environ["OCI_TENANCY"]))
-
-    if "OCI_REGION" in os.environ:
-        env_config.update(dict(region=os.environ["OCI_REGION"]))
-
-    if "OCI_PASS_PHRASE" in os.environ:
-        env_config.update(dict(pass_phrase=os.environ["OCI_PASS_PHRASE"]))
+    if "OCI_PROFILE_NAME" in os.environ:
+        profile_name = os.environ["OCI_PROFILE_NAME"]
 
     client_config = None
-    try:
-        oci.config.validate_config(env_config)
-        client_config = env_config
-    except oci.exceptions.InvalidConfig:
-        pass
-    if not client_config:
-        # Try to load from the config_file instead
-        file_config = oci.config.from_file(profile_name=profile_name)
-        oci.config.validate_config(file_config)
-        client_config = file_config
+    # Try to load from the config_file instead
+    file_config = oci.config.from_file(
+        file_location=file_location, profile_name=profile_name
+    )
+
+    # If an environment path for the key file is provided
+    if "OCI_KEY_FILE" in os.environ:
+        key_file = os.environ["OCI_KEY_FILE"]
+        file_config.update(dict(key_file=key_file))
+
+    oci.config.validate_config(file_config)
+    client_config = file_config
 
     if not client_config:
         raise ValueError("The OCI client config must be loaded at this point")
