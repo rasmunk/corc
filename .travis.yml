@@ -32,7 +32,7 @@ jobs:
         - travis_wait pytest -s -v tests/test_cluster_stack.py
         - travis_wait pytest -s -v tests/test_cluster_orchestrator.py
     - &instance_tests
-      name: instance_tests
+      stage: instance_tests
       python: "3.6"
       script: travis_wait pytest -s -v tests/test_instance_*.py
     - <<: *instance_tests
@@ -40,7 +40,7 @@ jobs:
     - <<: *instance_tests
       python: "3.8"
     - &vcn_tests
-      name: vcn_tests
+      stage: vcn_tests
       python: "3.6"
       script: travis_wait pytest -s -v tests/test_vcn_*.py
     - <<: *vcn_tests
