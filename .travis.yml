@@ -8,8 +8,8 @@ python:
 before_install:
 - mkdir $TRAVIS_BUILD_DIR/.oci
 - openssl aes-256-cbc -K $encrypted_bdba505e7122_key -iv $encrypted_bdba505e7122_iv
-  -in oci_data.tar.enc -out $TRAVIS_BUILD_PATH/oci_data.tar -d
-- tar -xvf $TRAVIS_BUILD_PATH/oci_data.tar -C $TRAVIS_BUILD_PATH/
+  -in oci_data.tar.enc -out $TRAVIS_BUILD_DIR/oci_data.tar -d
+- tar -xvf $TRAVIS_BUILD_DIR/oci_data.tar -C $TRAVIS_BUILD_DIR/
 install:
 - pip install -r tests/requirements.txt
 - pip install -r requirements-dev.txt
