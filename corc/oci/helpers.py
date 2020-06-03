@@ -30,8 +30,6 @@ def new_client(
     oci_client_class, composite_class=None, profile_name="DEFAULT", **kwargs
 ):
     # Try from environment, if not rely on config file
-
-    env_config = {}
     file_location = oci.config.DEFAULT_LOCATION
 
     if "OCI_CONFIG_PATH" in os.environ:
