@@ -38,23 +38,34 @@ class TestClusterStack(unittest.TestCase):
             compartment_id=os.environ["OCI_COMPARTMENT_ID"], profile_name=profile_name,
         )
 
-        cluster_options = dict(name="Test KU Cluster",)
+        test_name = "Test_Cluster_Orch"
+        cluster_name = test_name
+        node_name = test_name + "_Node"
+        vcn_name = test_name + "_Network"
+        subnet_name = test_name + "_Subnet"
+
+        # Add unique test postfix
+        if "OCI_TEST_ID" in os.environ:
+            cluster_name += os.environ["OCI_TEST_ID"]
+            node_name += os.environ["OCI_TEST_ID"]
+            vcn_name += os.environ["OCI_TEST_ID"]
+            subnet_name += os.environ["OCI_TEST_ID"]
+
+        cluster_options = dict(name=cluster_name,)
 
         image_options = dict(display_name="Oracle-Linux-7.7-2020.03.23-0",)
         node_options = dict(
             availability_domain="lfcb:EU-FRANKFURT-1-AD-1",
-            name="test_ku_cluster",
+            name=node_name,
             size=1,
             node_shape="VM.Standard2.1",
             image=image_options,
         )
         vcn_options = dict(
-            cidr_block="10.0.0.0/16",
-            display_name="Test Cluster Stack Network",
-            dns_label="ku",
+            cidr_block="10.0.0.0/16", display_name=vcn_name, dns_label="ku",
         )
 
-        subnet_options = dict(dns_label="workers")
+        subnet_options = dict(display_name=subnet_name, dns_label="workers")
 
         self.options = dict(
             oci=oci_options,

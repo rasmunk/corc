@@ -18,16 +18,27 @@ class TestInstanceOrchestrator(unittest.TestCase):
             compartment_id=os.environ["OCI_COMPARTMENT_ID"], profile_name=profile_name,
         )
 
+        test_name = "Test_Instance"
+        node_name = test_name + "_Node"
+        vcn_name = test_name + "_Network"
+        subnet_name = test_name + "_Subnet"
+
+        # Add unique test postfix
+        if "OCI_TEST_ID" in os.environ:
+            node_name += os.environ["OCI_TEST_ID"]
+            vcn_name += os.environ["OCI_TEST_ID"]
+            subnet_name += os.environ["OCI_TEST_ID"]
+
         compute_options = dict(
             availability_domain="lfcb:EU-FRANKFURT-1-AD-1",
             shape="VM.Standard2.1",
             operating_system="CentOS",
             operating_system_version="7",
-            display_name="Test Node",
+            display_name=node_name,
         )
 
-        vcn_options = dict(display_name="Test Instance Network", dns_label="ku",)
-        subnet_options = dict(display_name="Test Instance Subnet", dns_label="workers")
+        vcn_options = dict(display_name=vcn_name, dns_label="ku",)
+        subnet_options = dict(display_name=subnet_name, dns_label="workers")
 
         self.options = dict(
             oci=oci_options,

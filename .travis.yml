@@ -49,7 +49,9 @@ jobs:
       python: "3.8"
 env:
   global:
+  - OCI_TEST_ID="$TRAVIS_BUILD_ID"
   - OCI_CONFIG_DIR="$TRAVIS_BUILD_DIR/.oci"
   - OCI_CONFIG_PATH="$OCI_CONFIG_DIR/config"
   - OCI_KEY_FILE="$OCI_CONFIG_DIR/test_api_info"
   - secure: Pck6ytGvxHS/UZK7oXw9kPDoouH8MB5uy5QoB0bb3BWGeUiLsWyMPqpVbkib0ZCduXVHzgbuHaWwiUnY8plf7yZ+KSJzD57Xp4oMrfSOyqCvhQUY2U+hMu8jAupcxlSgCS7EbPF5vsuyUWWyIHvCwAtoRzHc1RBek4GsIn+esbicUkftnyyDNIW48FrG+PoyDDNOHnWXMr9Sa031MZljQIoLbsuoyifNoURiKi3Hx6pymwwdRvVVGiCXzUNctnLJDpIhdImu44vdjKppAbib1cqhMyBX/JFpzpS8qPN7DpmjfmuNzuqKtOdk7Fp6oNNu7Q76299Bq0/7MwF1yNwcdU4VctYeQPKKVTF7NgkE4yKHBhS1TmblbSZ/eImDQ1qaEQk2ll/iZKblIoUwTaZbuVgVlR2EaIexdiYTwO/JveLq126KlgvJRyoLPIgADTCsO5X9fb5Cib5SEXyg3APVtqvR0CdsCgLvLQSmocNxI0c3GsxxLmUmjfrRQsbAUJd4jVisqsIOiPbifB1IbfZLW1muWpYR1QF/MAis7Ak3aHSZw8gHiQ4ycBFjyTtn02z4D3YQ43SNdDEm4UKU35/DATjw+QgDPUeSsXne6xaM6TR8ZWmrJIq34md0e+YYtkkD/1qEl0nzkl9eV/swRQF5BZr5gkfiqs3px/VzaEbFsTo=
+  

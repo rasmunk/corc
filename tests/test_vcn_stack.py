@@ -22,24 +22,28 @@ class TestVCNStack(unittest.TestCase):
         else:
             profile_name = "DEFAULT"
 
-        oci_options = dict(
+        self.oci_options = dict(
             compartment_id=os.environ["OCI_COMPARTMENT_ID"], profile_name=profile_name,
         )
 
-        self.vcn_display_name = "Test VCN Network"
-        self.subnet_display_name = "Test VCN Subnet"
+        test_name = "Test_Cluster_Orch"
+        vcn_name = test_name + "_Network"
+        subnet_name = test_name + "_Subnet"
 
-        vcn_options = dict(
-            cidr_block="10.0.0.0/16",
-            display_name=self.vcn_display_name,
-            dns_label="ku",
+        # Add unique test postfix
+        if "OCI_TEST_ID" in os.environ:
+            vcn_name += os.environ["OCI_TEST_ID"]
+            subnet_name += os.environ["OCI_TEST_ID"]
+
+        self.vcn_options = dict(
+            cidr_block="10.0.0.0/16", display_name=vcn_name, dns_label="ku",
         )
 
-        subnet_options = dict(
-            display_name=self.subnet_display_name, dns_label="workers"
-        )
+        self.subnet_options = dict(display_name=subnet_name, dns_label="workers")
 
-        self.options = dict(oci=oci_options, vcn=vcn_options, subnet=subnet_options,)
+        self.options = dict(
+            oci=self.oci_options, vcn=self.vcn_options, subnet=self.subnet_options,
+        )
 
         self.network_client = new_client(
             VirtualNetworkClient,
@@ -53,7 +57,7 @@ class TestVCNStack(unittest.TestCase):
             self.network_client,
             "list_vcns",
             self.options["oci"]["compartment_id"],
-            display_name=self.vcn_display_name,
+            display_name=self.vcn_options["display_name"],
         )
 
         for vcn in vcns:
