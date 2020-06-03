@@ -14,6 +14,7 @@ stages:
   - cluster_tests
   - instance_tests
   - vcn_tests
+if: commit_message =~ ^.*\[ci\].*$
 jobs:
   include:
     - &prepare
@@ -49,7 +50,7 @@ jobs:
       python: "3.8"
 env:
   global:
-  - OCI_TEST_ID="$TRAVIS_BUILD_ID"
+  - OCI_TEST_ID="$TRAVIS_JOB_ID-$TRAVIS_JOB_NUMBER"
   - OCI_CONFIG_DIR="$TRAVIS_BUILD_DIR/.oci"
   - OCI_CONFIG_PATH="$OCI_CONFIG_DIR/config"
   - OCI_KEY_FILE="$OCI_CONFIG_DIR/test_api_info"
