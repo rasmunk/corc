@@ -9,14 +9,16 @@ before_install:
 - openssl aes-256-cbc -K $encrypted_bdba505e7122_key -iv $encrypted_bdba505e7122_iv
   -in oci_data.tar.enc -out $TRAVIS_BUILD_DIR/oci_data.tar -d
 - tar -xvf $TRAVIS_BUILD_DIR/oci_data.tar -C $TRAVIS_BUILD_DIR/
-install:
+before_script:
 - pip install -r tests/requirements.txt
 - pip install -r requirements-dev.txt
 - pip install -r requirements.txt
+
 jobs:
   include:
     - stage: sanity_check
       script: python setup.py check -rms
+    - stage: style_check
       script: flake8
     - stage: cluster_tests
       script: travis_wait pytest -s -v tests/test_cluster_stack.py
