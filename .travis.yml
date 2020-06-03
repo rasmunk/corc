@@ -12,7 +12,8 @@ install:
 stages:
   - prepare
   - cluster_tests
-  - instance_tests
+  - instance_orchestration_tests
+  - instance_configurer_test
   - vcn_tests
 if: commit_message =~ ^.*\[ci\].*$
 jobs:
@@ -27,19 +28,31 @@ jobs:
       python: "3.7"
     - <<: *prepare
       python: "3.8"
+
     - stage: cluster_tests
       python: "3.6"
       script:
         - travis_wait pytest -s -v tests/test_cluster_stack.py
         - travis_wait pytest -s -v tests/test_cluster_orchestrator.py
-    - &instance_tests
-      stage: instance_tests
+
+    - &instance_orchestration_tests
+      stage: instance_orchestration_tests
       python: "3.6"
-      script: travis_wait pytest -s -v tests/test_instance_*.py
-    - <<: *instance_tests
+      script: travis_wait pytest -s -v tests/test-instance_orchestrator*.py
+    - <<: *instance_orchestration_tests
       python: "3.7"
-    - <<: *instance_tests
+    - <<: *instance_orchestration_tests
       python: "3.8"
+
+    - &instance_configurer_test
+      stage: instance_configurer_test
+      python: "3.6"
+      script: travis_wait pytest -s -v tests/test_instance_configurer.py
+    - <<: *instance_configurer_test
+      python: "3.7"
+    - <<: *instance_configurer_test
+      python: "3.8"
+
     - &vcn_tests
       stage: vcn_tests
       python: "3.6"
