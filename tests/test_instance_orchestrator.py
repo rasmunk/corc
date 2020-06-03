@@ -31,7 +31,7 @@ class TestInstanceOrchestrator(unittest.TestCase):
 
         compute_options = dict(
             availability_domain="lfcb:EU-FRANKFURT-1-AD-1",
-            shape="VM.Standard2.1",
+            shape="VM.Standard1.1",
             operating_system="CentOS",
             operating_system_version="7",
             display_name=node_name,

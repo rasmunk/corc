@@ -12,7 +12,7 @@ def prepare_options():
         availability_domain="Xfze:eu-amsterdam-1-AD-1",
         name="test_xnovotech_cluster",
         size=1,
-        node_shape="VM.Standard2.1",
+        node_shape="VM.Standard1.1",
         node_image_name="Oracle-Linux-7.7",
     )
 

@@ -38,7 +38,7 @@ class TestClusterOrchestrator(unittest.TestCase):
             availability_domain="lfcb:EU-FRANKFURT-1-AD-1",
             name=node_name,
             size=1,
-            node_shape="VM.Standard2.1",
+            node_shape="VM.Standard1.1",
             image=image_options,
         )
 
