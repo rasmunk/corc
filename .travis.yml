@@ -14,28 +14,39 @@ stages:
   - cluster_tests
   - instance_tests
   - vcn_tests
-
 jobs:
   include:
     - &prepare
       stage: prepare
+      python: "3.6"
       script:
         - python setup.py check -rms
         - flake8
-    - <<: *prepare
-      python: "3.6"
     - <<: *prepare
       python: "3.7"
     - <<: *prepare
       python: "3.8"
     - stage: cluster_tests
+      python: "3.6"
       script:
         - travis_wait pytest -s -v tests/test_cluster_stack.py
         - travis_wait pytest -s -v tests/test_cluster_orchestrator.py
-    - stage: instance_tests
+    - &instance_tests
+      name: instance_tests
+      python: "3.6"
       script: travis_wait pytest -s -v tests/test_instance_*.py
-    - stage: vcn_tests
+    - <<: *instance_tests
+      python: "3.7"
+    - <<: *instance_tests
+      python: "3.8"
+    - &vcn_tests
+      name: vcn_tests
+      python: "3.6"
       script: travis_wait pytest -s -v tests/test_vcn_*.py
+    - <<: *vcn_tests
+      python: "3.7"
+    - <<: *vcn_tests
+      python: "3.8"
 env:
   global:
   - OCI_CONFIG_DIR="$TRAVIS_BUILD_DIR/.oci"
