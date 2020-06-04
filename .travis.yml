@@ -48,7 +48,7 @@ jobs:
     before_script: &2
     - mkdir $TRAVIS_BUILD_DIR/.ssh/
     - ssh-keygen -t rsa -b 4096 -N "" -f $TRAVIS_BUILD_DIR/.ssh/oci_id_rsa
-    env: OCI_INSTANCE_SSH_PATH=$TRAVIS_BUILD_DIR/.ssh/oci_id_rsa.pub
+    env: OCI_INSTANCE_SSH_KEY=$TRAVIS_BUILD_DIR/.ssh/oci_id_rsa.pub
     script: travis_wait pytest -s -v tests/test_instance_configurer.py
   - stage: instance_configurer_tests
     python: '3.7'

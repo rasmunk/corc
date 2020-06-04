@@ -13,6 +13,7 @@ from oci.core.models import (
     Instance,
 )
 from corc.orchestrator import Orchestrator
+from corc.util import open_port
 from corc.oci.helpers import (
     create,
     delete,
@@ -278,6 +279,7 @@ class OCIInstanceOrchestrator(Orchestrator):
             profile_name=options["oci"]["profile_name"],
         )
 
+        self.port = 22
         self.instance = None
         self.vcn_stack = None
         self._is_ready = False
@@ -437,6 +439,20 @@ class OCIInstanceOrchestrator(Orchestrator):
             self._is_ready = True
         else:
             self._is_ready = False
+
+    def poll(self):
+        target_endpoint = self.endpoint()
+        if target_endpoint:
+            if open_port(target_endpoint, self.port):
+                self._is_reachable = True
+            else:
+                print(
+                    "The endpoint: {} could not be reached on port: {}".format(
+                        target_endpoint, self.port
+                    )
+                )
+        else:
+            print("No endpoint was found to poll: {}".format(target_endpoint))
 
     @classmethod
     def validate_options(cls, options):

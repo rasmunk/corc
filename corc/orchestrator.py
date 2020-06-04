@@ -2,12 +2,16 @@ class Orchestrator:
 
     options = None
     _is_ready = False
+    _is_reachable = False
 
     def __init__(self, options):
         self.options = options
 
     def is_ready(self):
         return self._is_ready
+
+    def is_reachable(self):
+        return self._is_reachable
 
     def endpoint(self, select=None):
         raise NotImplementedError

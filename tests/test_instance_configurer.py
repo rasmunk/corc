@@ -1,4 +1,5 @@
 import os
+import time
 import unittest
 from corc.configurer import AnsibleConfigurer
 from corc.oci.instance import OCIInstanceOrchestrator
@@ -91,6 +92,21 @@ class TestInstanceConfigurer(unittest.TestCase):
         # Should not be ready at this point
         self.orchestrator.setup()
         self.assertTrue(self.orchestrator.is_ready())
+        # Ensure that the orchestrated instance is reachable
+        reachable = self.orchestrator.is_reachable()
+        num_waited, max_wait = 0, 60
+
+        while not reachable:
+            self.orchestrator.poll()
+            reachable = self.orchestrator.is_reachable()
+            if num_waited > max_wait:
+                print(
+                    "The maximum number of waits: '{}' for the orchestrated instance to "
+                    "be reachable was exceeded".format(max_wait)
+                )
+                break
+            time.sleep(1)
+        self.assertTrue(reachable)
 
     def tearDown(self):
         self.orchestrator.tear_down()
@@ -104,7 +120,8 @@ class TestInstanceConfigurer(unittest.TestCase):
         options = dict(
             ssh_private_key_file=self.ssh_private_key_file,
             playbook_path=playbook_path,
-            hosts=[endpoint],)
+            hosts=[endpoint],
+        )
         configurer = AnsibleConfigurer(options)
         configurer.apply()
 
