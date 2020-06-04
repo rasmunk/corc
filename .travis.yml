@@ -51,7 +51,6 @@ jobs:
     - ssh-keygen -t rsa -b 4096 -N "" -f $TRAVIS_BUILD_DIR/.ssh/oci_id_rsa
     env:
       - OCI_INSTANCE_SSH_KEY=$TRAVIS_BUILD_DIR/.ssh/oci_id_rsa
-      - ANSIBLE_DEBUG=1
       - ANSIBLE_HOST_KEY_CHECKING=False
     script: travis_wait pytest -s -v tests/test_instance_configurer.py
   - stage: instance_configurer_tests
@@ -59,7 +58,6 @@ jobs:
     before_script: *2
     env:
       - OCI_INSTANCE_SSH_KEY=$TRAVIS_BUILD_DIR/.ssh/oci_id_rsa
-      - ANSIBLE_DEBUG=1
       - ANSIBLE_HOST_KEY_CHECKING=False
     script: travis_wait pytest -s -v tests/test_instance_configurer.py
   - stage: instance_configurer_tests
@@ -67,7 +65,6 @@ jobs:
     before_script: *2
     env:
       - OCI_INSTANCE_SSH_KEY=$TRAVIS_BUILD_DIR/.ssh/oci_id_rsa
-      - ANSIBLE_DEBUG=1
       - ANSIBLE_HOST_KEY_CHECKING=False
     script: travis_wait pytest -s -v tests/test_instance_configurer.py
   - stage: vcn_tests

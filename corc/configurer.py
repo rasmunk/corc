@@ -52,11 +52,15 @@ class AnsibleConfigurer:
         self.variable_manager.set_host_variable(host, "ansible_user", "opc")
         self.variable_manager.set_host_variable(host, "ansible_become", "yes")
         self.variable_manager.set_host_variable(host, "ansible_become_method", "sudo")
+        self.variable_manager.set_host_variable(
+            host, "ansible_host_key_checking", "False"
+        )
 
         # Use the provided ssh key
         self.variable_manager.set_host_variable(
             host, "ansible_ssh_private_key_file", self.options["ssh_private_key_file"]
         )
+
         self.variable_manager.set_host_variable(host, "verbosity", 4)
 
     def apply(self):
