@@ -52,6 +52,7 @@ jobs:
     env:
       - OCI_INSTANCE_SSH_KEY=$TRAVIS_BUILD_DIR/.ssh/oci_id_rsa
       - ANSIBLE_DEBUG=1
+      - ANSIBLE_HOST_KEY_CHECKING=False
     script: travis_wait pytest -s -v tests/test_instance_configurer.py
   - stage: instance_configurer_tests
     python: '3.7'
@@ -59,6 +60,7 @@ jobs:
     env:
       - OCI_INSTANCE_SSH_KEY=$TRAVIS_BUILD_DIR/.ssh/oci_id_rsa
       - ANSIBLE_DEBUG=1
+      - ANSIBLE_HOST_KEY_CHECKING=False
     script: travis_wait pytest -s -v tests/test_instance_configurer.py
   - stage: instance_configurer_tests
     python: '3.8'
@@ -66,6 +68,7 @@ jobs:
     env:
       - OCI_INSTANCE_SSH_KEY=$TRAVIS_BUILD_DIR/.ssh/oci_id_rsa
       - ANSIBLE_DEBUG=1
+      - ANSIBLE_HOST_KEY_CHECKING=False
     script: travis_wait pytest -s -v tests/test_instance_configurer.py
   - stage: vcn_tests
     python: '3.6'
