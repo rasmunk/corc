@@ -78,6 +78,9 @@ jobs:
     script: travis_wait pytest -s -v tests/test_vcn_*.py
   - stage: deploy
     deploy:
+      python: '3.7'
+      script:
+        - python setup.py sdist bdist_wheel
       skip_cleanup: true
       skip_existing: true
       distributions: sdist bdist_wheel
