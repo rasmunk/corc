@@ -5,6 +5,7 @@ before_install:
 - openssl aes-256-cbc -K $encrypted_bdba505e7122_key -iv $encrypted_bdba505e7122_iv
   -in oci_data.tar.enc -out $TRAVIS_BUILD_DIR/oci_data.tar -d
 - tar -xvf $TRAVIS_BUILD_DIR/oci_data.tar -C $TRAVIS_BUILD_DIR/
+- rm -rf ~/.ansible
 install:
 - pip install -r tests/requirements.txt
 - pip install -r requirements-dev.txt
@@ -48,17 +49,23 @@ jobs:
     before_script: &2
     - mkdir $TRAVIS_BUILD_DIR/.ssh/
     - ssh-keygen -t rsa -b 4096 -N "" -f $TRAVIS_BUILD_DIR/.ssh/oci_id_rsa
-    env: OCI_INSTANCE_SSH_KEY=$TRAVIS_BUILD_DIR/.ssh/oci_id_rsa.pub
+    env:
+      - OCI_INSTANCE_SSH_KEY=$TRAVIS_BUILD_DIR/.ssh/oci_id_rsa
+      - ANSIBLE_DEBUG=1
     script: travis_wait pytest -s -v tests/test_instance_configurer.py
   - stage: instance_configurer_tests
     python: '3.7'
     before_script: *2
-    env: OCI_INSTANCE_SSH_KEY=$TRAVIS_BUILD_DIR/.ssh/oci_id_rsa
+    env:
+      - OCI_INSTANCE_SSH_KEY=$TRAVIS_BUILD_DIR/.ssh/oci_id_rsa
+      - ANSIBLE_DEBUG=1
     script: travis_wait pytest -s -v tests/test_instance_configurer.py
   - stage: instance_configurer_tests
     python: '3.8'
     before_script: *2
-    env: OCI_INSTANCE_SSH_KEY=$TRAVIS_BUILD_DIR/.ssh/oci_id_rsa
+    env:
+      - OCI_INSTANCE_SSH_KEY=$TRAVIS_BUILD_DIR/.ssh/oci_id_rsa
+      - ANSIBLE_DEBUG=1
     script: travis_wait pytest -s -v tests/test_instance_configurer.py
   - stage: vcn_tests
     python: '3.6'
