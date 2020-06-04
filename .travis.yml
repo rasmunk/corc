@@ -16,7 +16,7 @@ stages:
 - instance_orchestration_tests
 - instance_configurer_tests
 - vcn_tests
-if: commit_message =~ ^.*\[ci\].*$
+if: commit_message =~ ^.*\[ci\].*$ OR tag IS present
 jobs:
   include:
   - stage: prepare
