@@ -4,8 +4,6 @@ from corc.configurer import AnsibleConfigurer
 from corc.oci.instance import OCIInstanceOrchestrator
 
 
-# ansible_repo_path = os.path.join(os.sep, "home", "rasmus", "repos", "nbi_machines")
-
 current_dir = os.path.dirname(os.path.abspath(__file__))
 playbook_path = os.path.join(current_dir, "res", "configurer", "playbook.yml")
 
@@ -44,31 +42,36 @@ class TestInstanceConfigurer(unittest.TestCase):
             display_name=node_name,
         )
 
-        pub_file = None
-        # TODO, add OCI_INSTANCE_PUB_PATH
+        self.ssh_private_key_file = None
+        ssh_public_key_file = None
+        ssh_public_key = None
 
-        if "OCI_INSTANCE_PUB_KEY" in os.environ:
-            pub_file = os.environ["OCI_INSTANCE_PUB_KEY"]
-
-        if "OCI_INSTANCE_PUB_PATH" in os.environ:
-            pub_path = os.environ["OCI_INSTANCE_PUB_PATH"]
-            if not os.path.exists(pub_path):
+        if "OCI_INSTANCE_SSH_KEY" in os.environ:
+            self.ssh_private_key_file = os.environ["OCI_INSTANCE_SSH_KEY"]
+            if not os.path.exists(self.ssh_private_key_file):
                 raise ValueError(
-                    "The specified OCI_INSTANCE_PUB_PATH path: {} does not exist".format(
-                        pub_path
+                    "The specified OCI_INSTANCE_SSH_KEY path: {} does not exist".format(
+                        self.ssh_private_key_file
                     )
                 )
 
-            with open(pub_path, "r") as pub_file:
-                pub_file = pub_file.read()
+            # Get the public key compliment
+            ssh_public_key_file = self.ssh_private_key_file + ".pub"
+            with open(ssh_public_key_file, "r") as pub_file:
+                ssh_public_key = pub_file.read()
 
-        if not pub_file:
+        if not ssh_public_key_file or not self.ssh_private_key_file:
             raise ValueError(
-                "Either OCI_INSTANCE_PUB_KEY or OCI_INSTANCE_PUB_PATH"
+                "Failed to load ssh keys, OCI_INSTANCE_SSH_KEY "
                 "environment variable must be set"
             )
 
-        compute_metadata_options = dict(ssh_authorized_keys=[pub_file])
+        if not ssh_public_key:
+            raise ValueError(
+                "Failed to load the specified OCI_INSTANCE_SSH_KEY public key"
+            )
+
+        compute_metadata_options = dict(ssh_authorized_keys=[ssh_public_key])
 
         vcn_options = dict(
             cidr_block="10.0.0.0/16", display_name=vcn_name, dns_label="ku",
@@ -98,7 +101,10 @@ class TestInstanceConfigurer(unittest.TestCase):
     def test_instance_ansible_configure(self):
         # Extract the ip of the instance
         endpoint = self.orchestrator.endpoint()
-        options = dict(playbook_path=playbook_path, hosts=[endpoint],)
+        options = dict(
+            ssh_private_key_file=self.ssh_private_key_file,
+            playbook_path=playbook_path,
+            hosts=[endpoint],)
         configurer = AnsibleConfigurer(options)
         configurer.apply()
 
