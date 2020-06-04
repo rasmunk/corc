@@ -80,13 +80,7 @@ jobs:
     python: '3.6'
     script: &3
       - python setup.py sdist bdist_wheel
-  - stage: deploy
-    python: '3.7'
-    script: *3
-  - stage: deploy
-    python: '3.8'
-    script: *3
-    deploy:
+    deploy: &4
       skip_cleanup: true
       skip_existing: true
       distributions: sdist bdist_wheel
@@ -97,7 +91,14 @@ jobs:
       on:
         tags: true
         branch: master
-        python: '3.8'
+  - stage: deploy
+    python: '3.7'
+    script: *3
+    deploy: *4
+  - stage: deploy
+    python: '3.8'
+    script: *3
+    deploy: *4
 env:
   global:
   - OCI_TEST_ID="$TRAVIS_JOB_ID-$TRAVIS_JOB_NUMBER"
