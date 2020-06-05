@@ -106,6 +106,7 @@ class TestInstanceConfigurer(unittest.TestCase):
                 )
                 break
             time.sleep(1)
+            num_waited += 1
         self.assertTrue(reachable)
 
     def tearDown(self):
