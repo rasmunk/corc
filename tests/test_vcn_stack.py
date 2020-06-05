@@ -1,13 +1,15 @@
 import os
 import unittest
 from oci.core import VirtualNetworkClient, VirtualNetworkClientCompositeOperations
-from corc.oci.helpers import new_client, get, list_entities
+from corc.oci.helpers import new_client, get, list_entities, stack_was_deleted
 from corc.oci.network import (
     new_vcn_stack,
     delete_vcn_stack,
     valid_vcn_stack,
     get_vcn_stack,
     get_vcn_by_name,
+    equal_vcn_stack,
+    refresh_vcn_stack,
 )
 
 
@@ -61,10 +63,10 @@ class TestVCNStack(unittest.TestCase):
         )
 
         for vcn in vcns:
-            deleted = delete_vcn_stack(
+            deleted_stack = delete_vcn_stack(
                 self.network_client, self.options["oci"]["compartment_id"], vcn=vcn
             )
-            self.assertTrue(deleted)
+            self.assertTrue(stack_was_deleted(deleted_stack))
 
     def test_vcn_stack(self):
         # Extract the ip of the instance
@@ -94,6 +96,9 @@ class TestVCNStack(unittest.TestCase):
         self.assertEqual(self.vcn_stack["id"], new_vcn_id.id)
         self.assertEqual(self.vcn_stack["vcn"], new_vcn_id)
 
+        # Custom equal check
+        self.assertTrue(equal_vcn_stack(self.vcn_stack, _vcn_stack))
+
         new_vcn_name = get_vcn_by_name(
             self.network_client,
             self.options["oci"]["compartment_id"],
@@ -102,6 +107,63 @@ class TestVCNStack(unittest.TestCase):
 
         self.assertEqual(self.vcn_stack["id"], new_vcn_name.id)
         self.assertEqual(self.vcn_stack["vcn"], new_vcn_name)
+
+    def test_vcn_delete_stack(self):
+        # Extract the ip of the instance
+        self.vcn_stack = new_vcn_stack(
+            self.network_client,
+            self.options["oci"]["compartment_id"],
+            vcn_kwargs=self.options["vcn"],
+            subnet_kwargs=self.options["subnet"],
+        )
+
+        self.assertTrue(valid_vcn_stack(self.vcn_stack))
+
+        created_vcn_stack = get_vcn_stack(
+            self.network_client,
+            self.options["oci"]["compartment_id"],
+            self.vcn_stack["id"],
+        )
+
+        self.assertTrue(valid_vcn_stack(created_vcn_stack))
+        self.assertTrue(equal_vcn_stack(self.vcn_stack, created_vcn_stack))
+
+        deleted_stack = delete_vcn_stack(
+            self.network_client,
+            self.options["oci"]["compartment_id"],
+            self.vcn_stack["id"],
+        )
+        self.assertTrue(stack_was_deleted(deleted_stack))
+
+    def test_vcn_refresh_stack(self):
+        # Extract the ip of the instance
+        self.vcn_stack = new_vcn_stack(
+            self.network_client,
+            self.options["oci"]["compartment_id"],
+            vcn_kwargs=self.options["vcn"],
+            subnet_kwargs=self.options["subnet"],
+        )
+
+        self.assertTrue(valid_vcn_stack(self.vcn_stack))
+        refresh_stack = {"id": self.vcn_stack["id"]}
+
+        refreshed_vcn = refresh_vcn_stack(
+            self.network_client,
+            self.options["oci"]["compartment_id"],
+            vcn_kwargs=refresh_stack,
+        )
+        self.assertTrue(valid_vcn_stack(refreshed_vcn))
+        self.assertTrue(equal_vcn_stack(self.vcn_stack, refreshed_vcn))
+
+        refresh_stack = {"display_name": self.vcn_stack["vcn"].display_name}
+
+        refreshed_vcn = refresh_vcn_stack(
+            self.network_client,
+            self.options["oci"]["compartment_id"],
+            vcn_kwargs=refresh_stack,
+        )
+        self.assertTrue(valid_vcn_stack(refreshed_vcn))
+        self.assertTrue(equal_vcn_stack(self.vcn_stack, refreshed_vcn))
 
 
 if __name__ == "__main__":

@@ -18,6 +18,7 @@ from corc.oci.helpers import (
     create,
     delete,
     update,
+    stack_was_deleted,
 )
 
 
@@ -279,6 +280,30 @@ def get_vcn_stack(
     return stack
 
 
+def equal_vcn_stack(vcn_stack, other_vcn_stack):
+    if vcn_stack["id"] != other_vcn_stack["id"]:
+        return False
+
+    if vcn_stack["vcn"] != other_vcn_stack["vcn"]:
+        return False
+
+    if len(vcn_stack["internet_gateways"]) != len(other_vcn_stack["internet_gateways"]):
+        return False
+
+    for i, gateway in enumerate(vcn_stack["internet_gateways"]):
+        if gateway != other_vcn_stack["internet_gateways"][i]:
+            return False
+
+    if len(vcn_stack["subnets"]) != len(vcn_stack["subnets"]):
+        return False
+
+    for i, subnet in enumerate(vcn_stack["subnets"]):
+        if subnet != other_vcn_stack["subnets"][i]:
+            return False
+
+    return True
+
+
 def get_vcn_by_name(network_client, compartment_id, display_name, **kwargs):
     vcns = list_entities(network_client, "list_vcns", compartment_id, **kwargs)
     for vcn in vcns:
@@ -321,29 +346,45 @@ def delete_vcn_stack(network_client, compartment_id, vcn_id=None, vcn=None):
         # Delete all the routes (and disable the gateway target
         # if they are the default which means that they can't be deleted)
         routes = list_entities(
-            network_client, "list_route_tables", compartment_id, vcn.id
+            network_client,
+            "list_route_tables",
+            compartment_id,
+            vcn.id,
+            sort_by="TIMECREATED",
+            sort_order="ASC",
         )
-        for route in routes:
-            update_details = UpdateRouteTableDetails(route_rules=[])
-            update(
-                network_client,
-                "update_route_table",
-                route.id,
-                wait_for_states=[RouteTable.LIFECYCLE_STATE_AVAILABLE],
-                update_route_table_details=update_details,
-            )
+        # Disable routes on the default route table
+        if routes:
+            # Disable all routes
+            for route in routes:
+                update_details = UpdateRouteTableDetails(route_rules=[])
+                update(
+                    network_client,
+                    "update_route_table",
+                    route.id,
+                    wait_for_states=[RouteTable.LIFECYCLE_STATE_AVAILABLE],
+                    update_route_table_details=update_details,
+                )
 
-            deleted = delete(
-                network_client,
-                "delete_route_table",
-                route.id,
-                wait_for_states=[RouteTable.LIFECYCLE_STATE_TERMINATED],
-            )
-            remove_stack["route_tables"].append(deleted)
+            # Delete all non default routes
+            if len(routes) > 1:
+                for route in routes[1:]:
+                    deleted = delete(
+                        network_client,
+                        "delete_route_table",
+                        route.id,
+                        wait_for_states=[RouteTable.LIFECYCLE_STATE_TERMINATED],
+                    )
+                    remove_stack["route_tables"].append(deleted)
 
-        # Delete all gateways
+        # Delete all gateways (can't delete the default)
         gateways = list_entities(
-            network_client, "list_internet_gateways", compartment_id, vcn.id
+            network_client,
+            "list_internet_gateways",
+            compartment_id,
+            vcn.id,
+            sort_by="TIMECREATED",
+            sort_order="ASC",
         )
         for gateway in gateways:
             deleted = delete(
@@ -356,29 +397,43 @@ def delete_vcn_stack(network_client, compartment_id, vcn_id=None, vcn=None):
 
         # Delete all security lists
         securities = list_entities(
-            network_client, "list_security_lists", compartment_id, vcn.id
+            network_client,
+            "list_security_lists",
+            compartment_id,
+            vcn.id,
+            sort_by="TIMECREATED",
+            sort_order="ASC",
         )
-        for security in securities:
-            deleted = delete(
-                network_client,
-                "delete_security_list",
-                security.id,
-                wait_for_states=[SecurityList.LIFECYCLE_STATE_TERMINATED],
-            )
-            remove_stack["security_lists"].append(deleted)
+        # Can't delete the detault
+        if len(securities) > 1:
+            for security in securities[1:]:
+                deleted = delete(
+                    network_client,
+                    "delete_security_list",
+                    security.id,
+                    wait_for_states=[SecurityList.LIFECYCLE_STATE_TERMINATED],
+                )
+                remove_stack["security_lists"].append(deleted)
 
         # Delete all DHCP options
         dhcp_options = list_entities(
-            network_client, "list_dhcp_options", compartment_id, vcn.id
+            network_client,
+            "list_dhcp_options",
+            compartment_id,
+            vcn.id,
+            sort_by="TIMECREATED",
+            sort_order="ASC",
         )
-        for dhcp_option in dhcp_options:
-            deleted = delete(
-                network_client,
-                "delete_dhcp_options",
-                dhcp_option.id,
-                wait_for_states=[DhcpOptions.LIFECYCLE_STATE_TERMINATED],
-            )
-            remove_stack["dhcp_options"].append(deleted)
+
+        if len(dhcp_options) > 1:
+            for dhcp_option in dhcp_options[1:]:
+                deleted = delete(
+                    network_client,
+                    "delete_dhcp_options",
+                    dhcp_option.id,
+                    wait_for_states=[DhcpOptions.LIFECYCLE_STATE_TERMINATED],
+                )
+                remove_stack["dhcp_options"].append(deleted)
 
         # Delete local peering gateways
         local_peering_gateways = list_entities(
@@ -419,12 +474,13 @@ def delete_vcn_stack(network_client, compartment_id, vcn_id=None, vcn=None):
             )
             remove_stack["service_gateways"].append(deleted)
 
+        # The delete_vcn defaults internally to succeed_on_not_found
+        # https://github.com/oracle/oci-python-sdk/blob/bafa4f0d68be097568772cd3cda250e60cb61a0c/src/oci/core/virtual_network_client_composite_operations.py#L1758
         deleted = delete(
             network_client,
             "delete_vcn",
             vcn.id,
             wait_for_states=[Vcn.LIFECYCLE_STATE_TERMINATED],
-            waiter_kwargs=dict(succeed_on_not_found=True),
         )
         remove_stack["id"] = vcn.id
         remove_stack["vcn"] = deleted
@@ -436,8 +492,9 @@ def delete_compartment_vcns(network_client, compartment_id, **kwargs):
     removed_vcns = []
     vcns = list_entities(network_client, "list_vcns", compartment_id, **kwargs)
     for vcn in vcns:
-        result = delete_vcn_stack(network_client, compartment_id, vcn_id=vcn.id)
-        removed_vcns.append(result)
+        removed_stack = delete_vcn_stack(network_client, compartment_id, vcn_id=vcn.id)
+        deleted = stack_was_deleted(removed_stack)
+        removed_vcns.append(deleted)
     return removed_vcns
 
 

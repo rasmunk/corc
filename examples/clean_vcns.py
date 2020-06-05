@@ -11,4 +11,5 @@ if __name__ == "__main__":
         profile_name="",
     )
 
-    delete_compartment_vcns(network_client, compartment_id)
+    delected_vcns = delete_compartment_vcns(network_client, compartment_id)
+    print(delected_vcns)

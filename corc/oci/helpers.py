@@ -186,6 +186,18 @@ def get_kubernetes_version(container_engine_client):
     return kubernetes_version
 
 
+def stack_was_deleted(stack):
+    for key_type, value_type in stack.items():
+        if isinstance(value_type, (bool, str)):
+            if not value_type:
+                return False
+        if isinstance(value_type, (list, tuple)):
+            for result in value_type:
+                if not result:
+                    return False
+    return True
+
+
 def perform_action(action, *args, **kwargs):
     try:
         result = action(*args, **kwargs)
@@ -193,5 +205,10 @@ def perform_action(action, *args, **kwargs):
             return result.data
     # TODO, check for regular errors as well
     except (CompositeOperationError, ServiceError) as err:
-        print("Failed to perform action: {}, err: {}".format(action, err))
-    return False
+        print(
+            "Failed to perform action: {}, err: {}, cause: {}".format(
+                action, err, err.cause
+            )
+        )
+        return False
+    return True

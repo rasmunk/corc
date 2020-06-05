@@ -20,6 +20,7 @@ from corc.oci.helpers import (
     get,
     list_entities,
     new_client,
+    stack_was_deleted,
 )
 from corc.oci.network import (
     get_vcn_by_name,
@@ -433,7 +434,7 @@ class OCIInstanceOrchestrator(Orchestrator):
                 self.options["oci"]["compartment_id"],
                 vcn_id=self.vcn_stack["id"],
             )
-            if vcn_deleted:
+            if stack_was_deleted(vcn_deleted):
                 self.vcn_stack = None
 
         if self.instance and self.vcn_stack:
