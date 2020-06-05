@@ -445,14 +445,6 @@ class OCIInstanceOrchestrator(Orchestrator):
         if target_endpoint:
             if open_port(target_endpoint, self.port):
                 self._is_reachable = True
-            else:
-                print(
-                    "The endpoint: {} could not be reached on port: {}".format(
-                        target_endpoint, self.port
-                    )
-                )
-        else:
-            print("No endpoint was found to poll: {}".format(target_endpoint))
 
     @classmethod
     def validate_options(cls, options):
