@@ -136,7 +136,9 @@ def refresh_vcn_stack(
     if "id" in vcn_kwargs:
         vcn = get(network_client, "get_vcn", vcn_kwargs["id"])
     elif "display_name" in vcn_kwargs:
-        vcn = get(network_client, "get_vcn", vcn_kwargs["display_name"])
+        vcn = get_vcn_by_name(
+            network_client, compartment_id, vcn_kwargs["display_name"]
+        )
 
     if not vcn:
         create_vcn_details = CreateVcnDetails(

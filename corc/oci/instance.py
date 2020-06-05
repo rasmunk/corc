@@ -343,6 +343,7 @@ class OCIInstanceOrchestrator(Orchestrator):
         if valid_vcn_stack(vcn_stack):
             self.vcn_stack = vcn_stack
         else:
+            # FIXME, creates a duplicate VCN
             self.vcn_stack = self._refresh_vcn_stack(vcn_stack)
 
         if not valid_vcn_stack(self.vcn_stack):
