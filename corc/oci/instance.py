@@ -417,7 +417,13 @@ class OCIInstanceOrchestrator(Orchestrator):
             )
 
         if self.instance:
-            deleted = terminate_instance(self.compute_client, self.instance.id)
+            # Await that it is terminated
+            # Must be done before we can remove the vcn
+            deleted = terminate_instance(
+                self.compute_client,
+                self.instance.id,
+                wait_for_states=[Instance.LIFECYCLE_STATE_TERMINATED],
+            )
             if deleted:
                 self.instance = None
         else:

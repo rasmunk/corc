@@ -205,10 +205,9 @@ def perform_action(action, *args, **kwargs):
             return result.data
     # TODO, check for regular errors as well
     except (CompositeOperationError, ServiceError) as err:
-        print(
-            "Failed to perform action: {}, err: {}, cause: {}".format(
-                action, err, err.cause
-            )
-        )
+        print("Failed to perform action: {}, err: {}".format(action, err))
+        if hasattr(err, "cause"):
+            print("Failed cause: {}".format(err.cause))
+
         return False
     return True
