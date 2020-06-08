@@ -117,13 +117,20 @@ def new_vcn_stack(
 
 
 def refresh_vcn_stack(
-    network_client, compartment_id, vcn_kwargs=None, subnet_kwargs=None,
+    network_client,
+    compartment_id,
+    vcn_kwargs=None,
+    gateway_kwargs=None,
+    subnet_kwargs=None,
 ):
     if not vcn_kwargs:
         vcn_kwargs = {}
 
     if "cidr_block" not in vcn_kwargs:
         vcn_kwargs.update(dict(cidr_block="10.0.0.0/16"))
+
+    if not gateway_kwargs:
+        gateway_kwargs = {}
 
     if not subnet_kwargs:
         subnet_kwargs = {}
@@ -163,7 +170,11 @@ def refresh_vcn_stack(
     stack["vcn"] = vcn
 
     gateways = list_entities(
-        network_client, "list_internet_gateways", compartment_id, vcn.id
+        network_client,
+        "list_internet_gateways",
+        compartment_id,
+        vcn.id,
+        **gateway_kwargs
     )
 
     if gateways:
@@ -191,17 +202,18 @@ def refresh_vcn_stack(
     if subnets:
         stack["subnets"] = subnets
     else:
-        # Setup the route table
-        route_rule = prepare_route_rule(
-            gateway.id,
-            cidr_block=None,
-            destination="0.0.0.0/0",
-            destination_type="CIDR_BLOCK",
-        )
-
+        # Setup the default route table
         route_rules = []
-        if route_rule:
-            route_rules.append(route_rule)
+        for gateway in stack["internet_gateways"]:
+            route_rule = prepare_route_rule(
+                gateway.id,
+                cidr_block=None,
+                destination="0.0.0.0/0",
+                destination_type="CIDR_BLOCK",
+            )
+
+            if route_rule:
+                route_rules.append(route_rule)
 
         create_rt_details = CreateRouteTableDetails(
             compartment_id=compartment_id, route_rules=route_rules, vcn_id=vcn.id
