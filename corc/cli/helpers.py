@@ -12,6 +12,7 @@ from corc.cli.args import (
     add_vcn_group,
     start_cluster_group,
     stop_cluster_group,
+    run_cluster_job_group,
 )
 from corc.cluster import list_clusters, start_cluster, stop_cluster
 from corc.job import run
@@ -25,8 +26,8 @@ def add_job_cli(parser):
     add_execute_group(run_parser)
     add_storage_group(run_parser)
     add_s3_group(run_parser)
+    run_cluster_job_group(run_parser)
     run_parser.set_defaults(func=run)
-    # stop_parser = job_commands.add_parser("stop")
 
 
 def add_cluster_cli(parser):

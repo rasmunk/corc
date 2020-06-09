@@ -87,7 +87,10 @@ def stop_cluster(args):
             )
             cluster_id = cluster.id
 
-        return oci_delete_cluster_stack(container_engine_client, cluster_id)
+        return oci_delete_cluster_stack(
+            container_engine_client,
+            cluster_id
+        )
 
     if aws_args:
         pass

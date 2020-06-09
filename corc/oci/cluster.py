@@ -499,7 +499,7 @@ class OCIClusterOrchestrator(Orchestrator):
                     self.container_engine_client, cluster_details["create_node_pool"]
                 )
                 if node_pool:
-                    cluster_stack["node_pools"].extend(node_pool)
+                    cluster_stack["node_pools"].append(node_pool)
 
             if valid_cluster_stack(cluster_stack):
                 self.cluster_stack = cluster_stack

@@ -31,8 +31,14 @@ def new_vcn_stack(
     if "cidr_block" not in vcn_kwargs:
         vcn_kwargs.update(dict(cidr_block="10.0.0.0/16"))
 
+    if "id" in vcn_kwargs:
+        vcn_kwargs.pop("id")
+
     if not subnet_kwargs:
         subnet_kwargs = {}
+
+    if "id" in subnet_kwargs:
+        subnet_kwargs.pop("id")
 
     if "cidr_block" not in subnet_kwargs:
         subnet_kwargs.update(dict(cidr_block="10.0.1.0/24"))

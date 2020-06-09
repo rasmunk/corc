@@ -68,7 +68,7 @@ def add_ansible_group(parser):
 def add_compute_group(parser):
     compute_group = parser.add_argument_group(title="Compute arguments")
     compute_group.add_argument("--compute-ssh-authorized-keys", nargs="+", default=[])
-    compute_group.add_argument("--compute-ad", default="Xfze:eu-amsterdam-1-AD-1")
+    compute_group.add_argument("--compute-ad", default="", required=True)
     compute_group.add_argument("--compute-os", default="CentOS")
     compute_group.add_argument("--compute-os-version", default="7")
     compute_group.add_argument("--compute-target-shape", default="VM.Standard2.1")
@@ -94,7 +94,7 @@ def valid_cluster_group(parser):
     cluster_group.add_argument("--cluster-id", default="")
     cluster_group.add_argument("--cluster-name", default="")
     cluster_group.add_argument("--cluster-kubernetes-version", default=None)
-    cluster_group.add_argument("--cluster-domain", default="lfcb:eu-frankfurt-1-AD-1")
+    cluster_group.add_argument("--cluster-domain", default="")
     cluster_group.add_argument(
         "--cluster-image", default="nielsbohr/mccode-job-runner:latest"
     )
@@ -104,7 +104,7 @@ def start_cluster_group(parser):
     cluster_group = parser.add_argument_group(title="Cluster Start arguments")
     cluster_group.add_argument("--cluster-name", default="", required=True)
     cluster_group.add_argument("--cluster-kubernetes-version", default=None)
-    cluster_group.add_argument("--cluster-domain", default="lfcb:eu-frankfurt-1-AD-1")
+    cluster_group.add_argument("--cluster-domain", default="", required=True)
 
 
 def stop_cluster_group(parser):
@@ -113,8 +113,11 @@ def stop_cluster_group(parser):
     cluster_group.add_argument("--cluster-name", default="")
 
 
-def cluster_job_group(parser):
+def run_cluster_job_group(parser):
     cluster_group = parser.add_argument_group(title="Cluster Job arguments")
+    cluster = cluster_group.add_mutually_exclusive_group(required=True)
+    cluster.add_argument("--cluster-id", default="")
+    cluster.add_argument("--cluster-name", default="")
     cluster_group.add_argument(
         "--cluster-image", default="nielsbohr/mccode-job-runner:latest"
     )
@@ -122,9 +125,7 @@ def cluster_job_group(parser):
 
 def add_node_group(parser):
     node_group = parser.add_argument_group(title="Node arguments")
-    node_group.add_argument(
-        "--node-availability-domain", default="lfcb:eu-frankfurt-1-AD-1"
-    )
+    node_group.add_argument("--node-availability-domain", default="", required=True)
     node_group.add_argument("--node-name", default="NodePool")
     node_group.add_argument("--node-size", default=1, type=int)
     node_group.add_argument("--node-shape", default="VM.Standard2.1")
