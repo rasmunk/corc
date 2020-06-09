@@ -51,8 +51,6 @@ class TestClusterStack(unittest.TestCase):
             vcn_name += os.environ["OCI_TEST_ID"]
             subnet_name += os.environ["OCI_TEST_ID"]
 
-        cluster_options = dict(name=cluster_name,)
-
         image_options = dict(display_name="Oracle-Linux-7.7-2020.03.23-0",)
         node_options = dict(
             availability_domain="lfcb:EU-FRANKFURT-1-AD-1",
@@ -67,30 +65,35 @@ class TestClusterStack(unittest.TestCase):
 
         subnet_options = dict(display_name=subnet_name, dns_label="workers")
 
+        self.container_engine_client = new_client(
+            ContainerEngineClient,
+            composite_class=ContainerEngineClientCompositeOperations,
+            profile_name=profile_name,
+        )
+
+        cluster_options = dict(
+            name=cluster_name,
+            kubernetes_version=get_kubernetes_version(self.container_engine_client),
+        )
+
+        self.compute_client = new_client(
+            ComputeClient,
+            composite_class=ComputeClientCompositeOperations,
+            profile_name=profile_name,
+        )
+
+        self.network_client = new_client(
+            VirtualNetworkClient,
+            composite_class=VirtualNetworkClientCompositeOperations,
+            profile_name=profile_name,
+        )
+
         self.options = dict(
             oci=oci_options,
             cluster=cluster_options,
             node=node_options,
             vcn=vcn_options,
             subnet=subnet_options,
-        )
-
-        self.compute_client = new_client(
-            ComputeClient,
-            composite_class=ComputeClientCompositeOperations,
-            profile_name=self.options["oci"]["profile_name"],
-        )
-
-        self.network_client = new_client(
-            VirtualNetworkClient,
-            composite_class=VirtualNetworkClientCompositeOperations,
-            profile_name=self.options["oci"]["profile_name"],
-        )
-
-        self.container_engine_client = new_client(
-            ContainerEngineClient,
-            composite_class=ContainerEngineClientCompositeOperations,
-            profile_name=self.options["oci"]["profile_name"],
         )
 
     def tearDown(self):
@@ -150,11 +153,7 @@ class TestClusterStack(unittest.TestCase):
 
         # Prepare cluster details
         cluster_details = gen_cluster_stack_details(
-            self.vcn_stack["id"],
-            self.vcn_stack["subnets"],
-            image,
-            get_kubernetes_version(self.container_engine_client),
-            **self.options
+            self.vcn_stack["id"], self.vcn_stack["subnets"], image, **self.options
         )
 
         self.cluster_stack = new_cluster_stack(

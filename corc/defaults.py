@@ -4,7 +4,10 @@ PACKAGE_NAME = "corc"
 # Argument group defaults
 ANSIBLE = "ANSIBLE"
 AWS = "AWS"
+
+# Cluster
 CLUSTER = "CLUSTER"
+
 COMPUTE = "COMPUTE"
 EXECUTE = "EXECUTE"
 JOB = "JOB"

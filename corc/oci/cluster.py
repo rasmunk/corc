@@ -37,6 +37,14 @@ from corc.oci.network import (
 )
 
 
+def new_cluster_engine_client(**kwargs):
+    return new_client(
+        ContainerEngineClient,
+        composite_class=ContainerEngineClientCompositeOperations,
+        **kwargs,
+    )
+
+
 def refresh_kube_config(cluster_id, profile_name="DEFAULT"):
     container_engine_client = new_client(
         ContainerEngineClient,
@@ -192,20 +200,32 @@ def create_cluster(container_engine_client, create_cluster_details, create_kwarg
     return cluster
 
 
+def list_clusters(container_engine_client, compartment_id, cluster_kwargs=None):
+
+    if not cluster_kwargs:
+        cluster_kwargs = {}
+
+    if "lifecycle_state" not in cluster_kwargs:
+        cluster_kwargs.update(dict(lifecycle_state=[Cluster.LIFECYCLE_STATE_ACTIVE]))
+
+    # ClusterSummaries
+    return list_entities(
+        container_engine_client,
+        "list_clusters",
+        compartment_id=compartment_id,
+        **cluster_kwargs,
+    )
+
+
 def get_cluster_by_name(
     container_engine_client, compartment_id, name, cluster_kwargs=None
 ):
     if not cluster_kwargs:
-        cluster_kwargs = dict(lifecycle_state=[Cluster.LIFECYCLE_STATE_ACTIVE])
+        cluster_kwargs = {}
 
-    # ClusterSummaries
-    clusters = list_entities(
-        container_engine_client,
-        "list_clusters",
-        compartment_id=compartment_id,
-        name=name,
-        **cluster_kwargs,
-    )
+    cluster_kwargs.update(dict(name=name))
+
+    clusters = list_clusters(container_engine_client, compartment_id, cluster_kwargs)
     if clusters:
         # Convert to cluster type
         cluster = get(container_engine_client, "get_cluster", clusters[0].id)
@@ -287,14 +307,11 @@ def prepare_create_node_pool_details(**kwargs):
     return CreateNodePoolDetails(**create_node_pool_details)
 
 
-def gen_cluster_stack_details(vnc_id, subnets, image, kubernetes_version, **options):
+def gen_cluster_stack_details(vnc_id, subnets, image, **options):
     cluster_details = {}
 
     create_cluster_details = prepare_create_cluster_details(
-        vcn_id=vnc_id,
-        kubernetes_version=kubernetes_version,
-        **options["oci"],
-        **options["cluster"],
+        vcn_id=vnc_id, **options["oci"], **options["cluster"],
     )
     cluster_details["create_cluster"] = create_cluster_details
 
@@ -318,7 +335,7 @@ def gen_cluster_stack_details(vnc_id, subnets, image, kubernetes_version, **opti
 
     create_node_pool_details = prepare_create_node_pool_details(
         node_config_details=node_config_details,
-        kubernetes_version=kubernetes_version,
+        kubernetes_version=options["cluster"]["kubernetes_version"],
         **options["oci"],
         **options["node"],
     )
@@ -347,21 +364,40 @@ class OCIClusterOrchestrator(Orchestrator):
             profile_name=options["oci"]["profile_name"],
         )
 
+        if (
+            "kubernetes_version" not in self.options["cluster"]
+            or not self.options["cluster"]["kubernetes_version"]
+        ):
+            self.options["cluster"]["kubernetes_version"] = get_kubernetes_version(
+                self.container_engine_client
+            )
+
         self.cluster_stack = None
         self.vcn_stack = None
         self._is_ready = False
 
     def _get_vcn_stack(self):
-        stack = {}
-        vcn = get_vcn_by_name(
-            self.network_client,
-            self.options["oci"]["compartment_id"],
-            self.options["vcn"]["display_name"],
-        )
-        if vcn:
-            stack = get_vcn_stack(
-                self.network_client, self.options["oci"]["compartment_id"], vcn.id
+        if "id" in self.options["vcn"] and self.options["vcn"]["id"]:
+            return get_vcn_stack(
+                self.network_client,
+                self.options["oci"]["compartment_id"],
+                self.options["vcn"]["id"],
             )
+
+        stack = {}
+        if (
+            "display_name" in self.options["vcn"]
+            and self.options["vcn"]["display_name"]
+        ):
+            vcn = get_vcn_by_name(
+                self.network_client,
+                self.options["oci"]["compartment_id"],
+                self.options["vcn"]["display_name"],
+            )
+            if vcn:
+                stack = get_vcn_stack(
+                    self.network_client, self.options["oci"]["compartment_id"], vcn.id
+                )
         return stack
 
     def _new_vcn_stack(self):
@@ -425,13 +461,8 @@ class OCIClusterOrchestrator(Orchestrator):
 
         image = available_images[0]
 
-        kubernetes_version = get_kubernetes_version(self.container_engine_client)
         cluster_details = gen_cluster_stack_details(
-            self.vcn_stack["id"],
-            self.vcn_stack["subnets"],
-            image,
-            kubernetes_version,
-            **self.options,
+            self.vcn_stack["id"], self.vcn_stack["subnets"], image, **self.options,
         )
 
         cluster = get_cluster_by_name(
@@ -524,6 +555,7 @@ class OCIClusterOrchestrator(Orchestrator):
         expected_cluster_keys = [
             "name",
         ]
+        optional_cluster_keys = ["kubernetes_version", "domain"]
 
         expected_node_keys = [
             "availability_domain",
@@ -532,21 +564,19 @@ class OCIClusterOrchestrator(Orchestrator):
             "node_shape",
             "image",
         ]
-
         optional_node_keys = ["ssh_public_key"]
 
-        expected_vcn_keys = ["cidr_block", "dns_label", "display_name"]
+        expected_vcn_keys = ["cidr_block"]
+        optional_vcn_keys = ["id", "display_name", "dns_label"]
 
-        expected_subnet_keys = ["dns_label", "display_name"]
-
-        # TODO, this and vcn cidr_block should be optional
-        optional_subnet_keys = ["cidr_block"]
+        expected_subnet_keys = ["cidr_block"]
+        optional_subnet_keys = ["id", "dns_label", "display_name"]
 
         expected_groups = {
             "oci": expected_oci_keys,
-            "cluster": expected_cluster_keys,
+            "cluster": expected_cluster_keys + optional_cluster_keys,
             "node": expected_node_keys + optional_node_keys,
-            "vcn": expected_vcn_keys,
+            "vcn": expected_vcn_keys + optional_vcn_keys,
             "subnet": expected_subnet_keys + optional_subnet_keys,
         }
 

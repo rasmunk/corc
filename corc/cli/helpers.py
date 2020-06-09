@@ -1,16 +1,19 @@
 from corc.defaults import AWS, OCI
 from corc.cli.args import (
     add_aws_group,
-    add_cluster_group,
     add_compute_group,
     add_execute_group,
     add_job_meta_group,
+    add_node_group,
     add_oci_group,
     add_subnet_group,
     add_storage_group,
     add_s3_group,
     add_vcn_group,
+    start_cluster_group,
+    stop_cluster_group,
 )
+from corc.cluster import list_clusters, start_cluster, stop_cluster
 from corc.job import run
 from corc.instance import launch_instance
 
@@ -19,7 +22,6 @@ def add_job_cli(parser):
     job_commands = parser.add_subparsers(title="Commands")
     run_parser = job_commands.add_parser("run")
     add_job_meta_group(run_parser)
-    add_cluster_group(run_parser)
     add_execute_group(run_parser)
     add_storage_group(run_parser)
     add_s3_group(run_parser)
@@ -28,10 +30,20 @@ def add_job_cli(parser):
 
 
 def add_cluster_cli(parser):
-    pass
-    # cluster_commands = parser.add_subparsers(title="Commands")
-    # start_parser = cluster_commands.add_parser("start")
-    # terminate_parser = cluster_commands.add_parser("terminate")
+    cluster_commands = parser.add_subparsers(title="Commands")
+    start_parser = cluster_commands.add_parser("start")
+    start_cluster_group(start_parser)
+    add_node_group(start_parser)
+    add_vcn_group(start_parser)
+    add_subnet_group(start_parser)
+    start_parser.set_defaults(func=start_cluster)
+
+    stop_parser = cluster_commands.add_parser("stop")
+    stop_cluster_group(stop_parser)
+    stop_parser.set_defaults(func=stop_cluster)
+
+    list_parser = cluster_commands.add_parser("list")
+    list_parser.set_defaults(func=list_clusters)
 
 
 def add_instance_cli(parser):
@@ -41,12 +53,6 @@ def add_instance_cli(parser):
     add_vcn_group(launch_parser)
     add_subnet_group(launch_parser)
     launch_parser.set_defaults(func=launch_instance)
-
-    # command_group.add_argument('start')
-    # instance_commands = parser.add_subparsers(title='COMMAND')
-    # instance_commands.
-    # start_parser = instance_commands.add_parser('start')
-    # terminate_parser = instance_commands.add_parser('terminate')
 
 
 def add_platform_group(parser):

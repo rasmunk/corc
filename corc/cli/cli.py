@@ -26,7 +26,9 @@ def run():
     args = parser.parse_args()
     # Execute default function
     if hasattr(args, "func"):
-        args.func(args)
+        result = args.func(args)
+        if result:
+            print(result)
     return None
 
 

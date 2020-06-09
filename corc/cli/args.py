@@ -27,7 +27,7 @@ def _get_arguments(arguments, startswith=""):
 def add_oci_group(parser):
     oci_group = parser.add_argument_group(title="OCI arguments")
     oci_group.add_argument("--oci-profile-name", default="DEFAULT")
-    oci_group.add_argument("--oci-compartment-id", default=False)
+    oci_group.add_argument("--oci-compartment-id", default="")
 
 
 def add_aws_group(parser):
@@ -76,7 +76,7 @@ def add_compute_group(parser):
 
 def add_vcn_group(parser):
     vcn_group = parser.add_argument_group(title="VCN arguments")
-    vcn_group.add_argument("--vcn-id", default=None)
+    vcn_group.add_argument("--vcn-id", default="")
     vcn_group.add_argument("--vcn-dns-label", default=None)
     vcn_group.add_argument("--vcn-display-name", default="VCN Network")
     vcn_group.add_argument("--vcn-cidr-block", default="10.0.0.0/16")
@@ -84,15 +84,37 @@ def add_vcn_group(parser):
 
 def add_subnet_group(parser):
     subnet_group = parser.add_argument_group(title="Subnet arguments")
-    subnet_group.add_argument("--subnet-id", default=None)
+    subnet_group.add_argument("--subnet-id", default="")
     subnet_group.add_argument("--subnet-dns-label", default=None)
     subnet_group.add_argument("--subnet-cidr-block", default="10.0.1.0/24")
 
 
-def add_cluster_group(parser):
+def valid_cluster_group(parser):
     cluster_group = parser.add_argument_group(title="Cluster arguments")
+    cluster_group.add_argument("--cluster-id", default="")
     cluster_group.add_argument("--cluster-name", default="")
     cluster_group.add_argument("--cluster-kubernetes-version", default=None)
+    cluster_group.add_argument("--cluster-domain", default="lfcb:eu-frankfurt-1-AD-1")
+    cluster_group.add_argument(
+        "--cluster-image", default="nielsbohr/mccode-job-runner:latest"
+    )
+
+
+def start_cluster_group(parser):
+    cluster_group = parser.add_argument_group(title="Cluster Start arguments")
+    cluster_group.add_argument("--cluster-name", default="", required=True)
+    cluster_group.add_argument("--cluster-kubernetes-version", default=None)
+    cluster_group.add_argument("--cluster-domain", default="lfcb:eu-frankfurt-1-AD-1")
+
+
+def stop_cluster_group(parser):
+    cluster_group = parser.add_argument_group(title="Cluster Stop arguments")
+    cluster_group.add_argument("--cluster-id", default="")
+    cluster_group.add_argument("--cluster-name", default="")
+
+
+def cluster_job_group(parser):
+    cluster_group = parser.add_argument_group(title="Cluster Job arguments")
     cluster_group.add_argument(
         "--cluster-image", default="nielsbohr/mccode-job-runner:latest"
     )
@@ -101,13 +123,13 @@ def add_cluster_group(parser):
 def add_node_group(parser):
     node_group = parser.add_argument_group(title="Node arguments")
     node_group.add_argument(
-        "--node-availability-domain", default="Xfze:eu-amsterdam-1-AD-1"
+        "--node-availability-domain", default="lfcb:eu-frankfurt-1-AD-1"
     )
-    node_group.add_argument("--node-name", default=False)
+    node_group.add_argument("--node-name", default="NodePool")
     node_group.add_argument("--node-size", default=1, type=int)
     node_group.add_argument("--node-shape", default="VM.Standard2.1")
     # https://oracle-cloud-infrastructure-python-sdk.readthedocs.io/en/latest/api/cims/models/oci.cims.models.CreateResourceDetails.html?highlight=availability_domain#oci.cims.models.CreateResourceDetails.availability_domain
-    node_group.add_argument("--node-image-name", default="Oracle-Linux-7.7")
+    node_group.add_argument("--node-image", default="Oracle-Linux-7.7-2020.03.23-0")
 
 
 def add_storage_group(parser):
@@ -124,7 +146,7 @@ def add_storage_group(parser):
 argument_groups = {
     ANSIBLE: add_ansible_group,
     AWS: add_aws_group,
-    CLUSTER: add_cluster_group,
+    CLUSTER: valid_cluster_group,
     COMPUTE: add_compute_group,
     EXECUTE: add_execute_group,
     JOB: add_job_meta_group,
