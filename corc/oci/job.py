@@ -93,7 +93,7 @@ def run(
     if "debug" in execute_kwargs:
         jobio_args.append("--job-debug")
 
-    if "env_override" in execute_kwargs:
+    if "env_override" in job_kwargs:
         jobio_args.append("--job-env-override")
 
     # Maintained by the pod
@@ -265,7 +265,7 @@ def run(
             # Provide a way to allow pod specific output prefixes
             # field_ref = client.V1ObjectFieldSelector(field_path="metadata.name")
             field_ref = client.V1ObjectFieldSelector(
-                field_path="metadata.labels['job-name']"
+                field_path="metadata.name"
             )
             env_var_source = client.V1EnvVarSource(field_ref=field_ref)
             # Set the output prefix in the bucket to the name of the pod
