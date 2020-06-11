@@ -264,9 +264,7 @@ def run(
 
             # Provide a way to allow pod specific output prefixes
             # field_ref = client.V1ObjectFieldSelector(field_path="metadata.name")
-            field_ref = client.V1ObjectFieldSelector(
-                field_path="metadata.name"
-            )
+            field_ref = client.V1ObjectFieldSelector(field_path="metadata.name")
             env_var_source = client.V1EnvVarSource(field_ref=field_ref)
             # HACK, Set the output prefix in the bucket to the name of the pod
             env_output_prefix = client.V1EnvVar(
