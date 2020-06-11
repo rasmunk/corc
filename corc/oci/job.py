@@ -268,7 +268,7 @@ def run(
                 field_path="metadata.name"
             )
             env_var_source = client.V1EnvVarSource(field_ref=field_ref)
-            # Set the output prefix in the bucket to the name of the pod
+            # HACK, Set the output prefix in the bucket to the name of the pod
             env_output_prefix = client.V1EnvVar(
                 name="JOBIO_BUCKET_OUTPUT_PREFIX", value_from=env_var_source
             )
@@ -291,7 +291,7 @@ def run(
 
     job_spec = dict(
         backoff_limit=2,
-        parallelism=job_kwargs["num_nodes"],
+        parallelism=job_kwargs["num_parallel"],
         completions=job_kwargs["num_jobs"],
     )
 

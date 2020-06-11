@@ -41,7 +41,7 @@ def add_job_meta_group(parser):
     meta_group.add_argument("--job-debug", action="store_true", default=False)
     meta_group.add_argument("--job-env-override", action="store_true", default=True)
     meta_group.add_argument("--job-num-jobs", default=1, type=int)
-    meta_group.add_argument("--job-num-nodes", default=1, type=int)
+    meta_group.add_argument("--job-num-parallel", default=1, type=int)
 
 
 def add_execute_group(parser):
