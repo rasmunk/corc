@@ -38,6 +38,10 @@ def add_aws_group(parser):
 def add_job_meta_group(parser):
     meta_group = parser.add_argument_group(title="Job metadata")
     meta_group.add_argument("--job-name", default=False)
+    meta_group.add_argument("--job-debug", action="store_true", default=False)
+    meta_group.add_argument("--job-env-override", action="store_true", default=True)
+    meta_group.add_argument("--job-num-jobs", default=1, type=int)
+    meta_group.add_argument("--job-num-nodes", default=1, type=int)
 
 
 def add_execute_group(parser):
@@ -136,7 +140,8 @@ def add_node_group(parser):
 def add_storage_group(parser):
     storage_group = parser.add_argument_group(title="Storage arguments")
     storage_providers = storage_group.add_mutually_exclusive_group()
-    storage_providers.add_argument("--storage-s3", default=False, action="store_true")
+    storage_providers.add_argument("--storage-s3", action="store_true", default=False)
+    storage_group.add_argument("--storage-enable", action="store_true", default=False)
     storage_group.add_argument("--storage-endpoint", default="")
     storage_group.add_argument("--storage-credentials-path", default="/mnt/creds")
     storage_group.add_argument("--storage-upload-path", default="")

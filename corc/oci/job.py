@@ -2,7 +2,7 @@ import boto3
 import os
 import time
 from botocore.configloader import load_config
-from botocore.credentials import ConfigProvider
+from botocore.credentials import SharedCredentialProvider
 from oci.container_engine import (
     ContainerEngineClient,
     ContainerEngineClientCompositeOperations,
@@ -78,28 +78,38 @@ def run(
     jobio_args = [
         "jobio",
         "run",
-        "--job-name",
-        job_kwargs["name"],
         execute_kwargs["command"],
         "--execute-args",
         " ".join(execute_kwargs["args"]),
         "--execute-output-path",
         execute_kwargs["output_path"],
+        "--job-name",
+        job_kwargs["name"],
     ]
 
     if "capture" in execute_kwargs and execute_kwargs["capture"]:
         jobio_args.append("--execute-capture")
 
+    if "debug" in execute_kwargs:
+        jobio_args.append("--job-debug")
+
+    if "env_override" in execute_kwargs:
+        jobio_args.append("--job-env-override")
+
     # Maintained by the pod
     volumes = []
     # Maintained by the container
     volume_mounts = []
+    # Environment to pass to the container
+    envs = []
+
     # Prepare config for the scheduler
     scheduler_config = {}
 
-    valid_staging_types = validate_dict_types(staging_kwargs, required_staging_fields)
-    valid_staging_values = validate_dict_values(staging_kwargs, required_staging_values)
-    if valid_staging_types and valid_staging_values:
+    if staging_kwargs and staging_kwargs["enable"]:
+        validate_dict_types(staging_kwargs, required_staging_fields, throw=True)
+        validate_dict_values(staging_kwargs, required_staging_values, throw=True)
+
         # Means that results should be exported to the specified storage
         # Create kubernetes secrets
         core_api = client.CoreV1Api()
@@ -136,10 +146,9 @@ def run(
         )
         volume_mounts.append(secret_mount)
 
-        valid_storage_types = validate_dict_types(storage_kwargs, required_s3_fields)
-        valid_storage_values = validate_dict_values(storage_kwargs, required_s3_values)
-        # External Storage
-        if valid_storage_types and valid_storage_values:
+        if storage_kwargs:
+            validate_dict_types(storage_kwargs, required_s3_fields, throw=True)
+            validate_dict_values(storage_kwargs, required_s3_values, throw=True)
             # S3 storage
             # Look for s3 credentials and config files
             s3_config = load_config(storage_kwargs["config_file"])
@@ -149,10 +158,11 @@ def run(
                     "Failed to load s3 config: {}".format(storage_kwargs["config_file"])
                 )
 
-            s3_config_provider = ConfigProvider(
-                storage_kwargs["credentials_file"], storage_kwargs["profile_name"]
+            s3_creds_provider = SharedCredentialProvider(
+                storage_kwargs["credentials_file"],
+                profile_name=storage_kwargs["profile_name"],
             )
-            s3_creds_config = s3_config_provider.load()
+            s3_creds_config = s3_creds_provider.load()
             if not s3_creds_config:
                 raise RuntimeError(
                     "Failed to load s3 credentials config: {}".format(
@@ -165,7 +175,6 @@ def run(
                 s3_token,
             ) = s3_creds_config.get_frozen_credentials()
 
-            #
             if not storage_credentials_secret:
                 secret_data = dict(
                     aws_access_key_id=s3_access_key,
@@ -231,22 +240,39 @@ def run(
 
             jobio_args.extend(
                 [
-                    "--s3-profile-name",
-                    storage_kwargs["profile_name"],
-                    "--s3-session-vars",
-                    staging_kwargs["credentials_path"],
-                    "--s3-bucket-name",
-                    storage_kwargs["bucket_name"],
-                    "--s3-endpoint-url",
-                    staging_kwargs["endpoint"],
                     "--s3-region-name",
                     region,
-                    "--s3-input-path",
+                    "--storage-secrets-dir",
+                    staging_kwargs["credentials_path"],
+                    "--storage-endpoint",
+                    staging_kwargs["endpoint"],
+                    "--storage-input-path",
                     staging_kwargs["input_path"],
-                    "--s3-output-path",
+                    "--storage-output-path",
                     staging_kwargs["output_path"],
+                    "--bucket-name",
+                    storage_kwargs["bucket_name"],
+                    "--bucket-input-prefix",
+                    storage_kwargs["bucket_input_prefix"],
+                    "--bucket-output-prefix",
+                    storage_kwargs["bucket_output_prefix"],
                 ]
             )
+
+            if "enable" in staging_kwargs:
+                jobio_args.append("--storage-enable")
+
+            # Provide a way to allow pod specific output prefixes
+            # field_ref = client.V1ObjectFieldSelector(field_path="metadata.name")
+            field_ref = client.V1ObjectFieldSelector(
+                field_path="metadata.labels['job-name']"
+            )
+            env_var_source = client.V1EnvVarSource(field_ref=field_ref)
+            # Set the output prefix in the bucket to the name of the pod
+            env_output_prefix = client.V1EnvVar(
+                name="JOBIO_BUCKET_OUTPUT_PREFIX", value_from=env_var_source
+            )
+            envs.append(env_output_prefix)
 
     if scheduler_config:
         prepared = scheduler.prepare(**scheduler_config)
@@ -256,12 +282,24 @@ def run(
     container_spec = dict(
         name=job_kwargs["name"],
         image=cluster_kwargs["image"],
+        env=envs,
         args=jobio_args,
         volume_mounts=volume_mounts,
     )
     # args=jobio_args,
     pod_spec = dict(node_name=node.metadata.name, volumes=volumes, dns_policy="Default")
-    task = dict(container_kwargs=container_spec, pod_spec_kwargs=pod_spec)
+
+    job_spec = dict(
+        backoff_limit=2,
+        parallelism=job_kwargs["num_nodes"],
+        completions=job_kwargs["num_jobs"],
+    )
+
+    task = dict(
+        container_kwargs=container_spec,
+        pod_spec_kwargs=pod_spec,
+        job_spec_kwargs=job_spec,
+    )
 
     job_id = scheduler.submit(**task)
     if not job_id:

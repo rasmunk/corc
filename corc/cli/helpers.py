@@ -14,7 +14,7 @@ from corc.cli.args import (
     stop_cluster_group,
     run_cluster_job_group,
 )
-from corc.cluster import list_clusters, start_cluster, stop_cluster
+from corc.cluster import list_clusters, start_cluster, stop_cluster, update_cluster
 from corc.job import run
 from corc.instance import launch_instance
 
@@ -45,6 +45,10 @@ def add_cluster_cli(parser):
 
     list_parser = cluster_commands.add_parser("list")
     list_parser.set_defaults(func=list_clusters)
+
+    update_parser = cluster_commands.add_parser("update")
+    # update_cluster_group(update_parser)
+    update_parser.set_defaults(func=update_cluster)
 
 
 def add_instance_cli(parser):

@@ -87,14 +87,26 @@ def stop_cluster(args):
             )
             cluster_id = cluster.id
 
-        return oci_delete_cluster_stack(
-            container_engine_client,
-            cluster_id
-        )
+        return oci_delete_cluster_stack(container_engine_client, cluster_id)
+
+    if aws_args:
+        pass
+
+
+def update_cluster(args):
+    oci_args = vars(extract_arguments(args, [OCI]))
+    aws_args = vars(extract_arguments(args, [AWS]))
+    # cluster_args = vars(extract_arguments(args, [CLUSTER]))
+    # node_args = vars(extract_arguments(args, [NODE]))
+    # vcn_args = vars(extract_arguments(args, [VCN]))
+    # subnet_args = vars(extract_arguments(args, [SUBNET]))
+
+    if oci_args:
+        pass
 
     if aws_args:
         pass
 
 
 def get_cluster(args):
-    pass
+    raise NotImplementedError

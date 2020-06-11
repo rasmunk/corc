@@ -13,7 +13,7 @@ def run(args):
     s3_args = vars(extract_arguments(args, [S3]))
 
     if oci_args:
-        return oci_run(
+        oci_run(
             cluster_kwargs=cluster_args,
             execute_kwargs=execute_args,
             job_kwargs=job_args,
@@ -21,7 +21,6 @@ def run(args):
             staging_kwargs=staging_args,
             storage_kwargs=s3_args,
         )
-
     if aws_args:
         pass
         # return aws_run
