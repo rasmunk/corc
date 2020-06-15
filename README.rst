@@ -13,8 +13,6 @@ In addition, corc provides the capability to schedule job on orchestrated resour
 The current implementation only supports the `OCI <https://en.wikipedia.org/wiki/Oracle_Cloud>`_ backend.
 Future plans includes expanding this to support AWS as well.
 
-In alpha development, not ready for anything
-
 ------------
 Installation
 ------------
