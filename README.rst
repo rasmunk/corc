@@ -28,3 +28,4 @@ Installation from local git repository::
 
     cd corc
     pip install .
+
