@@ -1,5 +1,4 @@
 from corc.defaults import (
-    AWS,
     OCI,
     SUBNET,
     COMPUTE,
@@ -11,7 +10,6 @@ from corc.oci.instance import launch_instance as oci_launch_instance
 
 def launch_instance(args):
     oci_args = vars(extract_arguments(args, [OCI]))
-    aws_args = vars(extract_arguments(args, [AWS]))
     compute_args = vars(extract_arguments(args, [COMPUTE]))
     subnet_args = vars(extract_arguments(args, [SUBNET]))
     vcn_args = vars(extract_arguments(args, [VCN]))
@@ -23,6 +21,3 @@ def launch_instance(args):
             subnet_kwargs=subnet_args,
             vcn_kwargs=vcn_args,
         )
-
-    if aws_args:
-        pass

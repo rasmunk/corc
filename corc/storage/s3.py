@@ -1,22 +1,33 @@
+import boto3
 import botocore
+from botocore.configloader import load_config
+from botocore.credentials import SharedCredentialProvider
+import copy
 import os
 
+
 required_s3_fields = {
-    "bucket_name": str,
-    "bucket_input_prefix": str,
-    "bucket_output_prefix": str,
     "config_file": str,
     "credentials_file": str,
     "profile_name": str,
 }
 
 required_s3_values = {
-    "bucket_name": False,
-    "bucket_input_prefix": False,
-    "bucket_output_prefix": False,
     "config_file": True,
     "credentials_file": True,
     "profile_name": True,
+}
+
+required_s3_bucket_fields = {
+    "bucket_name": str,
+    "bucket_input_prefix": str,
+    "bucket_output_prefix": str,
+}
+
+required_s3_bucket_values = {
+    "bucket_name": True,
+    "bucket_input_prefix": False,
+    "bucket_output_prefix": False,
 }
 
 
@@ -27,7 +38,7 @@ def upload_to_s3(s3_client, local_path, s3_path, bucket_name):
     return True
 
 
-def upload_directory_to_s3(client, path, bucket_name, s3_prefix="input"):
+def upload_directory_to_s3(client, path, bucket_name, s3_prefix="output"):
     if not os.path.exists(path):
         return False
     for root, dirs, files in os.walk(path):
@@ -40,7 +51,9 @@ def upload_directory_to_s3(client, path, bucket_name, s3_prefix="input"):
             # Upload
             if s3_prefix:
                 s3_path = os.path.join(s3_prefix, s3_path)
-            if not client.upload_file(local_path, bucket_name, s3_path):
+            try:
+                client.upload_file(local_path, bucket_name, s3_path)
+            except Exception:
                 return False
     return True
 
@@ -52,3 +65,120 @@ def bucket_exists(s3_client, bucket_name):
     except botocore.exceptions.ClientError:
         pass
     return False
+
+
+def create_bucket(s3_client, bucket_name, **kwargs):
+    bucket = s3_client.create_bucket(Bucket=bucket_name, **kwargs)
+    if not bucket:
+        return False
+    return bucket
+
+
+def delete_bucket(s3_client, bucket_name, **kwargs):
+    return s3_client.delete_bucket(Bucket=bucket_name, **kwargs)
+
+
+def delete_objects(s3_resource, bucket_name, s3_prefix="", max_chunk_size=1000):
+    bucket = s3_resource.Bucket(bucket_name)
+    objects_keys = [
+        {"Key": str(obj.key)} for obj in bucket.objects.filter(Prefix=s3_prefix)
+    ]
+
+    if not objects_keys:
+        return {}
+
+    print(len(objects_keys))
+    num_delete = len(objects_keys)
+
+    if num_delete > max_chunk_size:
+        delete_chunks = [
+            objects_keys[i: i + max_chunk_size]
+            for i in range(0, num_delete, max_chunk_size)
+        ]
+        for idx, chunk_keys in enumerate(delete_chunks):
+            s3_resource.meta.client.delete_objects(
+                Bucket=bucket_name, Delete={"Objects": chunk_keys}
+            )
+
+    return s3_resource.meta.client.delete_objects(
+        Bucket=bucket_name, Delete={"Objects": objects_keys}
+    )
+
+
+# Accept parameters to
+def expand_s3_bucket(s3_resource, bucket_name, target_dir=None, s3_prefix="input"):
+    """ Expands the content of the specified bucket into the target_dir """
+    bucket = s3_resource.Bucket(bucket_name)
+    for obj in bucket.objects.filter(Prefix=s3_prefix):
+        obj_path = copy.deepcopy(obj.key)
+        if s3_prefix:
+            obj_path = os.path.relpath(obj_path, s3_prefix)
+
+        if target_dir:
+            full_path = os.path.join(target_dir, obj_path)
+        else:
+            full_path = obj_path
+        dir_path = os.path.dirname(full_path)
+        if not os.path.exists(dir_path):
+            os.makedirs(dir_path)
+        bucket.download_file(obj.key, full_path)
+    return True
+
+
+def list_objects(s3_resource, bucket_name, all_objects=True, **kwargs):
+    finished = False
+    results = []
+    last_object = None
+    while not finished:
+        response = None
+        if last_object:
+            response = s3_resource.meta.client.list_objects_v2(
+                Bucket=bucket_name, StartAfter=last_object["Key"], **kwargs
+            )
+        else:
+            response = s3_resource.meta.client.list_objects_v2(
+                Bucket=bucket_name, **kwargs
+            )
+
+        if response and "Contents" in response:
+            results.extend(response["Contents"])
+
+        if not all_objects:
+            finished = True
+        else:
+            if response and "Contents" in response and response["IsTruncated"]:
+                last_object = response["Contents"][-1]
+            else:
+                finished = True
+    return results
+
+
+def stage_s3_resource(**kwargs):
+    return boto3.resource("s3", **kwargs)
+
+
+def load_s3_config(config_file, credentials_file, endpoint_url, profile_name="DEFAULT"):
+    s3_config = load_config(config_file)
+    if not s3_config:
+        raise RuntimeError("Failed to load s3 config: {}".format(config_file))
+
+    s3_creds_provider = SharedCredentialProvider(
+        credentials_file, profile_name=profile_name,
+    )
+    s3_creds_config = s3_creds_provider.load()
+    if not s3_creds_config:
+        raise RuntimeError(
+            "Failed to load s3 credentials config: {}".format(credentials_file)
+        )
+
+    (s3_access_key, s3_secret_key, s3_token,) = s3_creds_config.get_frozen_credentials()
+    region = s3_config["profiles"][profile_name]["region_name"]
+
+    s3_config = dict(
+        aws_access_key_id=s3_access_key,
+        aws_secret_access_key=s3_secret_key,
+        region_name=region,
+        endpoint_url=endpoint_url,
+    )
+
+    return s3_config

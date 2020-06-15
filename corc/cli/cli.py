@@ -1,10 +1,11 @@
 import argparse
+import json
 from corc.defaults import PACKAGE_NAME
 from corc.cli.helpers import (
-    add_job_cli,
     add_cluster_cli,
     add_instance_cli,
     add_platform_group,
+    job_cli,
 )
 
 
@@ -21,14 +22,18 @@ def run():
     add_cluster_cli(cluster_parser)
 
     job_parser = commands.add_parser("job")
-    add_job_cli(job_parser)
+    job_cli(job_parser)
 
     args = parser.parse_args()
     # Execute default function
     if hasattr(args, "func"):
         result = args.func(args)
         if result:
-            print(result)
+            try:
+                json_object = json.loads(result)
+                print(json.dumps(json_object, indent=2))
+            except Exception:
+                print(result)
     return None
 
 

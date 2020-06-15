@@ -16,3 +16,17 @@ required_staging_values = {
     "input_path": False,
     "output_path": True,
 }
+
+
+required_get_storage_fields = {
+    "endpoint": str,
+    "download_path": str,
+}
+
+required_get_storage_values = {"endpoint": True, "download_path": False}
+
+required_delete_storage_fields = {
+    "endpoint": str,
+}
+
+required_delete_storage_values = {"endpoint": True}

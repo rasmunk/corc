@@ -1,8 +1,6 @@
 import boto3
 import os
 import time
-from botocore.configloader import load_config
-from botocore.credentials import SharedCredentialProvider
 from oci.container_engine import (
     ContainerEngineClient,
     ContainerEngineClientCompositeOperations,
@@ -16,17 +14,29 @@ from kubernetes.client import (
 )
 from kubernetes.client.rest import ApiException
 
+from jobio.storage.s3 import expand_s3_bucket, stage_s3_resource
 from corc.defaults import (
     STORAGE_CREDENTIALS_NAME,
     KUBERNETES_NAMESPACE,
     JOB_DEFAULT_NAME,
 )
 from corc.util import validate_dict_types, validate_dict_values
-from corc.storage.staging import required_staging_fields, required_staging_values
+from corc.storage.staging import (
+    required_staging_fields,
+    required_staging_values,
+    required_get_storage_fields,
+    required_get_storage_values,
+    required_delete_storage_fields,
+    required_delete_storage_values,
+)
 from corc.storage.s3 import (
+    bucket_exists,
+    delete_bucket,
+    delete_objects,
+    list_objects,
+    load_s3_config,
     required_s3_fields,
     required_s3_values,
-    bucket_exists,
     upload_to_s3,
     upload_directory_to_s3,
 )
@@ -151,34 +161,17 @@ def run(
             validate_dict_values(storage_kwargs, required_s3_values, throw=True)
             # S3 storage
             # Look for s3 credentials and config files
-            s3_config = load_config(storage_kwargs["config_file"])
-
-            if not s3_config:
-                raise RuntimeError(
-                    "Failed to load s3 config: {}".format(storage_kwargs["config_file"])
-                )
-
-            s3_creds_provider = SharedCredentialProvider(
+            s3_config = load_s3_config(
+                storage_kwargs["config_file"],
                 storage_kwargs["credentials_file"],
+                staging_kwargs["endpoint"],
                 profile_name=storage_kwargs["profile_name"],
             )
-            s3_creds_config = s3_creds_provider.load()
-            if not s3_creds_config:
-                raise RuntimeError(
-                    "Failed to load s3 credentials config: {}".format(
-                        storage_kwargs["credentials_file"]
-                    )
-                )
-            (
-                s3_access_key,
-                s3_secret_key,
-                s3_token,
-            ) = s3_creds_config.get_frozen_credentials()
 
             if not storage_credentials_secret:
                 secret_data = dict(
-                    aws_access_key_id=s3_access_key,
-                    aws_secret_access_key=s3_secret_key,
+                    aws_access_key_id=s3_config["aws_access_key_id"],
+                    aws_secret_access_key=s3_config["aws_secret_access_key"],
                 )
                 secret_metadata = V1ObjectMeta(name=STORAGE_CREDENTIALS_NAME)
                 secrets_config = dict(metadata=secret_metadata, string_data=secret_data)
@@ -186,25 +179,15 @@ def run(
 
             # If `access_key`
             # TODO, unify argument endpoint, with s3 config endpoint'
-            region = s3_config["profiles"][storage_kwargs["profile_name"]][
-                "region_name"
-            ]
-            s3_bucket_config = dict(
-                aws_access_key_id=s3_access_key,
-                aws_secret_access_key=s3_secret_key,
-                region_name=region,
-                endpoint_url=staging_kwargs["endpoint"],
-            )
-            s3 = boto3.resource("s3", **s3_bucket_config)
-
-            if not storage_kwargs["bucket_name"]:
-                storage_kwargs["bucket_name"] = job_kwargs["name"]
+            s3 = boto3.resource("s3", **s3_config)
 
             bucket = bucket_exists(s3.meta.client, storage_kwargs["bucket_name"])
             if not bucket:
                 bucket = s3.create_bucket(
                     Bucket=storage_kwargs["bucket_name"],
-                    CreateBucketConfiguration={"LocationConstraint": region},
+                    CreateBucketConfiguration={
+                        "LocationConstraint": s3_config["region_name"]
+                    },
                 )
 
             if "upload_path" in staging_kwargs and staging_kwargs["upload_path"]:
@@ -241,7 +224,7 @@ def run(
             jobio_args.extend(
                 [
                     "--s3-region-name",
-                    region,
+                    s3_config["region_name"],
                     "--storage-secrets-dir",
                     staging_kwargs["credentials_path"],
                     "--storage-endpoint",
@@ -302,3 +285,126 @@ def run(
     job_id = scheduler.submit(**task)
     if not job_id:
         exit(1)
+
+
+def get_results(job_kwargs={}, staging_kwargs={}, storage_kwargs={}):
+
+    validate_dict_types(staging_kwargs, required_get_storage_fields, throw=True)
+    validate_dict_values(staging_kwargs, required_get_storage_values, throw=True)
+
+    validate_dict_types(storage_kwargs, required_s3_fields, throw=True)
+    validate_dict_values(storage_kwargs, required_s3_values, throw=True)
+
+    # S3 storage
+    # Look for s3 credentials and config files
+    s3_config = load_s3_config(
+        storage_kwargs["config_file"],
+        storage_kwargs["credentials_file"],
+        staging_kwargs["endpoint"],
+        profile_name=storage_kwargs["profile_name"],
+    )
+
+    # Download results from s3
+    s3_resource = stage_s3_resource(**s3_config)
+
+    # Whether to expand all or a single result
+    if "result_prefix" in job_kwargs and job_kwargs["result_prefix"]:
+        result_prefix = job_kwargs["result_prefix"]
+    else:
+        # Use all
+        result_prefix = ""
+
+    bucket = bucket_exists(s3_resource.meta.client, job_kwargs["name"])
+    if not bucket:
+        raise RuntimeError(
+            "Could not find a bucket with the name: {}".format(job_kwargs["name"])
+        )
+
+    expanded = expand_s3_bucket(
+        s3_resource,
+        job_kwargs["name"],
+        staging_kwargs["download_path"],
+        s3_prefix=result_prefix,
+    )
+
+    if not expanded:
+        raise RuntimeError(
+            "Failed to expand the target bucket: {}".format(job_kwargs["name"])
+        )
+
+
+def delete_results(job_kwargs={}, staging_kwargs={}, storage_kwargs={}):
+
+    validate_dict_types(staging_kwargs, required_delete_storage_fields, throw=True)
+    validate_dict_values(staging_kwargs, required_delete_storage_values, throw=True)
+
+    validate_dict_types(storage_kwargs, required_s3_fields, throw=True)
+    validate_dict_values(storage_kwargs, required_s3_values, throw=True)
+
+    # S3 storage
+    # Look for s3 credentials and config files
+    s3_config = load_s3_config(
+        storage_kwargs["config_file"],
+        storage_kwargs["credentials_file"],
+        staging_kwargs["endpoint"],
+        profile_name=storage_kwargs["profile_name"],
+    )
+
+    # Download results from s3
+    s3_resource = stage_s3_resource(**s3_config)
+
+    # Whether to expand all or a single result
+    if "result_prefix" in job_kwargs and job_kwargs["result_prefix"]:
+        result_prefix = job_kwargs["result_prefix"]
+    else:
+        # Use all
+        result_prefix = ""
+
+    bucket = bucket_exists(s3_resource.meta.client, job_kwargs["name"])
+    if not bucket:
+        raise RuntimeError(
+            "Could not find a bucket with the name: {}".format(job_kwargs["name"])
+        )
+
+    deleted = delete_objects(s3_resource, job_kwargs["name"], s3_prefix=result_prefix)
+
+    if "Errors" in deleted:
+        for error in deleted["Errors"]:
+            print("Failed to delete: {}".format(error))
+
+    # If the bucket is empty, remove it as well
+    results = list_objects(s3_resource, job_kwargs["name"])
+
+    if not results:
+        if not delete_bucket(s3_resource.meta.client, job_kwargs["name"]):
+            return False
+    return True
+
+
+def list_results(
+    job_kwargs={}, staging_kwargs={}, storage_kwargs={}, storage_extra_kwargs={},
+):
+    # S3 storage
+    # Look for s3 credentials and config files
+    s3_config = load_s3_config(
+        storage_kwargs["config_file"],
+        storage_kwargs["credentials_file"],
+        staging_kwargs["endpoint"],
+        profile_name=storage_kwargs["profile_name"],
+    )
+
+    s3_resource = stage_s3_resource(**s3_config)
+    response = {}
+    results = []
+    if "name" in job_kwargs and job_kwargs["name"]:
+        bucket = bucket_exists(s3_resource.meta.client, job_kwargs["name"])
+        if not bucket:
+            raise RuntimeError(
+                "Could not find a bucket with the name: {}".format(job_kwargs["name"])
+            )
+        results = list_objects(s3_resource, job_kwargs["name"], **storage_extra_kwargs)
+    else:
+        response = s3_resource.meta.client.list_buckets()
+        if "Buckets" in response:
+            results = response["Buckets"]
+    return results

@@ -1,4 +1,4 @@
-from corc.defaults import AWS, OCI, CLUSTER, SUBNET, VCN, NODE
+from corc.defaults import OCI, CLUSTER, SUBNET, VCN, NODE
 from corc.cli.args import extract_arguments
 from corc.oci.cluster import (
     list_clusters as oci_list_clusters,
@@ -13,7 +13,6 @@ from corc.oci.cluster import (
 
 def list_clusters(args):
     oci_args = vars(extract_arguments(args, [OCI]))
-    aws_args = vars(extract_arguments(args, [AWS]))
 
     if oci_args:
         container_engine_client = new_cluster_engine_client(
@@ -21,13 +20,9 @@ def list_clusters(args):
         )
         return oci_list_clusters(container_engine_client, oci_args["compartment_id"])
 
-    if aws_args:
-        pass
-
 
 def start_cluster(args):
     oci_args = vars(extract_arguments(args, [OCI]))
-    aws_args = vars(extract_arguments(args, [AWS]))
     cluster_args = vars(extract_arguments(args, [CLUSTER]))
     node_args = vars(extract_arguments(args, [NODE]))
     vcn_args = vars(extract_arguments(args, [VCN]))
@@ -59,14 +54,9 @@ def start_cluster(args):
         orchestrator = OCIClusterOrchestrator(cluster_options)
         orchestrator.setup()
 
-    if aws_args:
-        pass
-        # return aws_run
-
 
 def stop_cluster(args):
     oci_args = vars(extract_arguments(args, [OCI]))
-    aws_args = vars(extract_arguments(args, [AWS]))
     cluster_args = vars(extract_arguments(args, [CLUSTER]))
 
     if oci_args:
@@ -89,22 +79,15 @@ def stop_cluster(args):
 
         return oci_delete_cluster_stack(container_engine_client, cluster_id)
 
-    if aws_args:
-        pass
-
 
 def update_cluster(args):
     oci_args = vars(extract_arguments(args, [OCI]))
-    aws_args = vars(extract_arguments(args, [AWS]))
     # cluster_args = vars(extract_arguments(args, [CLUSTER]))
-    # node_args = vars(extract_arguments(args, [NODE]))
+    # node_args = vars(extract_arguments(args, [NODGE]))
     # vcn_args = vars(extract_arguments(args, [VCN]))
     # subnet_args = vars(extract_arguments(args, [SUBNET]))
 
     if oci_args:
-        pass
-
-    if aws_args:
         pass
 
 
