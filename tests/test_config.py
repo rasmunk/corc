@@ -1,6 +1,11 @@
 import os
 import unittest
-from corc.config.config import generate_config, save_config, load_config, remove_config
+from corc.config.config import (
+    generate_config,
+    save_config,
+    load_config,
+    remove_config
+)
 from corc.config.defaults import default_config
 
 
@@ -25,3 +30,7 @@ class ConfigTest(unittest.TestCase):
         loaded_config = load_config(self.config_path)
         self.assertIsInstance(loaded_config, dict)
         self.assertDictEqual(config, loaded_config)
+
+    # def test_valid_config(self):
+    #     config = generate_config()
+    #     self.assertTrue(valid_config(config, verbose=True, throw=True))

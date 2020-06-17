@@ -11,12 +11,13 @@ default_instance_config = {
 }
 
 default_job_config = {
-    "debug": False,
-    "env_override": True,
-    "num_jobs": 1,
-    "num_parallel": 1,
-    "name": "",
-    "args": [],
+    "meta": {
+        "name": "",
+        "debug": False,
+        "env_override": True,
+        "num_jobs": 1,
+        "num_parallel": 1,
+    },
     "capture": True,
     "output_path": "/tmp/output",
 }
@@ -62,11 +63,11 @@ default_config = {
     "storage": default_storage_config,
 }
 
-valid_cluster_config_types = {
+valid_cluster_config = {
     "image": str,
     "id": str,
     "name": str,
-    "kubernetes-version": str,
+    "kubernetes_version": str,
     "domain": str,
     "node": dict,
 }
@@ -94,11 +95,12 @@ valid_instance_config = {
     "target_shape": str,
 }
 
+
 valid_job_config = {
     "meta": {
         "name": str,
-        "debug": str,
-        "env_override": str,
+        "debug": bool,
+        "env_override": bool,
         "num_jobs": int,
         "num_parallel": int,
     },
@@ -107,6 +109,7 @@ valid_job_config = {
     "capture": bool,
     "output_path": str,
 }
+
 
 valid_network_config = {
     "subnet": {"id": str, "dns_label": str, "cidr_block": str},
@@ -136,12 +139,12 @@ valid_storage_config = {
 }
 
 
-valid_config = {
-    "cluster": dict,
-    "configurer": dict,
-    "instance": dict,
-    "job": dict,
-    "network": dict,
-    "platform": dict,
-    "storage": dict,
+valid_corc_config = {
+    "cluster": valid_cluster_config,
+    "configurer": valid_configurer_config,
+    "instance": valid_instance_config,
+    "job": valid_job_config,
+    "network": valid_network_config,
+    "platform": valid_platform_config,
+    "storage": valid_storage_config,
 }

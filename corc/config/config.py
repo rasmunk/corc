@@ -1,7 +1,7 @@
 import os
 import yaml
-
-from corc.config.defaults import default_config
+from corc.util import validate_dict_fields
+from corc.config.defaults import valid_corc_config, default_config
 
 
 def generate_config(config=None, path=None):
@@ -53,7 +53,7 @@ def load_config(path=None):
     if not os.path.exists(path):
         return False
     try:
-        with open(path, 'r') as fh:
+        with open(path, "r") as fh:
             config = yaml.safe_load(fh)
     except Exception as err:
         print("Failed to load config: {}".format(err))
@@ -77,8 +77,18 @@ def remove_config(path=None):
     return True
 
 
-def valid_config(config):
+def valid_config(config, verbose=False, throw=False):
     if not isinstance(config, dict):
         return False
+
+    for key, value in config.items():
+        if key not in valid_corc_config:
+            return False
+        valid = validate_dict_fields(
+            value, valid_corc_config[key], verbose=verbose, throw=throw
+        )
+
+        if not valid:
+            return False
 
     return True
