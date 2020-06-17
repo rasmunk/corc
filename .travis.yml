@@ -12,6 +12,7 @@ install:
 - pip install -r requirements.txt
 stages:
 - prepare
+- config_tests
 - cluster_tests
 - instance_orchestration_tests
 - instance_configurer_tests
@@ -28,6 +29,16 @@ jobs:
     python: '3.7'
     script: *1
   - stage: prepare
+    python: '3.8'
+    script: *1
+  - stage: config_tests
+    python: '3.6'
+    script: &1
+    - travis_wait pytest -s -v tests/test_config.py
+  - stage: config_tests
+    python: '3.7'
+    script: *1
+  - stage: config_tests
     python: '3.8'
     script: *1
   - stage: cluster_tests
