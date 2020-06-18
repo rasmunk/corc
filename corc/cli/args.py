@@ -3,6 +3,7 @@ from argparse import Namespace
 from corc.defaults import (
     ANSIBLE,
     CLUSTER,
+    CONFIG,
     COMPUTE,
     JOB,
     NODE,
@@ -14,6 +15,7 @@ from corc.defaults import (
 )
 from corc.cli.configurer.ansible import valid_ansible_group
 from corc.cli.cluster.cluster import valid_cluster_group
+from corc.cli.config.config import valid_config_group
 from corc.cli.instance.instance import valid_compute_group
 from corc.cli.job.job import valid_job_group
 from corc.cli.network.subnet import valid_subnet_group
@@ -36,6 +38,7 @@ argument_groups = {
     ANSIBLE: valid_ansible_group,
     CLUSTER: valid_cluster_group,
     COMPUTE: valid_compute_group,
+    CONFIG: valid_config_group,
     JOB: valid_job_group,
     NODE: valid_node_group,
     OCI: valid_oci_group,

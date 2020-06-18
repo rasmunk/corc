@@ -3,6 +3,7 @@ import json
 from corc.defaults import PACKAGE_NAME
 from corc.cli.helpers import (
     add_cluster_cli,
+    add_config_cli,
     add_instance_cli,
     add_platform_group,
     job_cli,
@@ -15,6 +16,9 @@ def run():
     add_platform_group(parser)
 
     commands = parser.add_subparsers(title="COMMAND")
+    config_parser = commands.add_parser("config")
+    add_config_cli(config_parser)
+
     instance_parser = commands.add_parser("instance")
     add_instance_cli(instance_parser)
 

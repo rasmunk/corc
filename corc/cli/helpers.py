@@ -9,6 +9,7 @@ from corc.cli.cluster.cluster import (
     start_cluster_group,
 )
 from corc.cli.cluster.node import add_node_group
+from corc.cli.config.config import add_config_group
 from corc.cli.instance.instance import add_compute_group
 from corc.cli.job.job import select_job_group
 from corc.cli.job.result import results_group
@@ -65,6 +66,14 @@ def job_cli(parser):
     s3_config_group(list_parser)
     s3_extra(list_parser)
     list_parser.set_defaults(func=list_results)
+
+
+def add_config_cli(parser):
+    config_commands = parser.add_subparsers(title="Commands")
+    init_parser = config_commands.add_parser("init")
+    add_config_group(init_parser)
+
+    init_parser.set_defaults(func=)
 
 
 def add_cluster_cli(parser):
