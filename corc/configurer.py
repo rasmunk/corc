@@ -22,7 +22,7 @@ def run_playbook(
             loader=loader,
             passwords=passwords,
         )
-        _ = tqm.run(play)
+        tqm.run(play)
     finally:
         if tqm is not None:
             tqm.cleanup()

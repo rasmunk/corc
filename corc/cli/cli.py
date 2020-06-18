@@ -2,28 +2,20 @@ import argparse
 import json
 from corc.defaults import PACKAGE_NAME
 from corc.cli.helpers import (
-    add_cluster_cli,
-    add_config_cli,
-    add_instance_cli,
-    add_platform_group,
+    config_cli,
     job_cli,
+    orchestration_cli,
 )
 
 
 def run():
     parser = argparse.ArgumentParser(prog=PACKAGE_NAME)
-    # Platform
-    add_platform_group(parser)
-
     commands = parser.add_subparsers(title="COMMAND")
     config_parser = commands.add_parser("config")
-    add_config_cli(config_parser)
+    config_cli(config_parser)
 
-    instance_parser = commands.add_parser("instance")
-    add_instance_cli(instance_parser)
-
-    cluster_parser = commands.add_parser("cluster")
-    add_cluster_cli(cluster_parser)
+    orchestration_parser = commands.add_parser("orchestration")
+    orchestration_cli(orchestration_parser)
 
     job_parser = commands.add_parser("job")
     job_cli(job_parser)

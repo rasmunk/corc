@@ -1,4 +1,4 @@
-from corc.cli.job.result import results_group
+from corc.cli.parsers.job.result import results_group
 
 
 def valid_job_group(parser):

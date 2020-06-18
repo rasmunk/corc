@@ -1,12 +1,12 @@
 import os
 import unittest
-from corc.config.config import (
+from corc.config import (
     generate_default_config,
     save_config,
     load_config,
-    remove_config
+    remove_config,
 )
-from corc.config.defaults import default_config
+from corc.configs.defaults import default_config
 
 
 class ConfigTest(unittest.TestCase):

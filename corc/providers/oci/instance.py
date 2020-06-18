@@ -14,7 +14,7 @@ from oci.core.models import (
 )
 from corc.orchestrator import Orchestrator
 from corc.util import open_port
-from corc.oci.helpers import (
+from corc.providers.oci.helpers import (
     create,
     delete,
     get,
@@ -22,7 +22,7 @@ from corc.oci.helpers import (
     new_client,
     stack_was_deleted,
 )
-from corc.oci.network import (
+from corc.providers.oci.network import (
     get_vcn_by_name,
     new_vcn_stack,
     valid_vcn_stack,

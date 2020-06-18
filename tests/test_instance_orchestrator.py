@@ -1,6 +1,6 @@
 import os
 import unittest
-from corc.oci.instance import OCIInstanceOrchestrator
+from corc.providers.oci.instance import OCIInstanceOrchestrator
 
 
 class TestInstanceOrchestrator(unittest.TestCase):

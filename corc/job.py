@@ -1,6 +1,6 @@
 from corc.defaults import CLUSTER, OCI, JOB, S3, STORAGE
 from corc.cli.args import extract_arguments
-from corc.oci.job import (
+from corc.providers.oci.job import (
     run as oci_run,
     get_results as oci_get_results,
     delete_results as oci_delete_results,

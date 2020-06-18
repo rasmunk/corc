@@ -2,7 +2,7 @@ import os
 import time
 import unittest
 from corc.configurer import AnsibleConfigurer
-from corc.oci.instance import OCIInstanceOrchestrator
+from corc.providers.oci.instance import OCIInstanceOrchestrator
 
 
 current_dir = os.path.dirname(os.path.abspath(__file__))

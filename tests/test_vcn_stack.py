@@ -1,8 +1,8 @@
 import os
 import unittest
 from oci.core import VirtualNetworkClient, VirtualNetworkClientCompositeOperations
-from corc.oci.helpers import new_client, get, list_entities, stack_was_deleted
-from corc.oci.network import (
+from corc.providers.oci.helpers import new_client, get, list_entities, stack_was_deleted
+from corc.providers.oci.network import (
     new_vcn_stack,
     delete_vcn_stack,
     valid_vcn_stack,

@@ -10,8 +10,8 @@ from oci.container_engine import (
     ContainerEngineClient,
     ContainerEngineClientCompositeOperations,
 )
-from corc.oci.helpers import new_client, get, get_kubernetes_version
-from corc.oci.cluster import (
+from corc.providers.oci.helpers import new_client, get, get_kubernetes_version
+from corc.providers.oci.cluster import (
     new_cluster_stack,
     get_cluster_stack,
     get_cluster_by_name,
@@ -20,7 +20,7 @@ from corc.oci.cluster import (
     gen_cluster_stack_details,
     list_entities,
 )
-from corc.oci.network import new_vcn_stack, delete_vcn_stack, valid_vcn_stack
+from corc.providers.oci.network import new_vcn_stack, delete_vcn_stack, valid_vcn_stack
 
 
 class TestClusterStack(unittest.TestCase):

@@ -1,6 +1,6 @@
 from oci.core import VirtualNetworkClient, VirtualNetworkClientCompositeOperations
-from corc.oci.helpers import new_client
-from corc.oci.network import delete_compartment_vcns
+from corc.providers.oci.helpers import new_client
+from corc.providers.oci.network import delete_compartment_vcns
 
 
 if __name__ == "__main__":

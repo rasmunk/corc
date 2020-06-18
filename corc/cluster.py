@@ -1,11 +1,11 @@
 from corc.defaults import OCI, CLUSTER, SUBNET, VCN, NODE
 from corc.cli.args import extract_arguments
-from corc.oci.cluster import (
+from corc.providers.oci.cluster import (
     list_clusters as oci_list_clusters,
     delete_cluster_stack as oci_delete_cluster_stack,
     get_cluster_by_name as oci_get_cluster_by_name,
 )
-from corc.oci.cluster import (
+from corc.providers.oci.cluster import (
     OCIClusterOrchestrator,
     new_cluster_engine_client,
 )

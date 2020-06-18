@@ -14,16 +14,16 @@ from corc.defaults import (
     VCN,
 )
 from corc.cli.configurer.ansible import valid_ansible_group
-from corc.cli.cluster.cluster import valid_cluster_group
+from corc.cli.parsers.cluster.cluster import valid_cluster_group
 from corc.cli.config.config import valid_config_group
-from corc.cli.instance.instance import valid_compute_group
-from corc.cli.job.job import valid_job_group
-from corc.cli.network.subnet import valid_subnet_group
-from corc.cli.network.vcn import valid_vcn_group
-from corc.cli.cluster.node import valid_node_group
-from corc.cli.platform.oci import valid_oci_group
-from corc.cli.storage.storage import valid_storage_group
-from corc.cli.storage.s3 import valid_s3_group
+from corc.cli.parsers.instance.instance import valid_compute_group
+from corc.cli.parsers.job.job import valid_job_group
+from corc.cli.parsers.network.subnet import valid_subnet_group
+from corc.cli.parsers.network.vcn import valid_vcn_group
+from corc.cli.parsers.cluster.node import valid_node_group
+from corc.cli.parsers.providers.oci import valid_oci_group
+from corc.cli.parsers.storage.storage import valid_storage_group
+from corc.cli.parsers.storage.s3 import valid_s3_group
 
 
 def strip_argument_prefix(arguments, prefix=""):

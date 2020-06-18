@@ -1,6 +1,6 @@
 import os
 import unittest
-from corc.oci.cluster import OCIClusterOrchestrator
+from corc.providers.oci.cluster import OCIClusterOrchestrator
 
 
 class TestClusterOrchestrator(unittest.TestCase):

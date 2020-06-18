@@ -42,8 +42,8 @@ from corc.storage.s3 import (
 )
 from corc.kubernetes.nodes import NodeManager
 from corc.kubernetes.scheduler import KubenetesScheduler
-from corc.oci.cluster import get_cluster_by_name, refresh_kube_config
-from corc.oci.helpers import new_client
+from corc.providers.oci.cluster import get_cluster_by_name, refresh_kube_config
+from corc.providers.oci.helpers import new_client
 
 
 def run(

@@ -5,7 +5,7 @@ from corc.defaults import (
     VCN,
 )
 from corc.cli.args import extract_arguments
-from corc.oci.instance import launch_instance as oci_launch_instance
+from corc.providers.oci.instance import launch_instance as oci_launch_instance
 
 
 def launch_instance(args):

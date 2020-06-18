@@ -10,7 +10,7 @@ from oci.core.models import NatGateway
 from oci.core.models import ServiceGateway
 from oci.core.models import Subnet, CreateSubnetDetails
 from corc.cli.args import get_arguments, OCI, SUBNET, VCN
-from corc.oci.helpers import (
+from corc.providers.oci.helpers import (
     new_client,
     prepare_route_rule,
     list_entities,

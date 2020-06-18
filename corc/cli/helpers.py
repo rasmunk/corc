@@ -1,28 +1,30 @@
-from corc.defaults import OCI
-from corc.cli.job.job import (
+from corc.defaults import AWS, OCI
+from corc.cli.parsers.job.job import (
     job_group,
     job_meta_group,
 )
-from corc.cli.cluster.cluster import (
+from corc.cli.parsers.cluster.cluster import (
     cluster_schedule_group,
     select_cluster_group,
     start_cluster_group,
 )
-from corc.cli.cluster.node import add_node_group
-from corc.cli.config.config import add_config_group
-from corc.cli.instance.instance import add_compute_group
-from corc.cli.job.job import select_job_group
-from corc.cli.job.result import results_group
-from corc.cli.network.vcn import add_vcn_group
-from corc.cli.network.subnet import add_subnet_group
-from corc.cli.platform.oci import add_oci_group
-from corc.cli.storage.storage import (
+from corc.cli.providers.oci import init_config
+from corc.cli.parsers.config.config import add_config_group
+from corc.cli.parsers.cluster.node import add_node_group
+from corc.cli.parsers.instance.instance import add_compute_group
+from corc.cli.parsers.job.job import select_job_group
+from corc.cli.parsers.job.result import results_group
+from corc.cli.parsers.network.vcn import add_vcn_group
+from corc.cli.parsers.network.subnet import add_subnet_group
+from corc.cli.parsers.providers.oci import add_oci_group
+from corc.cli.parsers.providers.aws import add_aws_group
+from corc.cli.parsers.storage.storage import (
     add_storage_group,
     delete_storage,
     download_storage,
     select_storage,
 )
-from corc.cli.storage.s3 import add_s3_group, s3_config_group, s3_extra
+from corc.cli.parsers.storage.s3 import add_s3_group, s3_config_group, s3_extra
 from corc.cluster import list_clusters, start_cluster, stop_cluster, update_cluster
 from corc.job import run, get_results, delete_results, list_results
 from corc.instance import launch_instance
@@ -68,15 +70,24 @@ def job_cli(parser):
     list_parser.set_defaults(func=list_results)
 
 
-def add_config_cli(parser):
+def config_cli(parser):
     config_commands = parser.add_subparsers(title="Commands")
-    init_parser = config_commands.add_parser("init")
-    add_config_group(init_parser)
+    # AWS
+    aws_parser = config_commands.add_parser(AWS)
+    add_aws_group(aws_parser)
+    # aws_commands = aws_parser.add_subparsers(title="COMMAND")
+    # aws_init_parser = aws_commands.add_parser("init")
 
-    init_parser.set_defaults(func=)
+    # OCI
+    oci_parser = config_commands.add_parser(OCI)
+    add_oci_group(oci_parser)
+    oci_commands = oci_parser.add_subparsers(title="COMMAND")
+    oci_generate_parser = oci_commands.add_parser("generate")
+    add_config_group(oci_generate_parser)
+    oci_generate_parser.set_defaults(func=init_config)
 
 
-def add_cluster_cli(parser):
+def cluster_cli(parser):
     cluster_commands = parser.add_subparsers(title="Commands")
     start_parser = cluster_commands.add_parser("start")
     start_cluster_group(start_parser)
@@ -97,7 +108,7 @@ def add_cluster_cli(parser):
     update_parser.set_defaults(func=update_cluster)
 
 
-def add_instance_cli(parser):
+def instance_cli(parser):
     instance_commands = parser.add_subparsers(title="Commands")
     launch_parser = instance_commands.add_parser("launch")
     add_compute_group(launch_parser)
@@ -106,7 +117,21 @@ def add_instance_cli(parser):
     launch_parser.set_defaults(func=launch_instance)
 
 
-def add_platform_group(parser):
-    platform_group = parser.add_argument_group(title="Available Platforms")
-    platform_group.add_argument("platform", choices=[OCI], default=OCI)
-    add_oci_group(parser)
+def orchestration_cli(parser):
+    provider_commands = parser.add_subparsers(title="COMMAND")
+
+    # AWS
+    aws_parser = provider_commands.add_parser(AWS)
+    add_aws_group(aws_parser)
+    # aws_commands = aws_parser.add_subparsers(title="COMMAND")
+    # aws_instance_parser = aws_commands.add_parser("instance")
+    # aws_cluster_parser = aws_commands.add_parser("cluster")
+
+    # OCI
+    oci_parser = provider_commands.add_parser(OCI)
+    add_oci_group(oci_parser)
+    oci_commands = oci_parser.add_subparsers(title="COMMAND")
+    oci_instance_parser = oci_commands.add_parser("instance")
+    instance_cli(oci_instance_parser)
+    oci_cluster_parser = oci_commands.add_parser("cluster")
+    cluster_cli(oci_cluster_parser)
