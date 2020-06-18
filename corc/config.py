@@ -1,7 +1,7 @@
 import os
 import yaml
 from corc.defaults import ANSIBLE, AWS_LOWER, OCI_LOWER
-from corc.configs.defaults import valid_corc_config
+from corc.providers.oci.config import valid_corc_config
 from corc.util import validate_dict_fields
 
 default_configurer_config = {}

@@ -15,7 +15,7 @@ from corc.defaults import (
 )
 from corc.cli.configurer.ansible import valid_ansible_group
 from corc.cli.parsers.cluster.cluster import valid_cluster_group
-from corc.cli.config.config import valid_config_group
+from corc.cli.parsers.config.config import valid_config_group
 from corc.cli.parsers.instance.instance import valid_compute_group
 from corc.cli.parsers.job.job import valid_job_group
 from corc.cli.parsers.network.subnet import valid_subnet_group
