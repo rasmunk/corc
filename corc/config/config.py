@@ -4,16 +4,8 @@ from corc.util import validate_dict_fields
 from corc.config.defaults import valid_corc_config, default_config
 
 
-def generate_config(config=None, path=None):
-    if "CORC_CONFIG_FILE" in os.environ:
-        path = os.environ["CORC_CONFIG_FILE"]
-    else:
-        if not path:
-            path = os.path.join("~", ".corc", "config")
-
-    if not config:
-        config = default_config
-    return config
+def generate_default_config():
+    return default_config
 
 
 def save_config(config, path=None):
