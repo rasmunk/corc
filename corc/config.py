@@ -1,15 +1,15 @@
+import copy
 import os
 import yaml
 from corc.defaults import ANSIBLE, AWS_LOWER, OCI_LOWER
-from corc.providers.oci.config import valid_corc_config
-from corc.util import validate_dict_fields
+from corc.util import validate_dict_fields, present_in, correct_type
 
 default_configurer_config = {}
 
+default_configurers_config = {ANSIBLE: default_configurer_config}
+
 valid_configurer_config = {
-    "root_path": str,
-    "playbook_path": str,
-    "inventory_path": str,
+    ANSIBLE: {"root_path": str, "playbook_path": str, "inventory_path": str,}
 }
 
 default_job_config = {
@@ -37,6 +37,11 @@ valid_job_config = {
     "capture": bool,
     "output_path": str,
 }
+
+default_providers_config = {AWS_LOWER: {}, OCI_LOWER: {}}
+
+valid_providers_config = {AWS_LOWER: dict, OCI_LOWER: dict}
+
 
 default_s3_storage_config = {
     "config_file": "~/.aws/config",
@@ -85,9 +90,19 @@ default_config = {
         "job": default_job_config,
         "storage": default_storage_config,
         "configurers": {ANSIBLE: default_configurer_config},
-        "providers": {AWS_LOWER: {}, OCI_LOWER: {}, },
+        "providers": {AWS_LOWER: {}, OCI_LOWER: {},},
     }
 }
+
+valid_corc_config = {
+    "job": valid_job_config,
+    "storage": valid_storage_config,
+    "configurers": valid_configurer_config,
+    "providers": valid_providers_config,
+}
+
+
+valid_config = {"corc": valid_corc_config}
 
 
 def generate_default_config():
@@ -196,17 +211,43 @@ def remove_config(path=None):
     return True
 
 
-def valid_config(config, verbose=False, throw=False):
+def recursive_check_config(
+    config, valid_dict, remain_config=None, remain_valid=None, verbose=False
+):
+
+    while config.items():
+        key, value = config.popitem()
+        if not remain_config:
+            remain_config = copy.deepcopy(config)
+        if key in remain_config:
+            remain_config.pop(key)
+        if not remain_valid:
+            remain_valid = valid_dict
+
+        # Illegal key
+        if not present_in(key, valid_dict, verbose=verbose):
+            return False
+
+        if isinstance(value, dict) and isinstance(valid_dict[key], dict):
+            return recursive_check_config(
+                value,
+                valid_dict[key],
+                remain_config=remain_config,
+                remain_valid=remain_valid,
+                verbose=verbose
+            )
+
+        if not correct_type(type(value), valid_dict[key], verbose=verbose):
+            return False
+
+    if remain_config and remain_config.items():
+        return recursive_check_config(remain_config, remain_valid, verbose=verbose)
+
+    return True
+
+
+def valid_config(config, verbose=False):
     if not isinstance(config, dict):
         return False
 
-    for key, value in config.items():
-        if key not in valid_corc_config:
-            return False
-        valid = validate_dict_fields(
-            value, valid_corc_config[key], verbose=verbose, throw=throw
-        )
-        if not valid:
-            return False
-
-    return True
+    return recursive_check_config(config["corc"], valid_corc_config, verbose=verbose)

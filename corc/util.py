@@ -31,6 +31,18 @@ def present_in(var, collection, verbose=False):
     return True
 
 
+def correct_type(var, required_type, verbose=False):
+    if not isinstance(var, type):
+        if verbose:
+            print(
+                "variable: {} is an incorrect type: {}, should be: {}".format(
+                    var, type(var), required_type
+                )
+            )
+        return False
+    return True
+
+
 def validate_dict_fields(input_dict, valid_fields, verbose=False, throw=False):
 
     for key, value in input_dict.items():

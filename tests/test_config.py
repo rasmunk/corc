@@ -5,8 +5,9 @@ from corc.config import (
     save_config,
     load_config,
     remove_config,
+    valid_config,
 )
-from corc.configs.defaults import default_config
+from corc.config import default_config
 
 
 class ConfigTest(unittest.TestCase):
@@ -31,6 +32,6 @@ class ConfigTest(unittest.TestCase):
         self.assertIsInstance(loaded_config, dict)
         self.assertDictEqual(config, loaded_config)
 
-    # def test_valid_config(self):
-    #     config = generate_default_config()
-    #     self.assertTrue(valid_config(config, verbose=True, throw=True))
+    def test_valid_config(self):
+        config = generate_default_config()
+        self.assertTrue(valid_config(config, verbose=True))

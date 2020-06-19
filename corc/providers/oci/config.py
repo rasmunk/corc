@@ -60,7 +60,7 @@ valid_network_config = {
 
 valid_profile_config = {"profile_name": str, "compartment_id": str}
 
-valid_corc_config = {
+valid_oci_config = {
     "cluster": valid_cluster_config,
     "instance": valid_instance_config,
     "network": valid_network_config,

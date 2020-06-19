@@ -92,7 +92,7 @@ def delete_objects(s3_resource, bucket_name, s3_prefix="", max_chunk_size=1000):
 
     if num_delete > max_chunk_size:
         delete_chunks = [
-            objects_keys[i: i + max_chunk_size]
+            objects_keys[i : i + max_chunk_size]
             for i in range(0, num_delete, max_chunk_size)
         ]
         for idx, chunk_keys in enumerate(delete_chunks):
