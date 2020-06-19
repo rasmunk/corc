@@ -85,7 +85,7 @@ valid_storage_config = {
 }
 
 
-default_config = {
+default_corc_config = {
     "corc": {
         "job": default_job_config,
         "storage": default_storage_config,
@@ -102,11 +102,8 @@ valid_corc_config = {
 }
 
 
-valid_config = {"corc": valid_corc_config}
-
-
 def generate_default_config():
-    return default_config
+    return default_corc_config
 
 
 def save_config(config, path=None):
@@ -215,10 +212,12 @@ def recursive_check_config(
     config, valid_dict, remain_config=None, remain_valid=None, verbose=False
 ):
 
-    while config.items():
-        key, value = config.popitem()
+    local_config = copy.deepcopy(config)
+
+    while local_config.items():
+        key, value = local_config.popitem()
         if not remain_config:
-            remain_config = copy.deepcopy(config)
+            remain_config = copy.deepcopy(local_config)
         if key in remain_config:
             remain_config.pop(key)
         if not remain_valid:
@@ -234,7 +233,7 @@ def recursive_check_config(
                 valid_dict[key],
                 remain_config=remain_config,
                 remain_valid=remain_valid,
-                verbose=verbose
+                verbose=verbose,
             )
 
         if not correct_type(type(value), valid_dict[key], verbose=verbose):
@@ -248,6 +247,9 @@ def recursive_check_config(
 
 def valid_config(config, verbose=False):
     if not isinstance(config, dict):
+        return False
+
+    if "corc" not in config:
         return False
 
     return recursive_check_config(config["corc"], valid_corc_config, verbose=verbose)

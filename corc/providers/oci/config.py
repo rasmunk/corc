@@ -1,3 +1,6 @@
+import flatten_dict
+from corc.config import recursive_check_config
+
 default_cluster_config = {"name": "cluster", "kubernetes_version": "", "domain": ""}
 
 default_instance_config = {
@@ -26,6 +29,8 @@ default_config = {
     "network": default_network_config,
     "profile": default_profile_config,
 }
+
+default_oci_config = {"oci": default_config}
 
 valid_cluster_config = {
     "image": str,
@@ -60,7 +65,7 @@ valid_network_config = {
 
 valid_profile_config = {"profile_name": str, "compartment_id": str}
 
-valid_oci_config = {
+valid_full_oci_config = {
     "cluster": valid_cluster_config,
     "instance": valid_instance_config,
     "network": valid_network_config,
@@ -69,6 +74,20 @@ valid_oci_config = {
 
 
 def generate_oci_config(**kwargs):
-    # TODO, validate kwargs
-    # TODO, update default config with kwargs
-    return default_config
+    config = default_oci_config
+    if kwargs:
+        flat = flatten_dict.flatten(config)
+        other_flat = flatten_dict.flatten(kwargs)
+        flat.update(other_flat)
+        config = flatten_dict.unflatten(flat)
+    return config
+
+
+def valid_oci_config(config, verbose=False):
+    if not isinstance(config, dict):
+        return False
+
+    if "oci" not in config:
+        return False
+
+    return recursive_check_config(config["oci"], valid_full_oci_config, verbose=verbose)

@@ -84,6 +84,7 @@ def config_cli(parser):
     oci_commands = oci_parser.add_subparsers(title="COMMAND")
     oci_generate_parser = oci_commands.add_parser("generate")
     add_config_group(oci_generate_parser)
+
     oci_generate_parser.set_defaults(func=init_config)
 
 

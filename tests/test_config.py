@@ -1,3 +1,4 @@
+import copy
 import os
 import unittest
 from corc.config import (
@@ -7,7 +8,8 @@ from corc.config import (
     remove_config,
     valid_config,
 )
-from corc.config import default_config
+from corc.config import default_corc_config
+from corc.providers.oci.config import generate_oci_config, valid_oci_config
 
 
 class ConfigTest(unittest.TestCase):
@@ -19,7 +21,7 @@ class ConfigTest(unittest.TestCase):
         self.assertTrue(remove_config(self.config_path))
 
     def test_generate_config(self):
-        self.assertDictEqual(generate_default_config(), default_config)
+        self.assertDictEqual(generate_default_config(), default_corc_config)
 
     def test_save_config(self):
         config = generate_default_config()
@@ -34,4 +36,12 @@ class ConfigTest(unittest.TestCase):
 
     def test_valid_config(self):
         config = generate_default_config()
+        local_copy = copy.deepcopy(config)
         self.assertTrue(valid_config(config, verbose=True))
+        self.assertDictEqual(local_copy, config)
+
+    def test_oci_config(self):
+        config = generate_oci_config()
+        local_copy = copy.deepcopy(config)
+        self.assertTrue(valid_oci_config(config, verbose=True))
+        self.assertDictEqual(local_copy, config)
