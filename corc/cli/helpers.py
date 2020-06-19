@@ -7,6 +7,7 @@ from corc.cli.parsers.cluster.cluster import (
     cluster_schedule_group,
     select_cluster_group,
     start_cluster_group,
+    valid_cluster_group,
 )
 from corc.cli.providers.oci import init_config
 from corc.cli.parsers.config.config import add_config_group
@@ -84,6 +85,7 @@ def config_cli(parser):
     oci_commands = oci_parser.add_subparsers(title="COMMAND")
     oci_generate_parser = oci_commands.add_parser("generate")
     add_config_group(oci_generate_parser)
+    valid_cluster_group(oci_generate_parser)
 
     oci_generate_parser.set_defaults(func=init_config)
 

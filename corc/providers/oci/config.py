@@ -33,12 +33,12 @@ default_config = {
 default_oci_config = {"oci": default_config}
 
 valid_cluster_config = {
-    "image": str,
     "id": str,
     "name": str,
     "kubernetes_version": str,
     "domain": str,
     "node": dict,
+    "image": str,
 }
 
 valid_node_config = {
