@@ -1,3 +1,4 @@
+import flatten_dict
 import platform
 import socket
 import subprocess
@@ -41,6 +42,19 @@ def correct_type(var, required_type, verbose=False):
             )
         return False
     return True
+
+
+def missing_fields(input_dict, required_fields, verbose=False, throw=False):
+    missing = {}
+    flat_input_fields = flatten_dict.flatten(input_dict)
+    flat_required_fields = flatten_dict.flatten(required_fields)
+
+    for k, v in flat_required_fields.items():
+        # Not present or not set
+        if not present_in(k, flat_input_fields) or not flat_input_fields[k]:
+            missing[k] = None
+
+    return flatten_dict.unflatten(missing)
 
 
 def validate_dict_fields(input_dict, valid_fields, verbose=False, throw=False):

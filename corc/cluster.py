@@ -23,7 +23,6 @@ def list_clusters(args):
 
 
 def start_cluster(args):
-
     oci_args = vars(extract_arguments(args, [OCI]))
     cluster_args = vars(extract_arguments(args, [CLUSTER]))
     node_args = vars(extract_arguments(args, [NODE]))

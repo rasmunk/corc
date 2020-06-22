@@ -1,8 +1,10 @@
 import copy
+import flatten_dict
 import os
 import yaml
 from corc.defaults import ANSIBLE, AWS_LOWER, OCI_LOWER
 from corc.util import present_in, correct_type
+
 
 default_configurer_config = {}
 
@@ -12,26 +14,30 @@ valid_configurer_config = {
     ANSIBLE: {"root_path": str, "playbook_path": str, "inventory_path": str,}
 }
 
+default_job_meta_config = {
+    "name": "",
+    "debug": False,
+    "env_override": True,
+    "num_jobs": 1,
+    "num_parallel": 1,
+}
+
+valid_job_meta_config = {
+    "name": str,
+    "debug": bool,
+    "env_override": bool,
+    "num_jobs": int,
+    "num_parallel": int,
+}
+
 default_job_config = {
-    "meta": {
-        "name": "",
-        "debug": False,
-        "env_override": True,
-        "num_jobs": 1,
-        "num_parallel": 1,
-    },
+    "meta": default_job_meta_config,
     "capture": True,
     "output_path": "/tmp/output",
 }
 
 valid_job_config = {
-    "meta": {
-        "name": str,
-        "debug": bool,
-        "env_override": bool,
-        "num_jobs": int,
-        "num_parallel": int,
-    },
+    "meta": dict,
     "command": str,
     "args": list,
     "capture": bool,
@@ -253,3 +259,37 @@ def valid_config(config, verbose=False):
         return False
 
     return recursive_check_config(config["corc"], valid_corc_config, verbose=verbose)
+
+
+def load_from_config(find_dict, prefix={}):
+
+    if not find_dict or not config_exists():
+        return {}
+
+    config = load_config()
+    if not config:
+        return {}
+
+    found_config_values = {}
+    flat_find_dict = flatten_dict.flatten(find_dict, keep_empty_types=(dict,))
+    flat_prefix = flatten_dict.flatten(prefix, keep_empty_types=(dict,))
+    flat_config = flatten_dict.flatten(config, keep_empty_types=(dict,))
+    print(flat_config)
+    for k, _ in flat_find_dict.items():
+        if prefix:
+            prefixed_key = list(flat_prefix.keys())[0] + k
+            print(prefixed_key)
+            if prefixed_key in flat_config and flat_config[prefixed_key]:
+                found_config_values[k] = flat_config[prefixed_key]
+        else:
+            if k in flat_config and flat_config[k]:
+                found_config_values[k] = flat_config[k]
+    return flatten_dict.unflatten(found_config_values)
+
+
+def gen_config_provider_prefix(provider):
+    return gen_config_prefix({"providers": provider})
+
+
+def gen_config_prefix(prefix):
+    return {"corc": prefix}

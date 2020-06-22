@@ -50,13 +50,14 @@ argument_groups = {
 
 
 def extract_arguments(arguments, argument_types, strip_group_prefix=True):
-    if strip_group_prefix:
-        stripped_args = {}
-        for argument_group in argument_types:
-            group_args = _get_arguments(vars(arguments), argument_group.lower())
+    stripped_args = {}
+    for argument_group in argument_types:
+        arguments_dict = vars(arguments)
+        group_args = _get_arguments(arguments_dict, argument_group.lower())
+        if strip_group_prefix:
             group_args = strip_argument_prefix(group_args, argument_group.lower() + "_")
-            stripped_args.update(group_args)
-        return Namespace(**stripped_args)
+        stripped_args.update(group_args)
+    return Namespace(**stripped_args)
     return {}
 
 

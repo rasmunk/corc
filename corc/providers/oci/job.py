@@ -15,19 +15,23 @@ from kubernetes.client import (
 from kubernetes.client.rest import ApiException
 
 from jobio.storage.s3 import expand_s3_bucket, stage_s3_resource
+from corc.config import (
+    load_from_config,
+    gen_config_provider_prefix,
+    gen_config_prefix,
+    valid_job_config,
+    valid_job_meta_config,
+)
 from corc.defaults import (
     STORAGE_CREDENTIALS_NAME,
     KUBERNETES_NAMESPACE,
     JOB_DEFAULT_NAME,
 )
-from corc.util import validate_dict_types, validate_dict_values
-from corc.storage.staging import (
-    required_staging_fields,
-    required_staging_values,
-    required_get_storage_fields,
-    required_get_storage_values,
-    required_delete_storage_fields,
-    required_delete_storage_values,
+from corc.util import (
+    validate_dict_fields,
+    validate_dict_types,
+    validate_dict_values,
+    missing_fields,
 )
 from corc.storage.s3 import (
     bucket_exists,
@@ -44,25 +48,65 @@ from corc.kubernetes.nodes import NodeManager
 from corc.kubernetes.scheduler import KubenetesScheduler
 from corc.providers.oci.cluster import get_cluster_by_name, refresh_kube_config
 from corc.providers.oci.helpers import new_client
+from corc.providers.oci.config import valid_profile_config, valid_cluster_config
+
+
+required_run_cluster_fields = {"name": str, "image": str}
+
+required_run_job_fields = {
+    "meta": {"num_jobs": int, "num_parallel": int},
+    "command": str,
+}
+
+
+def validate_arguments(oci_kwargs, cluster_kwargs, job_kwargs, storage_kwargs):
+    validate_dict_fields(oci_kwargs, valid_profile_config, verbose=True, throw=True)
+    validate_dict_values(oci_kwargs, valid_profile_config, verbose=True, throw=True)
+
+    validate_dict_fields(cluster_kwargs, valid_cluster_config, verbose=True, throw=True)
+    validate_dict_values(
+        cluster_kwargs, required_run_cluster_fields, verbose=True, throw=True
+    )
+
+    validate_dict_fields(job_kwargs, valid_job_config, verbose=True, throw=True)
+    validate_dict_values(job_kwargs, required_run_job_fields, verbose=True, throw=True)
+
+    validate_arguments()
 
 
 def run(
-    cluster_kwargs={},
-    execute_kwargs={},
-    job_kwargs={},
-    oci_kwargs={},
-    staging_kwargs={},
-    storage_kwargs={},
+    oci_kwargs, cluster_kwargs={}, job_kwargs={}, storage_kwargs={}, staging_kwargs={},
 ):
-    # Validate arguments
 
-    print("Inside oci run")
-    if not s3_args["bucket_name"]:
-        s3_args["bucket_name"] = job_args["name"]
+    # Try to load the missing values from the config
+    missing_oci_dict = missing_fields(oci_kwargs, valid_profile_config)
+    config_profile_prefix = gen_config_provider_prefix({"oci": {"profile": {}}})
+    oci_kwargs.update(load_from_config(missing_oci_dict, prefix=config_profile_prefix))
+
+    missing_cluster = missing_fields(cluster_kwargs, valid_cluster_config)
+    config_cluster_prefix = gen_config_provider_prefix({"oci": {"cluster": {}}})
+    cluster_kwargs.update(
+        load_from_config(missing_cluster, prefix=config_cluster_prefix)
+    )
+
+    missing_job_dict = missing_fields(job_kwargs, valid_job_config)
+    config_job_prefix = gen_config_prefix({"job": {}})
+    job_kwargs.update(load_from_config(missing_job_dict, prefix=config_job_prefix))
+
+    missing_meta_dict = missing_fields(job_kwargs["meta"], valid_job_meta_config)
+    config_meta_prefix = gen_config_prefix({"job": {"meta": {}}})
+    job_kwargs["meta"].update(
+        load_from_config(missing_meta_dict, prefix=config_meta_prefix)
+    )
+
+    validate_arguments(oci_kwargs, cluster_kwargs, job_kwargs)
 
     if "name" not in job_kwargs or not job_kwargs["name"]:
         since_epoch = int(time.time())
         job_kwargs["name"] = "{}-{}".format(JOB_DEFAULT_NAME, since_epoch)
+
+    if "bucket_name" not in storage_kwargs or not storage_kwargs["bucket_name"]:
+        storage_kwargs["bucket_name"] = job_kwargs["name"]
 
     container_engine_client = new_client(
         ContainerEngineClient,
@@ -94,22 +138,28 @@ def run(
     jobio_args = [
         "jobio",
         "run",
-        execute_kwargs["command"],
-        "--execute-args",
-        " ".join(execute_kwargs["args"]),
-        "--execute-output-path",
-        execute_kwargs["output_path"],
+        job_kwargs["command"],
         "--job-name",
         job_kwargs["name"],
     ]
 
-    if "capture" in execute_kwargs and execute_kwargs["capture"]:
+    if "args" in job_kwargs:
+        jobio_args.append(
+            "--execute-args", " ".join(job_kwargs["args"]),
+        )
+
+    if "output_path" in job_kwargs:
+        jobio_args.append(
+            "--execute-output-path", job_kwargs["output_path"],
+        )
+
+    if "capture" in job_kwargs and job_kwargs["capture"]:
         jobio_args.append("--execute-capture")
 
-    if "debug" in execute_kwargs:
+    if "debug" in job_kwargs["meta"]:
         jobio_args.append("--job-debug")
 
-    if "env_override" in job_kwargs:
+    if "env_override" in job_kwargs["meta"]:
         jobio_args.append("--job-env-override")
 
     # Maintained by the pod
