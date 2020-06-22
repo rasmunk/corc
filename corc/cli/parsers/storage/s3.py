@@ -16,9 +16,8 @@ def s3_config_group(parser):
 
 def select_s3_group(parser):
     s3_group = parser.add_argument_group(title="S3 Selection arguments")
-    s3 = s3_group.add_mutually_exclusive_group(required=True)
-    s3.add_argument("--s3-bucket-id", default="")
-    s3.add_argument("--s3-bucket-name", default="")
+    s3_group.add_argument("--s3-bucket-id", default="")
+    s3_group.add_argument("--s3-bucket-name", default="")
 
 
 def add_s3_group(parser):

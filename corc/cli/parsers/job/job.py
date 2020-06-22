@@ -7,9 +7,9 @@ def valid_job_group(parser):
     job_group(parser)
 
 
-def select_job_group(parser, required=True):
+def select_job_group(parser):
     job_group = parser.add_argument_group(title="Job Identity arguments")
-    job_group.add_argument("--job-name", default="", required=required)
+    job_group.add_argument("--job-name", default="")
 
 
 def job_meta_group(parser):
@@ -23,7 +23,6 @@ def job_meta_group(parser):
 def job_group(parser):
     job_group = parser.add_argument_group(title="Job Execute arguments")
     job_group.add_argument("job_command", default="")
-    job_group.add_argument("--job-name", default="")
     job_group.add_argument("--job-args", nargs="*", default="")
     job_group.add_argument("--job-capture", action="store_true", default=True)
     job_group.add_argument("--job-output-path", default="/tmp/output")

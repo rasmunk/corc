@@ -30,6 +30,6 @@ def download_storage(parser):
 
 def select_storage(parser):
     storage_group = parser.add_argument_group(title="Storage Selection arguments")
-    storage_group.add_argument("--storage-endpoint", default="", required=True)
+    storage_group.add_argument("--storage-endpoint", default="")
     storage_providers = storage_group.add_mutually_exclusive_group()
     storage_providers.add_argument("--storage-s3", action="store_true", default=True)

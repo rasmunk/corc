@@ -1,5 +1,6 @@
 from corc.defaults import OCI, CLUSTER, SUBNET, VCN, NODE
 from corc.cli.args import extract_arguments
+from corc.config import load_config
 from corc.providers.oci.cluster import (
     list_clusters as oci_list_clusters,
     delete_cluster_stack as oci_delete_cluster_stack,
@@ -22,13 +23,17 @@ def list_clusters(args):
 
 
 def start_cluster(args):
+
     oci_args = vars(extract_arguments(args, [OCI]))
     cluster_args = vars(extract_arguments(args, [CLUSTER]))
     node_args = vars(extract_arguments(args, [NODE]))
     vcn_args = vars(extract_arguments(args, [VCN]))
     subnet_args = vars(extract_arguments(args, [SUBNET]))
 
+    # Interpolate general arguments with config
     if oci_args:
+        # Interpolate oci arguments with config
+
         # Validate oci authentication
         # Node shape is special
         if "shape" in node_args:

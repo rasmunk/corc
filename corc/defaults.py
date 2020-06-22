@@ -1,6 +1,13 @@
 # Package name
 PACKAGE_NAME = "corc"
 
+# Providers
+PROVIDER = "PROVIDER"
+AWS = "AWS"
+AWS_LOWER = "aws"
+OCI = "OCI"
+OCI_LOWER = "oci"
+
 # Argument group defaults
 ANSIBLE = "ANSIBLE"
 
@@ -11,11 +18,6 @@ COMPUTE = "COMPUTE"
 CONFIG = "CONFIG"
 JOB = "JOB"
 NODE = "NODE"
-AWS = "AWS"
-AWS_LOWER = "aws"
-OCI = "OCI"
-OCI_LOWER = "oci"
-PLATFORM = "OCI"
 RUN = "RUN"
 STORAGE = "STORAGE"
 SUBNET = "SUBNET"

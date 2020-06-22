@@ -64,7 +64,7 @@ def job_cli(parser):
     delete_parser.set_defaults(func=delete_results)
 
     list_parser = result_commands.add_parser("list")
-    select_job_group(list_parser, required=False)
+    select_job_group(list_parser)
     select_storage(list_parser)
     s3_config_group(list_parser)
     s3_extra(list_parser)
@@ -86,7 +86,6 @@ def config_cli(parser):
     oci_generate_parser = oci_commands.add_parser("generate")
     add_config_group(oci_generate_parser)
     valid_cluster_group(oci_generate_parser)
-
     oci_generate_parser.set_defaults(func=init_config)
 
 
@@ -122,7 +121,6 @@ def instance_cli(parser):
 
 def orchestration_cli(parser):
     provider_commands = parser.add_subparsers(title="COMMAND")
-
     # AWS
     aws_parser = provider_commands.add_parser(AWS)
     add_aws_group(aws_parser)
@@ -138,3 +136,7 @@ def orchestration_cli(parser):
     instance_cli(oci_instance_parser)
     oci_cluster_parser = oci_commands.add_parser("cluster")
     cluster_cli(oci_cluster_parser)
+
+
+# def load_argument_group_or_config(group, config):
+#     for grp in group:

@@ -54,6 +54,12 @@ def run(
     staging_kwargs={},
     storage_kwargs={},
 ):
+    # Validate arguments
+
+    print("Inside oci run")
+    if not s3_args["bucket_name"]:
+        s3_args["bucket_name"] = job_args["name"]
+
     if "name" not in job_kwargs or not job_kwargs["name"]:
         since_epoch = int(time.time())
         job_kwargs["name"] = "{}-{}".format(JOB_DEFAULT_NAME, since_epoch)

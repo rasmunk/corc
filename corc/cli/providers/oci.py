@@ -13,7 +13,7 @@ from corc.providers.oci.config import generate_oci_config, valid_oci_config
 def init_config(args):
     oci_kwargs = vars(extract_arguments(args, [OCI]))
     cluster_kwargs = vars(extract_arguments(args, [CLUSTER]))
-    oci_config_dict = {"oci": {"profile": oci_kwargs, "cluster": cluster_kwargs, }}
+    oci_config_dict = {"oci": {"profile": oci_kwargs, "cluster": cluster_kwargs,}}
 
     # Expects that the default corc config is present
     oci_config = generate_oci_config(**oci_config_dict)
