@@ -274,11 +274,9 @@ def load_from_config(find_dict, prefix={}):
     flat_find_dict = flatten_dict.flatten(find_dict, keep_empty_types=(dict,))
     flat_prefix = flatten_dict.flatten(prefix, keep_empty_types=(dict,))
     flat_config = flatten_dict.flatten(config, keep_empty_types=(dict,))
-    print(flat_config)
     for k, _ in flat_find_dict.items():
         if prefix:
             prefixed_key = list(flat_prefix.keys())[0] + k
-            print(prefixed_key)
             if prefixed_key in flat_config and flat_config[prefixed_key]:
                 found_config_values[k] = flat_config[prefixed_key]
         else:
