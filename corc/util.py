@@ -1,3 +1,4 @@
+import os
 import flatten_dict
 import platform
 import socket
@@ -21,6 +22,18 @@ def dump_yaml(path, data):
         return True
     except IOError as err:
         print("Failed to dump yaml: {} - {}".format(path, err))
+    return False
+
+
+def create_directory(dir_path):
+    if os.path.exists(dir_path):
+        return True
+
+    try:
+        os.makedirs(dir_path)
+        return True
+    except IOError as err:
+        print("Failed to create the directory path: {} - {}".format(dir_path, err))
     return False
 
 

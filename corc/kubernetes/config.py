@@ -1,5 +1,5 @@
 import os
-from corc.util import dump_yaml
+from corc.util import dump_yaml, create_directory
 from kubernetes import config
 from kubernetes.config import ConfigException
 from kubernetes.config.kube_config import KUBE_CONFIG_DEFAULT_LOCATION
@@ -20,4 +20,9 @@ def save_kube_config(config_dict, config_file=None, user_exec_args=None):
     if config_file is None:
         # Get the absolute path
         config_file = os.path.expanduser(KUBE_CONFIG_DEFAULT_LOCATION)
+
+    # Ensure the directory path exists before dump
+    if not create_directory(os.path.dirname(config_file)):
+        return False
+
     return dump_yaml(config_file, config_dict)

@@ -21,6 +21,8 @@ from corc.config import (
     gen_config_prefix,
     valid_job_config,
     valid_job_meta_config,
+    valid_storage_config,
+    valid_s3_config,
 )
 from corc.defaults import (
     STORAGE_CREDENTIALS_NAME,
@@ -58,8 +60,26 @@ required_run_job_fields = {
     "command": str,
 }
 
+required_storage_fields = {
+    "endpoint": True,
+    "credentials_path": True,
+    "input_path": True,
+    "output_path": True,
+}
 
-def validate_arguments(oci_kwargs, cluster_kwargs, job_kwargs, storage_kwargs):
+required_staging_values = {
+    "config_file": True,
+    "credentials_file": True,
+    "profile_name": True,
+    "bucket_name": True,
+    "input_prefix": True,
+    "output_prefix": True,
+}
+
+
+def validate_arguments(
+    oci_kwargs, cluster_kwargs, job_kwargs, storage_kwargs, staging_kwargs
+):
     validate_dict_fields(oci_kwargs, valid_profile_config, verbose=True, throw=True)
     validate_dict_values(oci_kwargs, valid_profile_config, verbose=True, throw=True)
 
@@ -71,7 +91,9 @@ def validate_arguments(oci_kwargs, cluster_kwargs, job_kwargs, storage_kwargs):
     validate_dict_fields(job_kwargs, valid_job_config, verbose=True, throw=True)
     validate_dict_values(job_kwargs, required_run_job_fields, verbose=True, throw=True)
 
-    validate_arguments()
+    # Storage and Staging are not required to execute a job, only if enabled
+    validate_dict_fields(storage_kwargs, valid_storage_config, verbose=True, throw=True)
+    validate_dict_fields(staging_kwargs, valid_s3_config, verbose=True, throw=True)
 
 
 def run(
@@ -99,7 +121,9 @@ def run(
         load_from_config(missing_meta_dict, prefix=config_meta_prefix)
     )
 
-    validate_arguments(oci_kwargs, cluster_kwargs, job_kwargs)
+    validate_arguments(
+        oci_kwargs, cluster_kwargs, job_kwargs, storage_kwargs, staging_kwargs
+    )
 
     if "name" not in job_kwargs or not job_kwargs["name"]:
         since_epoch = int(time.time())
@@ -144,14 +168,16 @@ def run(
     ]
 
     if "args" in job_kwargs:
-        jobio_args.append(
-            "--execute-args", " ".join(job_kwargs["args"]),
-        )
+        jobio_args.extend([
+            "--execute-args",
+            " ".join(job_kwargs["args"])
+        ])
 
     if "output_path" in job_kwargs:
-        jobio_args.append(
-            "--execute-output-path", job_kwargs["output_path"],
-        )
+        jobio_args.extend([
+            "--execute-output-path",
+            job_kwargs["output_path"],
+        ])
 
     if "capture" in job_kwargs and job_kwargs["capture"]:
         jobio_args.append("--execute-capture")
@@ -172,9 +198,8 @@ def run(
     # Prepare config for the scheduler
     scheduler_config = {}
 
-    if staging_kwargs and staging_kwargs["enable"]:
-        validate_dict_types(staging_kwargs, required_staging_fields, throw=True)
-        validate_dict_values(staging_kwargs, required_staging_values, throw=True)
+    if storage_kwargs:
+        validate_dict_values(storage_kwargs, required_storage_fields, throw=True)
 
         # Means that results should be exported to the specified storage
         # Create kubernetes secrets
@@ -207,21 +232,20 @@ def run(
         # in the compute unit
         secret_mount = V1VolumeMount(
             name=STORAGE_CREDENTIALS_NAME,
-            mount_path=staging_kwargs["credentials_path"],
+            mount_path=storage_kwargs["credentials_path"],
             read_only=True,
         )
         volume_mounts.append(secret_mount)
 
-        if storage_kwargs:
-            validate_dict_types(storage_kwargs, required_s3_fields, throw=True)
-            validate_dict_values(storage_kwargs, required_s3_values, throw=True)
+        if staging_kwargs:
+            validate_dict_values(staging_kwargs, required_staging_values, throw=True)
             # S3 storage
             # Look for s3 credentials and config files
             s3_config = load_s3_config(
-                storage_kwargs["config_file"],
-                storage_kwargs["credentials_file"],
-                staging_kwargs["endpoint"],
-                profile_name=storage_kwargs["profile_name"],
+                staging_kwargs["config_file"],
+                staging_kwargs["credentials_file"],
+                storage_kwargs["endpoint"],
+                profile_name=staging_kwargs["profile_name"],
             )
 
             if not storage_credentials_secret:
@@ -237,72 +261,70 @@ def run(
             # TODO, unify argument endpoint, with s3 config endpoint'
             s3 = boto3.resource("s3", **s3_config)
 
-            bucket = bucket_exists(s3.meta.client, storage_kwargs["bucket_name"])
+            bucket = bucket_exists(s3.meta.client, staging_kwargs["bucket_name"])
             if not bucket:
                 bucket = s3.create_bucket(
-                    Bucket=storage_kwargs["bucket_name"],
+                    Bucket=staging_kwargs["bucket_name"],
                     CreateBucketConfiguration={
                         "LocationConstraint": s3_config["region_name"]
                     },
                 )
 
-            if "upload_path" in staging_kwargs and staging_kwargs["upload_path"]:
+            if "upload_path" in storage_kwargs and storage_kwargs["upload_path"]:
                 # Upload local path to the bucket as designated input for the job
-                if os.path.exists(staging_kwargs["upload_path"]):
-                    if os.path.isdir(staging_kwargs["upload_path"]):
+                if os.path.exists(storage_kwargs["upload_path"]):
+                    if os.path.isdir(storage_kwargs["upload_path"]):
                         uploaded = upload_directory_to_s3(
                             s3.meta.client,
-                            staging_kwargs["upload_path"],
-                            storage_kwargs["bucket_name"],
-                            s3_prefix=storage_kwargs["bucket_input_prefix"],
+                            storage_kwargs["upload_path"],
+                            staging_kwargs["bucket_name"],
+                            s3_prefix=staging_kwargs["bucket_input_prefix"],
                         )
-                    elif os.path.isfile(staging_kwargs["upload_path"]):
-                        s3_path = os.path.basename(staging_kwargs["upload_path"])
-                        if storage_kwargs["bucket_input_prefix"]:
+                    elif os.path.isfile(storage_kwargs["upload_path"]):
+                        s3_path = os.path.basename(storage_kwargs["upload_path"])
+                        if staging_kwargs["bucket_input_prefix"]:
                             s3_path = os.path.join(
-                                storage_kwargs["bucket_input_prefix"], s3_path
+                                staging_kwargs["bucket_input_prefix"], s3_path
                             )
                         # Upload
                         uploaded = upload_to_s3(
                             s3.meta.client,
-                            staging_kwargs["upload_path"],
+                            storage_kwargs["upload_path"],
                             s3_path,
-                            storage_kwargs["bucket_name"],
+                            staging_kwargs["bucket_name"],
                         )
 
                 if not uploaded:
                     raise RuntimeError(
                         "Failed to local path: {} in the upload folder to s3".format(
-                            staging_kwargs["upload_path"]
+                            storage_kwargs["upload_path"]
                         )
                     )
+
+                jobio_args.append("--storage-enable")
 
             jobio_args.extend(
                 [
                     "--s3-region-name",
                     s3_config["region_name"],
                     "--storage-secrets-dir",
-                    staging_kwargs["credentials_path"],
+                    storage_kwargs["credentials_path"],
                     "--storage-endpoint",
-                    staging_kwargs["endpoint"],
+                    storage_kwargs["endpoint"],
                     "--storage-input-path",
-                    staging_kwargs["input_path"],
+                    storage_kwargs["input_path"],
                     "--storage-output-path",
-                    staging_kwargs["output_path"],
+                    storage_kwargs["output_path"],
                     "--bucket-name",
-                    storage_kwargs["bucket_name"],
+                    staging_kwargs["bucket_name"],
                     "--bucket-input-prefix",
-                    storage_kwargs["bucket_input_prefix"],
+                    staging_kwargs["bucket_input_prefix"],
                     "--bucket-output-prefix",
-                    storage_kwargs["bucket_output_prefix"],
+                    staging_kwargs["bucket_output_prefix"],
                 ]
             )
 
-            if "enable" in staging_kwargs:
-                jobio_args.append("--storage-enable")
-
             # Provide a way to allow pod specific output prefixes
-            # field_ref = client.V1ObjectFieldSelector(field_path="metadata.name")
             field_ref = client.V1ObjectFieldSelector(field_path="metadata.name")
             env_var_source = client.V1EnvVarSource(field_ref=field_ref)
             # HACK, Set the output prefix in the bucket to the name of the pod

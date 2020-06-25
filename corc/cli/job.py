@@ -23,7 +23,7 @@ def run(args):
     cluster_kwargs = vars(extract_arguments(args, [CLUSTER]))
     meta_kwargs = vars(extract_arguments(args, [META]))
     job_kwargs = vars(extract_arguments(args, [JOB]))
-    staging_kwargs = vars(extract_arguments(args, [STORAGE]))
+    storage_kwargs = vars(extract_arguments(args, [STORAGE]))
     s3_kwargs = vars(extract_arguments(args, [S3]))
 
     provider = select_provider(provider_kwargs, default_fallback=True, verbose=True)
@@ -35,8 +35,8 @@ def run(args):
     action_kwargs = dict(
         cluster_kwargs=cluster_kwargs,
         job_kwargs=job_kwargs,
-        staging_kwargs=staging_kwargs,
-        storage_kwargs=s3_kwargs,
+        storage_kwargs=storage_kwargs,
+        staging_kwargs=s3_kwargs,
     )
 
     api_run(provider, provider_kwargs, action_kwargs)
