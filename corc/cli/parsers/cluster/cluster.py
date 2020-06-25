@@ -6,9 +6,7 @@ def valid_cluster_group(parser):
 
 def cluster_schedule_group(parser):
     cluster_group = parser.add_argument_group(title="Cluster Runtime arguments")
-    cluster_group.add_argument(
-        "--cluster-image", default=""
-    )
+    cluster_group.add_argument("--cluster-image", default="")
 
 
 def select_cluster_group(parser):

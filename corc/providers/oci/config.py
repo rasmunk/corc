@@ -5,7 +5,8 @@ default_cluster_config = {
     "name": "cluster",
     "kubernetes_version": "",
     "domain": "",
-    "image": "nielsbohr/mccode-job-runner:latest"}
+    "image": "nielsbohr/mccode-job-runner:latest",
+}
 
 
 valid_cluster_config = {
