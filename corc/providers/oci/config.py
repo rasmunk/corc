@@ -1,7 +1,21 @@
 import flatten_dict
 from corc.config import recursive_check_config
 
-default_cluster_config = {"name": "cluster", "kubernetes_version": "", "domain": ""}
+default_cluster_config = {
+    "name": "cluster",
+    "kubernetes_version": "",
+    "domain": "",
+    "image": "nielsbohr/mccode-job-runner:latest"}
+
+
+valid_cluster_config = {
+    "id": str,
+    "name": str,
+    "kubernetes_version": str,
+    "domain": str,
+    "node": dict,
+    "image": str,
+}
 
 default_instance_config = {
     "ssh_authorized_keys": [],
@@ -9,6 +23,14 @@ default_instance_config = {
     "operating_system": "CentOS",
     "operating_system_version": "7",
     "target_shape": "VM.Standard2.1",
+}
+
+valid_instance_config = {
+    "ssh_authorized_keys": list,
+    "availability_domain": str,
+    "operating_system": str,
+    "operating_system_version": str,
+    "target_shape": str,
 }
 
 default_network_config = {
@@ -21,7 +43,14 @@ default_network_config = {
     },
 }
 
+valid_network_config = {
+    "subnet": {"id": str, "dns_label": str, "cidr_block": str},
+    "vcn": {"id": str, "dns_label": str, "display_name": str, "cidr_block": str},
+}
+
 default_profile_config = {"profile_name": "DEFAULT", "compartment_id": ""}
+
+valid_profile_config = {"profile_name": str, "compartment_id": str}
 
 default_config = {
     "cluster": default_cluster_config,
@@ -32,15 +61,6 @@ default_config = {
 
 default_oci_config = {"oci": default_config}
 
-valid_cluster_config = {
-    "id": str,
-    "name": str,
-    "kubernetes_version": str,
-    "domain": str,
-    "node": dict,
-    "image": str,
-}
-
 valid_node_config = {
     "id": str,
     "name": str,
@@ -50,20 +70,14 @@ valid_node_config = {
     "image": str,
 }
 
-valid_instance_config = {
-    "ssh_authorized_keys": list,
-    "availability_domain": str,
-    "operating_system": str,
-    "operating_system_version": str,
-    "target_shape": str,
+default_node_config = {
+    "id": "",
+    "name": "",
+    "availability_domain": "",
+    "size": 1,
+    "shape": "VM.Standard2.1",
+    "image": "Oracle-Linux-7.7-2020.03.23-0",
 }
-
-valid_network_config = {
-    "subnet": {"id": str, "dns_label": str, "cidr_block": str},
-    "vcn": {"id": str, "dns_label": str, "display_name": str, "cidr_block": str},
-}
-
-valid_profile_config = {"profile_name": str, "compartment_id": str}
 
 valid_full_oci_config = {
     "cluster": valid_cluster_config,

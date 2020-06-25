@@ -28,7 +28,7 @@ def add_s3_group(parser):
 
 def list_s3_group(parser):
     s3_list = parser.add_argument_group(title="S3 List arguments")
-    s3_list.add_argument("--s3-all", default=True, type=bool)
+    s3_list.add_argument("--s3-all", default=False, type=bool)
 
 
 def s3_extra(parser):

@@ -6,4 +6,4 @@ def add_subnet_group(parser):
     subnet_group = parser.add_argument_group(title="Subnet arguments")
     subnet_group.add_argument("--subnet-id", default="")
     subnet_group.add_argument("--subnet-dns-label", default=None)
-    subnet_group.add_argument("--subnet-cidr-block", default="10.0.1.0/24")
+    subnet_group.add_argument("--subnet-cidr-block", default="")

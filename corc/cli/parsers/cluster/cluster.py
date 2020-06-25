@@ -7,7 +7,7 @@ def valid_cluster_group(parser):
 def cluster_schedule_group(parser):
     cluster_group = parser.add_argument_group(title="Cluster Runtime arguments")
     cluster_group.add_argument(
-        "--cluster-image", default="nielsbohr/mccode-job-runner:latest"
+        "--cluster-image", default=""
     )
 
 
