@@ -1,6 +1,5 @@
 from corc.defaults import OCI, CLUSTER, SUBNET, VCN, NODE
 from corc.cli.args import extract_arguments
-from corc.config import load_config
 from corc.providers.oci.cluster import (
     list_clusters as oci_list_clusters,
     delete_cluster_stack as oci_delete_cluster_stack,

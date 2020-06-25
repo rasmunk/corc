@@ -7,6 +7,7 @@ def valid_storage_group(parser):
 
 def add_storage_group(parser):
     storage_group = parser.add_argument_group(title="Storage arguments")
+    storage_group.add_argument("--storage-enable", action="store_true")
     storage_group.add_argument("--storage-credentials-path", default="/mnt/creds")
     storage_group.add_argument("--storage-upload-path", default="")
     storage_group.add_argument("--storage-input-path", default="/tmp/input")

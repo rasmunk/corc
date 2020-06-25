@@ -5,8 +5,7 @@ from corc.defaults import (
     META,
     S3,
     STORAGE,
-    PROVIDER,
-    PROVIDERS_LOWER,
+    PROVIDER
 )
 from corc.cli.args import extract_arguments
 from corc.cli.providers.helpers import select_provider
@@ -55,7 +54,6 @@ def get_results(args):
 
 
 def delete_results(args):
-    oci_args = vars(extract_arguments(args, [OCI]))
     job_args = vars(extract_arguments(args, [JOB]))
     staging_args = vars(extract_arguments(args, [STORAGE]))
     s3_args = vars(extract_arguments(args, [S3]))

@@ -9,9 +9,9 @@ def valid_s3_group(parser):
 
 def s3_config_group(parser):
     s3_config = parser.add_argument_group(title="S3 Config arguments")
-    s3_config.add_argument("--s3-config-file", default="~/.aws/config")
-    s3_config.add_argument("--s3-credentials-file", default="~/.aws/credentials")
-    s3_config.add_argument("--s3-profile-name", default="default")
+    s3_config.add_argument("--s3-config-file", default="")
+    s3_config.add_argument("--s3-credentials-file", default="")
+    s3_config.add_argument("--s3-profile-name", default="")
 
 
 def select_s3_group(parser):
@@ -22,8 +22,8 @@ def select_s3_group(parser):
 
 def add_s3_group(parser):
     s3 = parser.add_argument_group(title="S3 arguments")
-    s3.add_argument("--s3-bucket-input-prefix", default="input")
-    s3.add_argument("--s3-bucket-output-prefix", default="output")
+    s3.add_argument("--s3-bucket-input-prefix", default="")
+    s3.add_argument("--s3-bucket-output-prefix", default="")
 
 
 def list_s3_group(parser):

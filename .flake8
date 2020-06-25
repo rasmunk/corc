@@ -1,4 +1,4 @@
 [flake8]
 max-line-length = 89
 exclude = build,venv
-ignore = E999,W503
+ignore = E999,W503,E231,E203

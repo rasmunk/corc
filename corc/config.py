@@ -70,6 +70,7 @@ valid_s3_config = {
 }
 
 default_storage_config = {
+    "enable": False,
     "s3": default_s3_storage_config,
     "endpoint": "",
     "credentials_path": "/mnt/creds",
@@ -81,6 +82,7 @@ default_storage_config = {
 
 
 valid_storage_config = {
+    "enable": bool,
     "s3": dict,
     "endpoint": str,
     "credentials_path": str,
@@ -277,8 +279,14 @@ def load_from_config(find_dict, prefix={}):
     for k, _ in flat_find_dict.items():
         if prefix:
             prefixed_key = list(flat_prefix.keys())[0] + k
-            if prefixed_key in flat_config and flat_config[prefixed_key]:
-                found_config_values[k] = flat_config[prefixed_key]
+            if prefixed_key in flat_config:
+                if (
+                    isinstance(flat_config[prefixed_key], str)
+                    and flat_config[prefixed_key]
+                ):
+                    found_config_values[k] = flat_config[prefixed_key]
+                else:
+                    found_config_values[k] = flat_config[prefixed_key]
         else:
             if k in flat_config and flat_config[k]:
                 found_config_values[k] = flat_config[k]

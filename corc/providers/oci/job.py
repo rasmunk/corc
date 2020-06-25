@@ -61,6 +61,7 @@ required_run_job_fields = {
 }
 
 required_storage_fields = {
+    "enable": True,
     "endpoint": True,
     "credentials_path": True,
     "input_path": True,
@@ -72,8 +73,8 @@ required_staging_values = {
     "credentials_file": True,
     "profile_name": True,
     "bucket_name": True,
-    "input_prefix": True,
-    "output_prefix": True,
+    "bucket_input_prefix": True,
+    "bucket_output_prefix": True,
 }
 
 
@@ -99,7 +100,6 @@ def validate_arguments(
 def run(
     oci_kwargs, cluster_kwargs={}, job_kwargs={}, storage_kwargs={}, staging_kwargs={},
 ):
-
     # Try to load the missing values from the config
     missing_oci_dict = missing_fields(oci_kwargs, valid_profile_config)
     config_profile_prefix = gen_config_provider_prefix({"oci": {"profile": {}}})
@@ -121,16 +121,28 @@ def run(
         load_from_config(missing_meta_dict, prefix=config_meta_prefix)
     )
 
+    missing_storage_dict = missing_fields(storage_kwargs, valid_storage_config)
+    config_storage_prefix = gen_config_prefix({"storage": {}})
+    storage_kwargs.update(
+        load_from_config(missing_storage_dict, prefix=config_storage_prefix)
+    )
+
+    missing_staging_dict = missing_fields(staging_kwargs, valid_s3_config)
+    config_staging_prefix = gen_config_prefix({"storage": {"s3": {}}})
+    staging_kwargs.update(
+        load_from_config(missing_staging_dict, prefix=config_staging_prefix)
+    )
+
     validate_arguments(
         oci_kwargs, cluster_kwargs, job_kwargs, storage_kwargs, staging_kwargs
     )
 
-    if "name" not in job_kwargs or not job_kwargs["name"]:
+    if "name" not in job_kwargs["meta"] or not job_kwargs["meta"]["name"]:
         since_epoch = int(time.time())
-        job_kwargs["name"] = "{}-{}".format(JOB_DEFAULT_NAME, since_epoch)
+        job_kwargs["meta"]["name"] = "{}-{}".format(JOB_DEFAULT_NAME, since_epoch)
 
-    if "bucket_name" not in storage_kwargs or not storage_kwargs["bucket_name"]:
-        storage_kwargs["bucket_name"] = job_kwargs["name"]
+    if "bucket_name" not in staging_kwargs or not staging_kwargs["bucket_name"]:
+        staging_kwargs["bucket_name"] = job_kwargs["meta"]["name"]
 
     container_engine_client = new_client(
         ContainerEngineClient,
@@ -164,20 +176,16 @@ def run(
         "run",
         job_kwargs["command"],
         "--job-name",
-        job_kwargs["name"],
+        job_kwargs["meta"]["name"],
     ]
 
     if "args" in job_kwargs:
-        jobio_args.extend([
-            "--execute-args",
-            " ".join(job_kwargs["args"])
-        ])
+        jobio_args.extend(["--execute-args", " ".join(job_kwargs["args"])])
 
     if "output_path" in job_kwargs:
-        jobio_args.extend([
-            "--execute-output-path",
-            job_kwargs["output_path"],
-        ])
+        jobio_args.extend(
+            ["--execute-output-path", job_kwargs["output_path"],]
+        )
 
     if "capture" in job_kwargs and job_kwargs["capture"]:
         jobio_args.append("--execute-capture")
@@ -198,8 +206,9 @@ def run(
     # Prepare config for the scheduler
     scheduler_config = {}
 
-    if storage_kwargs:
+    if storage_kwargs and storage_kwargs["enable"]:
         validate_dict_values(storage_kwargs, required_storage_fields, throw=True)
+        jobio_args.append("--storage-enable")
 
         # Means that results should be exported to the specified storage
         # Create kubernetes secrets
@@ -211,13 +220,8 @@ def run(
             storage_credentials_secret = core_api.read_namespaced_secret(
                 STORAGE_CREDENTIALS_NAME, KUBERNETES_NAMESPACE
             )
-        except ApiException as err:
+        except ApiException:
             storage_credentials_secret = None
-            print(
-                "Failed to find the secret: {}, err: {}".format(
-                    STORAGE_CREDENTIALS_NAME, err
-                )
-            )
 
         # volumes
         secret_volume_source = V1SecretVolumeSource(
@@ -239,6 +243,7 @@ def run(
 
         if staging_kwargs:
             validate_dict_values(staging_kwargs, required_staging_values, throw=True)
+            jobio_args.append("--storage-s3")
             # S3 storage
             # Look for s3 credentials and config files
             s3_config = load_s3_config(
@@ -301,8 +306,6 @@ def run(
                         )
                     )
 
-                jobio_args.append("--storage-enable")
-
             jobio_args.extend(
                 [
                     "--s3-region-name",
@@ -339,7 +342,7 @@ def run(
             raise RuntimeError("Failed to prepare the scheduler")
 
     container_spec = dict(
-        name=job_kwargs["name"],
+        name=job_kwargs["meta"]["name"],
         image=cluster_kwargs["image"],
         env=envs,
         args=jobio_args,
@@ -350,8 +353,8 @@ def run(
 
     job_spec = dict(
         backoff_limit=2,
-        parallelism=job_kwargs["num_parallel"],
-        completions=job_kwargs["num_jobs"],
+        parallelism=job_kwargs["meta"]["num_parallel"],
+        completions=job_kwargs["meta"]["num_jobs"],
     )
 
     task = dict(
@@ -366,7 +369,6 @@ def run(
 
 
 def get_results(job_kwargs={}, staging_kwargs={}, storage_kwargs={}):
-
     validate_dict_types(staging_kwargs, required_get_storage_fields, throw=True)
     validate_dict_values(staging_kwargs, required_get_storage_values, throw=True)
 
