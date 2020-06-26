@@ -1,4 +1,3 @@
-import os
 import unittest
 from oci.core import (
     ComputeClient,
@@ -10,6 +9,7 @@ from oci.container_engine import (
     ContainerEngineClient,
     ContainerEngineClientCompositeOperations,
 )
+from corc.config import load_from_env_or_config, gen_config_provider_prefix
 from corc.providers.oci.helpers import new_client, get, get_kubernetes_version
 from corc.providers.oci.cluster import (
     new_cluster_stack,
@@ -26,16 +26,20 @@ from corc.providers.oci.network import new_vcn_stack, delete_vcn_stack, valid_vc
 class TestClusterStack(unittest.TestCase):
     def setUp(self):
         # Load compartment_id from the env
-        if "OCI_COMPARTMENT_ID" not in os.environ:
-            raise ValueError("Missing required environment variable OCI_COMPARTMENT_ID")
+        oci_compartment_id = load_from_env_or_config(
+            {"profile": {"compartment_id": {}}},
+            prefix=gen_config_provider_prefix({"oci": {}}),
+            throw=True,
+        )
 
-        if "OCI_PROFILE_NAME" in os.environ:
-            profile_name = os.environ["OCI_PROFILE_NAME"]
-        else:
-            profile_name = "DEFAULT"
+        oci_profile_name = load_from_env_or_config(
+            {"profile": {"profile_name": {}}},
+            prefix=gen_config_provider_prefix({"oci": {}}),
+            throw=True,
+        )
 
         oci_options = dict(
-            compartment_id=os.environ["OCI_COMPARTMENT_ID"], profile_name=profile_name,
+            compartment_id=oci_compartment_id, profile_name=oci_profile_name,
         )
 
         test_name = "Test_Cluster"
@@ -45,11 +49,14 @@ class TestClusterStack(unittest.TestCase):
         subnet_name = test_name + "_Subnet"
 
         # Add unique test postfix
-        if "OCI_TEST_ID" in os.environ:
-            cluster_name += os.environ["OCI_TEST_ID"]
-            node_name += os.environ["OCI_TEST_ID"]
-            vcn_name += os.environ["OCI_TEST_ID"]
-            subnet_name += os.environ["OCI_TEST_ID"]
+        test_id = load_from_env_or_config(
+            {"test": {"id": {}}}, prefix=gen_config_provider_prefix({"oci": {}})
+        )
+        if test_id:
+            cluster_name += test_id
+            node_name += test_id
+            vcn_name += test_id
+            subnet_name += test_id
 
         image_options = dict(display_name="Oracle-Linux-7.7-2020.03.23-0",)
         node_options = dict(
@@ -68,7 +75,7 @@ class TestClusterStack(unittest.TestCase):
         self.container_engine_client = new_client(
             ContainerEngineClient,
             composite_class=ContainerEngineClientCompositeOperations,
-            profile_name=profile_name,
+            profile_name=oci_profile_name,
         )
 
         cluster_options = dict(
@@ -79,13 +86,13 @@ class TestClusterStack(unittest.TestCase):
         self.compute_client = new_client(
             ComputeClient,
             composite_class=ComputeClientCompositeOperations,
-            profile_name=profile_name,
+            profile_name=oci_profile_name,
         )
 
         self.network_client = new_client(
             VirtualNetworkClient,
             composite_class=VirtualNetworkClientCompositeOperations,
-            profile_name=profile_name,
+            profile_name=oci_profile_name,
         )
 
         self.options = dict(

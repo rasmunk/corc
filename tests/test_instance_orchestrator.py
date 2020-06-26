@@ -1,21 +1,25 @@
-import os
 import unittest
+from corc.config import load_from_env_or_config, gen_config_provider_prefix
 from corc.providers.oci.instance import OCIInstanceOrchestrator
 
 
 class TestInstanceOrchestrator(unittest.TestCase):
     def setUp(self):
         # Load compartment_id from the env
-        if "OCI_COMPARTMENT_ID" not in os.environ:
-            raise ValueError("Missing required environment variable OCI_COMPARTMENT_ID")
+        oci_compartment_id = load_from_env_or_config(
+            {"profile": {"compartment_id": {}}},
+            prefix=gen_config_provider_prefix({"oci": {}}),
+            throw=True,
+        )
 
-        if "OCI_PROFILE_NAME" in os.environ:
-            profile_name = os.environ["OCI_PROFILE_NAME"]
-        else:
-            profile_name = "DEFAULT"
+        oci_profile_name = load_from_env_or_config(
+            {"profile": {"profile_name": {}}},
+            prefix=gen_config_provider_prefix({"oci": {}}),
+            throw=True,
+        )
 
         oci_options = dict(
-            compartment_id=os.environ["OCI_COMPARTMENT_ID"], profile_name=profile_name,
+            compartment_id=oci_compartment_id, profile_name=oci_profile_name,
         )
 
         test_name = "Test_Instance_Orch"
@@ -24,10 +28,13 @@ class TestInstanceOrchestrator(unittest.TestCase):
         subnet_name = test_name + "_Subnet"
 
         # Add unique test postfix
-        if "OCI_TEST_ID" in os.environ:
-            node_name += os.environ["OCI_TEST_ID"]
-            vcn_name += os.environ["OCI_TEST_ID"]
-            subnet_name += os.environ["OCI_TEST_ID"]
+        test_id = load_from_env_or_config(
+            {"test": {"id": {}}}, prefix=gen_config_provider_prefix({"oci": {}})
+        )
+        if test_id:
+            node_name += test_id
+            vcn_name += test_id
+            subnet_name += test_id
 
         compute_options = dict(
             availability_domain="lfcb:EU-FRANKFURT-1-AD-1",

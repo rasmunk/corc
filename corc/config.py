@@ -263,6 +263,46 @@ def valid_config(config, verbose=False):
     return recursive_check_config(config["corc"], valid_corc_config, verbose=verbose)
 
 
+def load_from_env_or_config(find_dict={}, prefix={}, throw=False):
+    value = False
+    # Load from environment first
+    dict_keys = flatten_dict.flatten(
+        find_dict, reducer="underscore", keep_empty_types=(dict,)
+    )
+    list_keys = list(dict_keys.keys())
+    if len(list_keys) > 1:
+        return False
+    env_var = list_keys[0].upper()
+
+    value = load_from_env(env_var)
+    if value:
+        return value
+
+    # Try config after
+    if config_exists():
+        config = load_config()
+        if valid_config(config):
+            values = load_from_config(find_dict, prefix=prefix)
+            flat_values = list(flatten_dict.flatten(values).values())
+            if flat_values and len(flat_values) == 1:
+                value = flat_values[0]
+
+    if throw and not value:
+        raise ValueError(
+            "Failed to find var: {} in either environment or config".format(prefix)
+        )
+
+    return value
+
+
+def load_from_env(name, throw=False):
+    if name in os.environ:
+        return os.environ[name]
+    if throw:
+        raise ValueError("Missing required environment variable: {}".format(name))
+    return False
+
+
 def load_from_config(find_dict, prefix={}):
 
     if not find_dict or not config_exists():

@@ -1,6 +1,6 @@
-import os
 import unittest
 from oci.core import VirtualNetworkClient, VirtualNetworkClientCompositeOperations
+from corc.config import load_from_env_or_config, gen_config_provider_prefix
 from corc.providers.oci.helpers import new_client, get, list_entities, stack_was_deleted
 from corc.providers.oci.network import (
     new_vcn_stack,
@@ -16,16 +16,20 @@ from corc.providers.oci.network import (
 class TestVCNStack(unittest.TestCase):
     def setUp(self):
         # Load compartment_id from the env
-        if "OCI_COMPARTMENT_ID" not in os.environ:
-            raise ValueError("Missing required environment variable OCI_COMPARTMENT_ID")
+        oci_compartment_id = load_from_env_or_config(
+            {"profile": {"compartment_id": {}}},
+            prefix=gen_config_provider_prefix({"oci": {}}),
+            throw=True,
+        )
 
-        if "OCI_PROFILE_NAME" in os.environ:
-            profile_name = os.environ["OCI_PROFILE_NAME"]
-        else:
-            profile_name = "DEFAULT"
+        oci_profile_name = load_from_env_or_config(
+            {"profile": {"profile_name": {}}},
+            prefix=gen_config_provider_prefix({"oci": {}}),
+            throw=True,
+        )
 
         self.oci_options = dict(
-            compartment_id=os.environ["OCI_COMPARTMENT_ID"], profile_name=profile_name,
+            compartment_id=oci_compartment_id, profile_name=oci_profile_name,
         )
 
         test_name = "Test_VCN"
@@ -33,9 +37,12 @@ class TestVCNStack(unittest.TestCase):
         subnet_name = test_name + "_Subnet"
 
         # Add unique test postfix
-        if "OCI_TEST_ID" in os.environ:
-            vcn_name += os.environ["OCI_TEST_ID"]
-            subnet_name += os.environ["OCI_TEST_ID"]
+        test_id = load_from_env_or_config(
+            {"test": {"id": {}}}, prefix=gen_config_provider_prefix({"oci": {}})
+        )
+        if test_id:
+            vcn_name += test_id
+            subnet_name += test_id
 
         self.vcn_options = dict(
             cidr_block="10.0.0.0/16", display_name=vcn_name, dns_label="ku",
