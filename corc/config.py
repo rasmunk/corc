@@ -2,7 +2,16 @@ import copy
 import flatten_dict
 import os
 import yaml
-from corc.defaults import ANSIBLE, AWS_LOWER, OCI_LOWER
+from corc.defaults import (
+    ANSIBLE,
+    AWS_LOWER,
+    OCI_LOWER,
+    STORAGE,
+    PROVIDER,
+    JOB,
+    S3,
+    META,
+)
 from corc.util import present_in, correct_type
 
 
@@ -107,6 +116,15 @@ valid_corc_config = {
     "storage": valid_storage_config,
     "configurers": valid_configurer_config,
     "providers": valid_providers_config,
+}
+
+
+corc_config_groups = {
+    JOB: valid_job_config,
+    META: valid_job_meta_config,
+    STORAGE: valid_storage_config,
+    S3: valid_s3_config,
+    PROVIDER: valid_providers_config,
 }
 
 
@@ -303,14 +321,15 @@ def load_from_env(name, throw=False):
     return False
 
 
-def load_from_config(find_dict, prefix={}):
+def load_from_config(find_dict, prefix={}, config=None):
 
     if not find_dict or not config_exists():
         return {}
 
-    config = load_config()
     if not config:
-        return {}
+        config = load_config()
+        if not config:
+            return {}
 
     found_config_values = {}
     flat_find_dict = flatten_dict.flatten(find_dict, keep_empty_types=(dict,))

@@ -1,5 +1,8 @@
 import flatten_dict
 from corc.config import recursive_check_config
+from corc.defaults import CLUSTER, INSTANCE, VCN, SUBNET
+from corc.providers.oci import PROFILE
+
 
 default_cluster_config = {
     "name": "cluster",
@@ -34,20 +37,28 @@ valid_instance_config = {
     "target_shape": str,
 }
 
-default_network_config = {
-    "subnet": {"id": "", "dns_label": None, "cidr_block": "10.0.1.0/24"},
-    "vcn": {
-        "id": "",
-        "dns_label": None,
-        "display_name": "VCN Network",
-        "cidr_block": "10.0.0.0/16",
-    },
+default_subnet_config = {"id": "", "dns_label": None, "cidr_block": "10.0.1.0/24"}
+
+
+valid_subnet_config = {"id": str, "dns_label": str, "cidr_block": str}
+
+
+default_vcn_config = {
+    "id": "",
+    "dns_label": None,
+    "display_name": "VCN Network",
+    "cidr_block": "10.0.0.0/16",
 }
 
-valid_network_config = {
-    "subnet": {"id": str, "dns_label": str, "cidr_block": str},
-    "vcn": {"id": str, "dns_label": str, "display_name": str, "cidr_block": str},
+valid_vcn_config = {"id": str, "dns_label": str, "display_name": str, "cidr_block": str}
+
+
+default_network_config = {
+    "subnet": default_subnet_config,
+    "vcn": default_vcn_config,
 }
+
+valid_network_config = {"subnet": valid_subnet_config, "vcn": valid_vcn_config}
 
 default_profile_config = {"profile_name": "DEFAULT", "compartment_id": ""}
 
@@ -85,6 +96,14 @@ valid_full_oci_config = {
     "instance": valid_instance_config,
     "network": valid_network_config,
     "profile": valid_profile_config,
+}
+
+oci_config_groups = {
+    CLUSTER: valid_cluster_config,
+    INSTANCE: valid_instance_config,
+    VCN: valid_vcn_config,
+    SUBNET: valid_subnet_config,
+    PROFILE: valid_profile_config,
 }
 
 

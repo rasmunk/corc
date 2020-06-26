@@ -14,10 +14,7 @@ PROVIDERS_LOWER = [AWS_LOWER, OCI_LOWER]
 
 # Argument group defaults
 ANSIBLE = "ANSIBLE"
-
-# Cluster
 CLUSTER = "CLUSTER"
-
 COMPUTE = "COMPUTE"
 CONFIG = "CONFIG"
 JOB = "JOB"
@@ -28,6 +25,24 @@ STORAGE = "STORAGE"
 SUBNET = "SUBNET"
 S3 = "S3"
 VCN = "VCN"
+
+
+# Action groups
+ACTION_GROUPS = [
+    ANSIBLE,
+    CLUSTER,
+    COMPUTE,
+    CONFIG,
+    JOB,
+    META,
+    NODE,
+    RUN,
+    STORAGE,
+    SUBNET,
+    S3,
+    VCN,
+]
+
 
 # Storage credentials secret name
 STORAGE_CREDENTIALS_NAME = "storage-credentials"
