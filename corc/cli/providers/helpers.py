@@ -5,7 +5,12 @@ def select_provider(provider_kwargs=None, default_fallback=False, verbose=False)
     if not provider_kwargs:
         return False
 
-    selected_provider = [k for k, v in provider_kwargs.items() if v]
+    # Find the activated one
+    selected_provider = [
+        provider
+        for provider in PROVIDERS_LOWER
+        if provider in provider_kwargs and provider_kwargs[provider]
+    ]
 
     if not selected_provider and default_fallback:
         return DEFAULT_PROVIDER_LOWER
@@ -17,7 +22,11 @@ def select_provider(provider_kwargs=None, default_fallback=False, verbose=False)
 
     if len(selected_provider) > 1:
         if verbose:
-            print("Only a single provider must be selected")
+            print(
+                "Only a single provider must be selected, you selected: {}".format(
+                    select_provider
+                )
+            )
             return False
 
     provider = selected_provider[0]

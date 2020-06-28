@@ -1,7 +1,7 @@
 import argparse
 import json
 from corc.defaults import PACKAGE_NAME, AWS_LOWER, OCI_LOWER
-from corc.defaults import AWS, OCI
+from corc.defaults import AWS, OCI, COMPUTE, CLUSTER, STORAGE, S3, JOB, PROFILE
 from corc.cli.parsers.job.job import (
     job_group,
     job_meta_group,
@@ -49,7 +49,6 @@ def run():
     oci_parser = commands.add_parser(OCI_LOWER)
     add_oci_group(oci_parser)
     oci_commands = oci_parser.add_subparsers(title="COMMAND")
-
     orchestration_parser = oci_commands.add_parser("orchestration")
     orchestration_cli(orchestration_parser)
 
@@ -82,9 +81,11 @@ def job_cli(parser):
     add_s3_group(run_parser)
     run_parser.set_defaults(
         func=cli_exec,
-        module_path="corc.providers.{provider}.job.py",
+        module_path="corc.providers.{provider}.job",
         module_name="job",
-        action="run",
+        func_name="run",
+        provider_groups=[PROFILE],
+        argument_groups=[CLUSTER, JOB, STORAGE, S3],
     )
 
     result_parser = job_commands.add_parser("result")

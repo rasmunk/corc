@@ -58,7 +58,6 @@ def extract_arguments(arguments, argument_types, strip_group_prefix=True):
             group_args = strip_argument_prefix(group_args, argument_group.lower() + "_")
         stripped_args.update(group_args)
     return Namespace(**stripped_args)
-    return {}
 
 
 def get_arguments(argument_types, strip_group_prefix=True, parser=None):

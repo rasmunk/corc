@@ -78,71 +78,69 @@ required_staging_values = {
 }
 
 
-def validate_arguments(
-    oci_kwargs, cluster_kwargs, job_kwargs, storage_kwargs, staging_kwargs
-):
-    validate_dict_fields(oci_kwargs, valid_profile_config, verbose=True, throw=True)
-    validate_dict_values(oci_kwargs, valid_profile_config, verbose=True, throw=True)
-
-    validate_dict_fields(cluster_kwargs, valid_cluster_config, verbose=True, throw=True)
+def validate_arguments(provider_kwargs, cluster, job, storage, s3):
+    validate_dict_fields(
+        provider_kwargs, valid_profile_config, verbose=True, throw=True
+    )
     validate_dict_values(
-        cluster_kwargs, required_run_cluster_fields, verbose=True, throw=True
+        provider_kwargs, valid_profile_config, verbose=True, throw=True
     )
 
-    validate_dict_fields(job_kwargs, valid_job_config, verbose=True, throw=True)
-    validate_dict_values(job_kwargs, required_run_job_fields, verbose=True, throw=True)
+    validate_dict_fields(cluster, valid_cluster_config, verbose=True, throw=True)
+    validate_dict_values(cluster, required_run_cluster_fields, verbose=True, throw=True)
+
+    validate_dict_fields(job, valid_job_config, verbose=True, throw=True)
+    validate_dict_values(job, required_run_job_fields, verbose=True, throw=True)
 
     # Storage and Staging are not required to execute a job, only if enabled
-    validate_dict_fields(storage_kwargs, valid_storage_config, verbose=True, throw=True)
-    validate_dict_fields(staging_kwargs, valid_s3_config, verbose=True, throw=True)
+    validate_dict_fields(storage, valid_storage_config, verbose=True, throw=True)
+    validate_dict_fields(s3, valid_s3_config, verbose=True, throw=True)
 
 
 def run(
-    oci_kwargs, cluster_kwargs={}, job_kwargs={}, storage_kwargs={}, staging_kwargs={},
+    provider_kwargs, cluster={}, job={}, storage={}, s3={},
 ):
     # Try to load the missing values from the config
-    missing_oci_dict = missing_fields(oci_kwargs, valid_profile_config)
-    config_profile_prefix = gen_config_provider_prefix({"oci": {"profile": {}}})
-    oci_kwargs.update(load_from_config(missing_oci_dict, prefix=config_profile_prefix))
+    # missing_oci_dict = missing_fields(oci_kwargs, valid_profile_config)
+    # config_profile_prefix = gen_config_provider_prefix({"oci": {"profile": {}}})
+    # oci_kwargs.update(load_from_config(missing_oci_dict, prefix=config_profile_prefix))
 
-    missing_cluster = missing_fields(cluster_kwargs, valid_cluster_config)
-    config_cluster_prefix = gen_config_provider_prefix({"oci": {"cluster": {}}})
-    cluster_kwargs.update(
-        load_from_config(missing_cluster, prefix=config_cluster_prefix)
-    )
+    # missing_cluster = missing_fields(cluster, valid_cluster_config)
+    # config_cluster_prefix = gen_config_provider_prefix({"oci": {"cluster": {}}})
+    # cluster.update(
+    #     load_from_config(missing_cluster, prefix=config_cluster_prefix)
+    # )
 
-    missing_job_dict = missing_fields(job_kwargs, valid_job_config)
-    config_job_prefix = gen_config_prefix({"job": {}})
-    job_kwargs.update(load_from_config(missing_job_dict, prefix=config_job_prefix))
+    # missing_job_dict = missing_fields(job, valid_job_config)
+    # config_job_prefix = gen_config_prefix({"job": {}})
+    # job.update(load_from_config(missing_job_dict, prefix=config_job_prefix))
 
-    missing_meta_dict = missing_fields(job_kwargs["meta"], valid_job_meta_config)
-    config_meta_prefix = gen_config_prefix({"job": {"meta": {}}})
-    job_kwargs["meta"].update(
-        load_from_config(missing_meta_dict, prefix=config_meta_prefix)
-    )
+    # missing_meta_dict = missing_fields(job["meta"], valid_job_meta_config)
+    # config_meta_prefix = gen_config_prefix({"job": {"meta": {}}})
+    # job["meta"].update(
+    #     load_from_config(missing_meta_dict, prefix=config_meta_prefix)
+    # )
 
-    missing_storage_dict = missing_fields(storage_kwargs, valid_storage_config)
-    config_storage_prefix = gen_config_prefix({"storage": {}})
-    storage_kwargs.update(
-        load_from_config(missing_storage_dict, prefix=config_storage_prefix)
-    )
+    # missing_storage_dict = missing_fields(storage, valid_storage_config)
+    # config_storage_prefix = gen_config_prefix({"storage": {}})
+    # storage.update(
+    #     load_from_config(missing_storage_dict, prefix=config_storage_prefix)
+    # )
 
-    missing_staging_dict = missing_fields(staging_kwargs, valid_s3_config)
-    config_staging_prefix = gen_config_prefix({"storage": {"s3": {}}})
-    staging_kwargs.update(
-        load_from_config(missing_staging_dict, prefix=config_staging_prefix)
-    )
+    # missing_staging_dict = missing_fields(s3, valid_s3_config)
+    # config_staging_prefix = gen_config_prefix({"storage": {"s3": {}}})
+    # s3.update(
+    #     load_from_config(missing_staging_dict, prefix=config_staging_prefix)
+    # )
 
-    validate_arguments(
-        oci_kwargs, cluster_kwargs, job_kwargs, storage_kwargs, staging_kwargs
-    )
+    validate_arguments(provider_kwargs, cluster, job, storage, s3)
 
-    if "name" not in job_kwargs["meta"] or not job_kwargs["meta"]["name"]:
+    if "name" not in job["meta"] or not job["meta"]["name"]:
         since_epoch = int(time.time())
-        job_kwargs["meta"]["name"] = "{}-{}".format(JOB_DEFAULT_NAME, since_epoch)
+        job["meta"]["name"] = "{}-{}".format(JOB_DEFAULT_NAME, since_epoch)
 
-    if "bucket_name" not in staging_kwargs or not staging_kwargs["bucket_name"]:
-        staging_kwargs["bucket_name"] = job_kwargs["meta"]["name"]
+    if "bucket_name" not in s3 or not s3["bucket_name"]:
+        s3["bucket_name"] = job["meta"]["name"]
 
     container_engine_client = new_client(
         ContainerEngineClient,
@@ -151,13 +149,11 @@ def run(
     )
 
     cluster = get_cluster_by_name(
-        container_engine_client,
-        oci_kwargs["compartment_id"],
-        name=cluster_kwargs["name"],
+        container_engine_client, oci_kwargs["compartment_id"], name=cluster["name"],
     )
 
     if not cluster:
-        print("Failed to find a cluster with name: {}".format(cluster_kwargs["name"]))
+        print("Failed to find a cluster with name: {}".format(cluster["name"]))
         return False
 
     refreshed = refresh_kube_config(cluster.id, profile_name=oci_kwargs["profile_name"])
@@ -174,26 +170,26 @@ def run(
     jobio_args = [
         "jobio",
         "run",
-        job_kwargs["command"],
+        job["command"],
         "--job-name",
-        job_kwargs["meta"]["name"],
+        job["meta"]["name"],
     ]
 
-    if "args" in job_kwargs:
-        jobio_args.extend(["--execute-args", " ".join(job_kwargs["args"])])
+    if "args" in job:
+        jobio_args.extend(["--execute-args", " ".join(job["args"])])
 
-    if "output_path" in job_kwargs:
+    if "output_path" in job:
         jobio_args.extend(
-            ["--execute-output-path", job_kwargs["output_path"],]
+            ["--execute-output-path", job["output_path"],]
         )
 
-    if "capture" in job_kwargs and job_kwargs["capture"]:
+    if "capture" in job and job["capture"]:
         jobio_args.append("--execute-capture")
 
-    if "debug" in job_kwargs["meta"]:
+    if "debug" in job["meta"]:
         jobio_args.append("--job-debug")
 
-    if "env_override" in job_kwargs["meta"]:
+    if "env_override" in job["meta"]:
         jobio_args.append("--job-env-override")
 
     # Maintained by the pod
@@ -206,8 +202,8 @@ def run(
     # Prepare config for the scheduler
     scheduler_config = {}
 
-    if storage_kwargs and storage_kwargs["enable"]:
-        validate_dict_values(storage_kwargs, required_storage_fields, throw=True)
+    if storage and storage["enable"]:
+        validate_dict_values(storage, required_storage_fields, throw=True)
         jobio_args.append("--storage-enable")
 
         # Means that results should be exported to the specified storage
@@ -236,21 +232,21 @@ def run(
         # in the compute unit
         secret_mount = V1VolumeMount(
             name=STORAGE_CREDENTIALS_NAME,
-            mount_path=storage_kwargs["credentials_path"],
+            mount_path=storage["credentials_path"],
             read_only=True,
         )
         volume_mounts.append(secret_mount)
 
-        if staging_kwargs:
-            validate_dict_values(staging_kwargs, required_staging_values, throw=True)
+        if s3:
+            validate_dict_values(s3, required_staging_values, throw=True)
             jobio_args.append("--storage-s3")
             # S3 storage
             # Look for s3 credentials and config files
             s3_config = load_s3_config(
-                staging_kwargs["config_file"],
-                staging_kwargs["credentials_file"],
-                storage_kwargs["endpoint"],
-                profile_name=staging_kwargs["profile_name"],
+                s3["config_file"],
+                s3["credentials_file"],
+                storage["endpoint"],
+                profile_name=s3["profile_name"],
             )
 
             if not storage_credentials_secret:
@@ -266,43 +262,41 @@ def run(
             # TODO, unify argument endpoint, with s3 config endpoint'
             s3 = boto3.resource("s3", **s3_config)
 
-            bucket = bucket_exists(s3.meta.client, staging_kwargs["bucket_name"])
+            bucket = bucket_exists(s3.meta.client, s3["bucket_name"])
             if not bucket:
                 bucket = s3.create_bucket(
-                    Bucket=staging_kwargs["bucket_name"],
+                    Bucket=s3["bucket_name"],
                     CreateBucketConfiguration={
                         "LocationConstraint": s3_config["region_name"]
                     },
                 )
 
-            if "upload_path" in storage_kwargs and storage_kwargs["upload_path"]:
+            if "upload_path" in storage and storage["upload_path"]:
                 # Upload local path to the bucket as designated input for the job
-                if os.path.exists(storage_kwargs["upload_path"]):
-                    if os.path.isdir(storage_kwargs["upload_path"]):
+                if os.path.exists(storage["upload_path"]):
+                    if os.path.isdir(storage["upload_path"]):
                         uploaded = upload_directory_to_s3(
                             s3.meta.client,
-                            storage_kwargs["upload_path"],
-                            staging_kwargs["bucket_name"],
-                            s3_prefix=staging_kwargs["bucket_input_prefix"],
+                            storage["upload_path"],
+                            s3["bucket_name"],
+                            s3_prefix=s3["bucket_input_prefix"],
                         )
-                    elif os.path.isfile(storage_kwargs["upload_path"]):
-                        s3_path = os.path.basename(storage_kwargs["upload_path"])
-                        if staging_kwargs["bucket_input_prefix"]:
-                            s3_path = os.path.join(
-                                staging_kwargs["bucket_input_prefix"], s3_path
-                            )
+                    elif os.path.isfile(storage["upload_path"]):
+                        s3_path = os.path.basename(storage["upload_path"])
+                        if s3["bucket_input_prefix"]:
+                            s3_path = os.path.join(s3["bucket_input_prefix"], s3_path)
                         # Upload
                         uploaded = upload_to_s3(
                             s3.meta.client,
-                            storage_kwargs["upload_path"],
+                            storage["upload_path"],
                             s3_path,
-                            staging_kwargs["bucket_name"],
+                            s3["bucket_name"],
                         )
 
                 if not uploaded:
                     raise RuntimeError(
                         "Failed to local path: {} in the upload folder to s3".format(
-                            storage_kwargs["upload_path"]
+                            storage["upload_path"]
                         )
                     )
 
@@ -311,19 +305,19 @@ def run(
                     "--s3-region-name",
                     s3_config["region_name"],
                     "--storage-secrets-dir",
-                    storage_kwargs["credentials_path"],
+                    storage["credentials_path"],
                     "--storage-endpoint",
-                    storage_kwargs["endpoint"],
+                    storage["endpoint"],
                     "--storage-input-path",
-                    storage_kwargs["input_path"],
+                    storage["input_path"],
                     "--storage-output-path",
-                    storage_kwargs["output_path"],
+                    storage["output_path"],
                     "--bucket-name",
-                    staging_kwargs["bucket_name"],
+                    s3["bucket_name"],
                     "--bucket-input-prefix",
-                    staging_kwargs["bucket_input_prefix"],
+                    s3["bucket_input_prefix"],
                     "--bucket-output-prefix",
-                    staging_kwargs["bucket_output_prefix"],
+                    s3["bucket_output_prefix"],
                 ]
             )
 
@@ -342,8 +336,8 @@ def run(
             raise RuntimeError("Failed to prepare the scheduler")
 
     container_spec = dict(
-        name=job_kwargs["meta"]["name"],
-        image=cluster_kwargs["image"],
+        name=job["meta"]["name"],
+        image=cluster["image"],
         env=envs,
         args=jobio_args,
         volume_mounts=volume_mounts,
@@ -353,8 +347,8 @@ def run(
 
     job_spec = dict(
         backoff_limit=2,
-        parallelism=job_kwargs["meta"]["num_parallel"],
-        completions=job_kwargs["meta"]["num_jobs"],
+        parallelism=job["meta"]["num_parallel"],
+        completions=job["meta"]["num_jobs"],
     )
 
     task = dict(
@@ -368,121 +362,116 @@ def run(
         exit(1)
 
 
-def get_results(job_kwargs={}, staging_kwargs={}, storage_kwargs={}):
-    validate_dict_types(staging_kwargs, required_get_storage_fields, throw=True)
-    validate_dict_values(staging_kwargs, required_get_storage_values, throw=True)
+def get_results(job={}, s3={}, storage={}):
+    validate_dict_types(s3, required_get_storage_fields, throw=True)
+    validate_dict_values(s3, required_get_storage_values, throw=True)
 
-    validate_dict_types(storage_kwargs, required_s3_fields, throw=True)
-    validate_dict_values(storage_kwargs, required_s3_values, throw=True)
+    validate_dict_types(storage, required_s3_fields, throw=True)
+    validate_dict_values(storage, required_s3_values, throw=True)
 
     # S3 storage
     # Look for s3 credentials and config files
     s3_config = load_s3_config(
-        storage_kwargs["config_file"],
-        storage_kwargs["credentials_file"],
-        staging_kwargs["endpoint"],
-        profile_name=storage_kwargs["profile_name"],
+        storage["config_file"],
+        storage["credentials_file"],
+        s3["endpoint"],
+        profile_name=storage["profile_name"],
     )
 
     # Download results from s3
     s3_resource = stage_s3_resource(**s3_config)
 
     # Whether to expand all or a single result
-    if "result_prefix" in job_kwargs and job_kwargs["result_prefix"]:
-        result_prefix = job_kwargs["result_prefix"]
+    if "result_prefix" in job and job["result_prefix"]:
+        result_prefix = job["result_prefix"]
     else:
         # Use all
         result_prefix = ""
 
-    bucket = bucket_exists(s3_resource.meta.client, job_kwargs["name"])
+    bucket = bucket_exists(s3_resource.meta.client, job["name"])
     if not bucket:
         raise RuntimeError(
-            "Could not find a bucket with the name: {}".format(job_kwargs["name"])
+            "Could not find a bucket with the name: {}".format(job["name"])
         )
 
     expanded = expand_s3_bucket(
-        s3_resource,
-        job_kwargs["name"],
-        staging_kwargs["download_path"],
-        s3_prefix=result_prefix,
+        s3_resource, job["name"], s3["download_path"], s3_prefix=result_prefix,
     )
 
     if not expanded:
-        raise RuntimeError(
-            "Failed to expand the target bucket: {}".format(job_kwargs["name"])
-        )
+        raise RuntimeError("Failed to expand the target bucket: {}".format(job["name"]))
 
 
-def delete_results(job_kwargs={}, staging_kwargs={}, storage_kwargs={}):
+def delete_results(job={}, s3={}, storage={}):
 
-    validate_dict_types(staging_kwargs, required_delete_storage_fields, throw=True)
-    validate_dict_values(staging_kwargs, required_delete_storage_values, throw=True)
+    validate_dict_types(s3, required_delete_storage_fields, throw=True)
+    validate_dict_values(s3, required_delete_storage_values, throw=True)
 
-    validate_dict_types(storage_kwargs, required_s3_fields, throw=True)
-    validate_dict_values(storage_kwargs, required_s3_values, throw=True)
+    validate_dict_types(storage, required_s3_fields, throw=True)
+    validate_dict_values(storage, required_s3_values, throw=True)
 
     # S3 storage
     # Look for s3 credentials and config files
     s3_config = load_s3_config(
-        storage_kwargs["config_file"],
-        storage_kwargs["credentials_file"],
-        staging_kwargs["endpoint"],
-        profile_name=storage_kwargs["profile_name"],
+        storage["config_file"],
+        storage["credentials_file"],
+        s3["endpoint"],
+        profile_name=storage["profile_name"],
     )
 
     # Download results from s3
     s3_resource = stage_s3_resource(**s3_config)
 
     # Whether to expand all or a single result
-    if "result_prefix" in job_kwargs and job_kwargs["result_prefix"]:
-        result_prefix = job_kwargs["result_prefix"]
+    if "result_prefix" in job and job["result_prefix"]:
+        result_prefix = job["result_prefix"]
     else:
         # Use all
         result_prefix = ""
 
-    bucket = bucket_exists(s3_resource.meta.client, job_kwargs["name"])
+    bucket = bucket_exists(s3_resource.meta.client, job["name"])
     if not bucket:
         raise RuntimeError(
-            "Could not find a bucket with the name: {}".format(job_kwargs["name"])
+            "Could not find a bucket with the name: {}".format(job["name"])
         )
 
-    deleted = delete_objects(s3_resource, job_kwargs["name"], s3_prefix=result_prefix)
+    deleted = delete_objects(s3_resource, job["name"], s3_prefix=result_prefix)
 
     if "Errors" in deleted:
         for error in deleted["Errors"]:
             print("Failed to delete: {}".format(error))
 
     # If the bucket is empty, remove it as well
-    results = list_objects(s3_resource, job_kwargs["name"])
+    results = list_objects(s3_resource, job["name"])
 
     if not results:
-        if not delete_bucket(s3_resource.meta.client, job_kwargs["name"]):
+        if not delete_bucket(s3_resource.meta.client, job["name"]):
             return False
     return True
 
 
 def list_results(
-    job_kwargs={}, staging_kwargs={}, storage_kwargs={}, storage_extra_kwargs={},
+    job={}, s3={}, storage={}, storage_extra_kwargs={},
 ):
     # S3 storage
     # Look for s3 credentials and config files
     s3_config = load_s3_config(
-        storage_kwargs["config_file"],
-        storage_kwargs["credentials_file"],
-        staging_kwargs["endpoint"],
-        profile_name=storage_kwargs["profile_name"],
+        storage["config_file"],
+        storage["credentials_file"],
+        s3["endpoint"],
+        profile_name=storage["profile_name"],
     )
 
     s3_resource = stage_s3_resource(**s3_config)
     response = {}
     results = []
-    if "name" in job_kwargs and job_kwargs["name"]:
-        bucket = bucket_exists(s3_resource.meta.client, job_kwargs["name"])
+    if "name" in job and job["name"]:
+        bucket = bucket_exists(s3_resource.meta.client, job["name"])
         if not bucket:
             raise RuntimeError(
-                "Could not find a bucket with the name: {}".format(job_kwargs["name"])
+                "Could not find a bucket with the name: {}".format(job["name"])
             )
-        results = list_objects(s3_resource, job_kwargs["name"], **storage_extra_kwargs)
+        results = list_objects(s3_resource, job["name"], **storage_extra_kwargs)
     else:
         response = s3_resource.meta.client.list_buckets()
         if "Buckets" in response:

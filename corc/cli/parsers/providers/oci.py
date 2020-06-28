@@ -7,4 +7,4 @@ def add_oci_group(parser):
     oci_group.add_argument("--oci-profile-name", default="")
     oci_group.add_argument("--oci-compartment-id", default="")
     # HACK to extract the set provider from the cli
-    oci_group.add_argument("--provider-oci", action="store_true", default=True)
+    oci_group.add_argument("--oci", action="store_true", default=True)

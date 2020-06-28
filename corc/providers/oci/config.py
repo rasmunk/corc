@@ -1,7 +1,6 @@
 import flatten_dict
 from corc.config import recursive_check_config
-from corc.defaults import CLUSTER, INSTANCE, VCN, SUBNET
-from corc.providers.oci import PROFILE
+from corc.defaults import CLUSTER, COMPUTE, VCN, SUBNET, PROFILE
 
 
 default_cluster_config = {
@@ -100,7 +99,7 @@ valid_full_oci_config = {
 
 oci_config_groups = {
     CLUSTER: valid_cluster_config,
-    INSTANCE: valid_instance_config,
+    COMPUTE: valid_instance_config,
     VCN: valid_vcn_config,
     SUBNET: valid_subnet_config,
     PROFILE: valid_profile_config,
