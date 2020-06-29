@@ -15,9 +15,7 @@ def list_clusters(args):
     oci_args = vars(extract_arguments(args, [OCI]))
 
     if oci_args:
-        container_engine_client = new_cluster_engine_client(
-            profile_name=oci_args["profile_name"]
-        )
+        container_engine_client = new_cluster_engine_client(name=oci_args["name"])
         return oci_list_clusters(container_engine_client, oci_args["compartment_id"])
 
 
@@ -67,9 +65,7 @@ def stop_cluster(args):
         if not cluster_args["id"] and not cluster_args["name"]:
             raise ValueError("Either the id or name of the cluster must" "be provided")
 
-        container_engine_client = new_cluster_engine_client(
-            profile_name=oci_args["profile_name"]
-        )
+        container_engine_client = new_cluster_engine_client(name=oci_args["name"])
         if cluster_args["id"]:
             cluster_id = cluster_args["id"]
         else:

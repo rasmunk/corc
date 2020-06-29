@@ -32,15 +32,13 @@ class TestClusterStack(unittest.TestCase):
             throw=True,
         )
 
-        oci_profile_name = load_from_env_or_config(
-            {"profile": {"profile_name": {}}},
+        oci_name = load_from_env_or_config(
+            {"profile": {"name": {}}},
             prefix=gen_config_provider_prefix({"oci": {}}),
             throw=True,
         )
 
-        oci_options = dict(
-            compartment_id=oci_compartment_id, profile_name=oci_profile_name,
-        )
+        oci_options = dict(compartment_id=oci_compartment_id, name=oci_name,)
 
         test_name = "Test_Cluster"
         cluster_name = test_name
@@ -75,7 +73,7 @@ class TestClusterStack(unittest.TestCase):
         self.container_engine_client = new_client(
             ContainerEngineClient,
             composite_class=ContainerEngineClientCompositeOperations,
-            profile_name=oci_profile_name,
+            name=oci_name,
         )
 
         cluster_options = dict(
@@ -86,13 +84,13 @@ class TestClusterStack(unittest.TestCase):
         self.compute_client = new_client(
             ComputeClient,
             composite_class=ComputeClientCompositeOperations,
-            profile_name=oci_profile_name,
+            name=oci_name,
         )
 
         self.network_client = new_client(
             VirtualNetworkClient,
             composite_class=VirtualNetworkClientCompositeOperations,
-            profile_name=oci_profile_name,
+            name=oci_name,
         )
 
         self.options = dict(

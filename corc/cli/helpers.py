@@ -1,3 +1,4 @@
+from argparse import Namespace
 from corc.cli.args import extract_arguments
 from corc.cli.providers.helpers import select_provider
 from corc.config import (
@@ -8,7 +9,7 @@ from corc.config import (
     gen_config_provider_prefix,
 )
 from corc.providers.oci.config import oci_config_groups
-from corc.defaults import PROVIDER, ACTION_GROUPS, PROVIDERS_LOWER
+from corc.defaults import PROVIDERS_LOWER
 from corc.util import missing_fields
 
 
@@ -18,14 +19,20 @@ def cli_exec(args):
     module_name = args.module_name
     func_name = args.func_name
     argument_groups = args.argument_groups
-    provider_groups = args.provider_groups
+    if hasattr(args, "provider_groups"):
+        provider_groups = args.provider_groups
+    else:
+        provider_groups = []
 
-    provider, provider_kwargs = prepare_provider_kwargs(args)
+    provider, provider_kwargs = prepare_provider_kwargs(args, namespace_wrap=True)
     if provider:
+
+        if not provider_groups:
+            provider_groups.append(provider.upper())
         module_path = module_path.format(provider=provider)
         # load missing provider kwargs from config
         provider_configuration = prepare_kwargs_configurations(
-            provider_kwargs, provider_groups
+            provider_kwargs, provider_groups, strip_group_prefix=False
         )
         provider_kwargs = load_missing_action_kwargs(provider_configuration)
 
@@ -48,14 +55,18 @@ def import_from_module(module_path, module_name, func_name):
     return getattr(module, func_name)
 
 
-def prepare_provider_kwargs(args):
+def prepare_provider_kwargs(args, namespace_wrap=False):
     providers = vars(extract_arguments(args, PROVIDERS_LOWER, strip_group_prefix=False))
     provider = select_provider(providers, default_fallback=True, verbose=True)
     provider_kwargs = vars(extract_arguments(args, [provider]))
+    # remove the provider flag
+    provider_kwargs.pop(provider)
+    if namespace_wrap:
+        provider_kwargs = Namespace(**provider_kwargs)
     return provider, provider_kwargs
 
 
-def prepare_kwargs_configurations(args, argument_groups):
+def prepare_kwargs_configurations(args, argument_groups, strip_group_prefix=True):
     # Try to find all available args
     kwargs_configurations = []
     for group in argument_groups:
@@ -71,13 +82,13 @@ def prepare_kwargs_configurations(args, argument_groups):
         if group in corc_config_groups:
             valid_action_config = corc_config_groups[group]
             # gen config prefix
-            config_prefix = gen_config_prefix({group.lower(): {}})
+            config_prefix = gen_config_prefix({name: {}})
             group_kwargs_config[name]["valid_action_config"] = valid_action_config
             group_kwargs_config[name]["config_prefix"] = config_prefix
 
         if group in oci_config_groups:
             valid_action_config = oci_config_groups[group]
-            config_prefix = gen_config_provider_prefix({"oci": {group: {}}})
+            config_prefix = gen_config_provider_prefix({"oci": {name: {}}})
             group_kwargs_config[name]["valid_action_config"] = valid_action_config
             group_kwargs_config[name]["config_prefix"] = config_prefix
 

@@ -10,7 +10,7 @@ from corc.defaults import (
     PROVIDER,
     JOB,
     S3,
-    META,
+    JOB_META,
 )
 from corc.util import present_in, correct_type
 
@@ -61,7 +61,7 @@ valid_providers_config = {AWS_LOWER: dict, OCI_LOWER: dict}
 default_s3_storage_config = {
     "config_file": "~/.aws/config",
     "credentials_file": "~/.aws/credentials",
-    "profile_name": "default",
+    "name": "default",
     "bucket_id": "",
     "bucket_name": "",
     "bucket_input_prefix": "input",
@@ -71,7 +71,7 @@ default_s3_storage_config = {
 valid_s3_config = {
     "config_file": str,
     "credentials_file": str,
-    "profile_name": str,
+    "name": str,
     "bucket_id": str,
     "bucket_name": str,
     "bucket_input_prefix": str,
@@ -121,7 +121,7 @@ valid_corc_config = {
 
 corc_config_groups = {
     JOB: valid_job_config,
-    META: valid_job_meta_config,
+    JOB_META: valid_job_meta_config,
     STORAGE: valid_storage_config,
     S3: valid_s3_config,
     PROVIDER: valid_providers_config,

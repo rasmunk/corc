@@ -45,11 +45,11 @@ def new_cluster_engine_client(**kwargs):
     )
 
 
-def refresh_kube_config(cluster_id, profile_name="DEFAULT"):
+def refresh_kube_config(cluster_id, name="DEFAULT"):
     container_engine_client = new_client(
         ContainerEngineClient,
         composite_class=ContainerEngineClientCompositeOperations,
-        profile_name=profile_name,
+        name=name,
     )
 
     # Try to load the existing
@@ -58,8 +58,8 @@ def refresh_kube_config(cluster_id, profile_name="DEFAULT"):
     if kube_config and hasattr(kube_config, "text"):
         config_dict = parse_yaml(kube_config.text)
         # HACK, add profile to user args
-        if profile_name:
-            profile_args = ["--profile", profile_name]
+        if name:
+            profile_args = ["--profile", name]
             config_dict["users"][0]["user"]["exec"]["args"].extend(profile_args)
         if save_kube_config(config_dict):
             loaded = load_kube_config()
@@ -350,17 +350,17 @@ class OCIClusterOrchestrator(Orchestrator):
         self.compute_client = new_client(
             ComputeClient,
             composite_class=ComputeClientCompositeOperations,
-            profile_name=options["oci"]["profile_name"],
+            name=options["oci"]["name"],
         )
         self.container_engine_client = new_client(
             ContainerEngineClient,
             composite_class=ContainerEngineClientCompositeOperations,
-            profile_name=options["oci"]["profile_name"],
+            name=options["oci"]["name"],
         )
         self.network_client = new_client(
             VirtualNetworkClient,
             composite_class=VirtualNetworkClientCompositeOperations,
-            profile_name=options["oci"]["profile_name"],
+            name=options["oci"]["name"],
         )
 
         if (
@@ -548,7 +548,7 @@ class OCIClusterOrchestrator(Orchestrator):
 
         expected_oci_keys = [
             "compartment_id",
-            "profile_name",
+            "name",
         ]
 
         expected_cluster_keys = [

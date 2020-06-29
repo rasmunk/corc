@@ -32,13 +32,13 @@ if __name__ == "__main__":
     container_engine_client = new_client(
         ContainerEngineClient,
         composite_class=ContainerEngineClientCompositeOperations,
-        profile_name=oci_args.profile_name,
+        name=oci_args.name,
     )
 
     network_client = new_client(
         VirtualNetworkClient,
         composite_class=VirtualNetworkClientCompositeOperations,
-        profile_name=oci_args.profile_name,
+        name=oci_args.name,
     )
 
     stack = None

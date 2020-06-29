@@ -26,9 +26,7 @@ def _perform_client_func_action(client, func_name, *args, **kwargs):
     return perform_action(func, *args, **kwargs)
 
 
-def new_client(
-    oci_client_class, composite_class=None, profile_name="DEFAULT", **kwargs
-):
+def new_client(oci_client_class, composite_class=None, name="DEFAULT", **kwargs):
     # Try from environment, if not rely on config file
     file_location = oci.config.DEFAULT_LOCATION
 
@@ -36,13 +34,11 @@ def new_client(
         file_location = os.environ["OCI_CONFIG_PATH"]
 
     if "OCI_PROFILE_NAME" in os.environ:
-        profile_name = os.environ["OCI_PROFILE_NAME"]
+        name = os.environ["OCI_PROFILE_NAME"]
 
     client_config = None
     # Try to load from the config_file instead
-    file_config = oci.config.from_file(
-        file_location=file_location, profile_name=profile_name
-    )
+    file_config = oci.config.from_file(file_location=file_location, name=name)
 
     # If an environment path for the key file is provided
     if "OCI_KEY_FILE" in os.environ:

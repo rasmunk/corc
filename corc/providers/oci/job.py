@@ -16,11 +16,7 @@ from kubernetes.client.rest import ApiException
 
 from jobio.storage.s3 import expand_s3_bucket, stage_s3_resource
 from corc.config import (
-    load_from_config,
-    gen_config_provider_prefix,
-    gen_config_prefix,
     valid_job_config,
-    valid_job_meta_config,
     valid_storage_config,
     valid_s3_config,
 )
@@ -33,7 +29,6 @@ from corc.util import (
     validate_dict_fields,
     validate_dict_types,
     validate_dict_values,
-    missing_fields,
 )
 from corc.storage.s3 import (
     bucket_exists,
@@ -71,7 +66,7 @@ required_storage_fields = {
 required_staging_values = {
     "config_file": True,
     "credentials_file": True,
-    "profile_name": True,
+    "name": True,
     "bucket_name": True,
     "bucket_input_prefix": True,
     "bucket_output_prefix": True,
@@ -80,10 +75,10 @@ required_staging_values = {
 
 def validate_arguments(provider_kwargs, cluster, job, storage, s3):
     validate_dict_fields(
-        provider_kwargs, valid_profile_config, verbose=True, throw=True
+        provider_kwargs["profile"], valid_profile_config, verbose=True, throw=True
     )
     validate_dict_values(
-        provider_kwargs, valid_profile_config, verbose=True, throw=True
+        provider_kwargs["profile"], valid_profile_config, verbose=True, throw=True
     )
 
     validate_dict_fields(cluster, valid_cluster_config, verbose=True, throw=True)
@@ -145,18 +140,20 @@ def run(
     container_engine_client = new_client(
         ContainerEngineClient,
         composite_class=ContainerEngineClientCompositeOperations,
-        profile_name=oci_kwargs["profile_name"],
+        name=provider_kwargs["name"],
     )
 
     cluster = get_cluster_by_name(
-        container_engine_client, oci_kwargs["compartment_id"], name=cluster["name"],
+        container_engine_client,
+        provider_kwargs["compartment_id"],
+        name=cluster["name"],
     )
 
     if not cluster:
         print("Failed to find a cluster with name: {}".format(cluster["name"]))
         return False
 
-    refreshed = refresh_kube_config(cluster.id, profile_name=oci_kwargs["profile_name"])
+    refreshed = refresh_kube_config(cluster.id, name=provider_kwargs["name"])
     if not refreshed:
         exit(1)
 
@@ -246,7 +243,7 @@ def run(
                 s3["config_file"],
                 s3["credentials_file"],
                 storage["endpoint"],
-                profile_name=s3["profile_name"],
+                name=s3["name"],
             )
 
             if not storage_credentials_secret:
@@ -375,7 +372,7 @@ def get_results(job={}, s3={}, storage={}):
         storage["config_file"],
         storage["credentials_file"],
         s3["endpoint"],
-        profile_name=storage["profile_name"],
+        name=storage["name"],
     )
 
     # Download results from s3
@@ -416,7 +413,7 @@ def delete_results(job={}, s3={}, storage={}):
         storage["config_file"],
         storage["credentials_file"],
         s3["endpoint"],
-        profile_name=storage["profile_name"],
+        name=storage["name"],
     )
 
     # Download results from s3
@@ -459,7 +456,7 @@ def list_results(
         storage["config_file"],
         storage["credentials_file"],
         s3["endpoint"],
-        profile_name=storage["profile_name"],
+        name=storage["name"],
     )
 
     s3_resource = stage_s3_resource(**s3_config)

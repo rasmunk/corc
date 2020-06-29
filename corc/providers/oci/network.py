@@ -532,7 +532,7 @@ if __name__ == "__main__":
     network_client = new_client(
         VirtualNetworkClient,
         composite_class=VirtualNetworkClientCompositeOperations,
-        profile_name=args.profile_name,
+        name=args.name,
     )
 
     removed_vcns = delete_compartment_vcns(network_client, args.compartment_id)

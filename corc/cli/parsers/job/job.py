@@ -9,15 +9,15 @@ def valid_job_group(parser):
 
 def select_job_group(parser):
     job_group = parser.add_argument_group(title="Job Identity arguments")
-    job_group.add_argument("--meta-name", type=str, default="")
+    job_group.add_argument("--job-meta-name", type=str, default="")
 
 
 def job_meta_group(parser):
     job_group = parser.add_argument_group(title="Job Meta arguments")
-    job_group.add_argument("--meta-debug", action="store_true")
-    job_group.add_argument("--meta-env-override", action="store_true")
-    job_group.add_argument("--meta-num-jobs", type=int)
-    job_group.add_argument("--meta-num-parallel", type=int)
+    job_group.add_argument("--job-meta-debug", action="store_true")
+    job_group.add_argument("--job-meta-env-override", action="store_true")
+    job_group.add_argument("--job-meta-num-jobs", type=int)
+    job_group.add_argument("--job-meta-num-parallel", type=int)
 
 
 def job_group(parser):

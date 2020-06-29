@@ -22,15 +22,13 @@ class TestVCNStack(unittest.TestCase):
             throw=True,
         )
 
-        oci_profile_name = load_from_env_or_config(
-            {"profile": {"profile_name": {}}},
+        oci_name = load_from_env_or_config(
+            {"profile": {"name": {}}},
             prefix=gen_config_provider_prefix({"oci": {}}),
             throw=True,
         )
 
-        self.oci_options = dict(
-            compartment_id=oci_compartment_id, profile_name=oci_profile_name,
-        )
+        self.oci_options = dict(compartment_id=oci_compartment_id, name=oci_name,)
 
         test_name = "Test_VCN"
         vcn_name = test_name + "_Network"
@@ -57,7 +55,7 @@ class TestVCNStack(unittest.TestCase):
         self.network_client = new_client(
             VirtualNetworkClient,
             composite_class=VirtualNetworkClientCompositeOperations,
-            profile_name=self.options["oci"]["profile_name"],
+            name=self.options["oci"]["name"],
         )
 
     def tearDown(self):

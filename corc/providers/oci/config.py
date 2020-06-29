@@ -59,9 +59,9 @@ default_network_config = {
 
 valid_network_config = {"subnet": valid_subnet_config, "vcn": valid_vcn_config}
 
-default_profile_config = {"profile_name": "DEFAULT", "compartment_id": ""}
+default_profile_config = {"name": "DEFAULT", "compartment_id": ""}
 
-valid_profile_config = {"profile_name": str, "compartment_id": str}
+valid_profile_config = {"name": str, "compartment_id": str}
 
 default_config = {
     "cluster": default_cluster_config,

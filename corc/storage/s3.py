@@ -9,13 +9,13 @@ import os
 required_s3_fields = {
     "config_file": str,
     "credentials_file": str,
-    "profile_name": str,
+    "name": str,
 }
 
 required_s3_values = {
     "config_file": True,
     "credentials_file": True,
-    "profile_name": True,
+    "name": True,
 }
 
 required_s3_bucket_fields = {
@@ -157,14 +157,12 @@ def stage_s3_resource(**kwargs):
     return boto3.resource("s3", **kwargs)
 
 
-def load_s3_config(config_file, credentials_file, endpoint_url, profile_name="DEFAULT"):
+def load_s3_config(config_file, credentials_file, endpoint_url, name="DEFAULT"):
     s3_config = load_config(config_file)
     if not s3_config:
         raise RuntimeError("Failed to load s3 config: {}".format(config_file))
 
-    s3_creds_provider = SharedCredentialProvider(
-        credentials_file, profile_name=profile_name,
-    )
+    s3_creds_provider = SharedCredentialProvider(credentials_file, name=name,)
     s3_creds_config = s3_creds_provider.load()
     if not s3_creds_config:
         raise RuntimeError(
@@ -172,7 +170,7 @@ def load_s3_config(config_file, credentials_file, endpoint_url, profile_name="DE
         )
 
     (s3_access_key, s3_secret_key, s3_token,) = s3_creds_config.get_frozen_credentials()
-    region = s3_config["profiles"][profile_name]["region_name"]
+    region = s3_config["profiles"][name]["region_name"]
 
     s3_config = dict(
         aws_access_key_id=s3_access_key,

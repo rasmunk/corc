@@ -17,5 +17,5 @@ def select_cluster_group(parser):
 
 def start_cluster_group(parser):
     cluster_group = parser.add_argument_group(title="Cluster Start arguments")
-    cluster_group.add_argument("--cluster-kubernetes-version", default=None)
+    cluster_group.add_argument("--cluster-kubernetes-version", default="")
     cluster_group.add_argument("--cluster-domain", default="")

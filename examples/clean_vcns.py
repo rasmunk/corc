@@ -8,7 +8,7 @@ if __name__ == "__main__":
     network_client = new_client(
         VirtualNetworkClient,
         composite_class=VirtualNetworkClientCompositeOperations,
-        profile_name="",
+        name="",
     )
 
     delected_vcns = delete_compartment_vcns(network_client, compartment_id)

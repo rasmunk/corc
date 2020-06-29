@@ -7,7 +7,7 @@ def prepare_options():
     oci_options = dict(
         compartment_id="ocid1.tenancy.oc1..aaaaaaaakfmksyrf7hl2gfexmjpb6pbyrirm6k3ro7wd4"
         "64y2pr7atpxpv4q",
-        profile_name="XNOVOTECH",
+        name="XNOVOTECH",
     )
 
     vcn_options = dict(
@@ -30,7 +30,7 @@ if __name__ == "__main__":
     network_client = new_client(
         VirtualNetworkClient,
         composite_class=VirtualNetworkClientCompositeOperations,
-        profile_name=options["oci"]["profile_name"],
+        name=options["oci"]["name"],
     )
 
     stack = new_vcn_stack(

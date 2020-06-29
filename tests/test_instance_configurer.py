@@ -19,14 +19,12 @@ class TestInstanceConfigurer(unittest.TestCase):
             throw=True,
         )
 
-        oci_profile_name = load_from_env_or_config(
-            {"profile": {"profile_name": {}}},
+        oci_name = load_from_env_or_config(
+            {"profile": {"name": {}}},
             prefix=gen_config_provider_prefix({"oci": {}}),
             throw=True,
         )
-        oci_options = dict(
-            compartment_id=oci_compartment_id, profile_name=oci_profile_name,
-        )
+        oci_options = dict(compartment_id=oci_compartment_id, name=oci_name,)
 
         test_name = "Test_Instance_Conf"
         node_name = test_name + "_Node"

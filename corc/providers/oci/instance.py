@@ -86,19 +86,19 @@ def launch_instance(compute_kwargs={}, oci_kwargs={}, subnet_kwargs={}, vcn_kwar
     # compute_client = new_client(
     #     ComputeClient,
     #     composite_class=ComputeClientCompositeOperations,
-    #     profile_name=oci_kwargs["profile_name"],
+    #     name=oci_kwargs["name"],
     # )
 
     # identity_client = new_client(
     #     IdentityClient,
     #     composite_class=IdentityClientCompositeOperations,
-    #     profile_name=oci_kwargs["profile_name"],
+    #     name=oci_kwargs["name"],
     # )
 
     # network_client = new_client(
     #     VirtualNetworkClient,
     #     composite_class=VirtualNetworkClientCompositeOperations,
-    #     profile_name=oci_kwargs["profile_name"],
+    #     name=oci_kwargs["name"],
     # )
 
     # # AD
@@ -265,19 +265,19 @@ class OCIInstanceOrchestrator(Orchestrator):
         self.compute_client = new_client(
             ComputeClient,
             composite_class=ComputeClientCompositeOperations,
-            profile_name=options["oci"]["profile_name"],
+            name=options["oci"]["name"],
         )
 
         self.identity_client = new_client(
             IdentityClient,
             composite_class=IdentityClientCompositeOperations,
-            profile_name=options["oci"]["profile_name"],
+            name=options["oci"]["name"],
         )
 
         self.network_client = new_client(
             VirtualNetworkClient,
             composite_class=VirtualNetworkClientCompositeOperations,
-            profile_name=options["oci"]["profile_name"],
+            name=options["oci"]["name"],
         )
 
         self.port = 22
@@ -461,7 +461,7 @@ class OCIInstanceOrchestrator(Orchestrator):
 
         expected_oci_keys = [
             "compartment_id",
-            "profile_name",
+            "name",
         ]
 
         expected_compute_keys = [
