@@ -26,9 +26,6 @@ def cli_exec(args):
 
     provider, provider_kwargs = prepare_provider_kwargs(args, namespace_wrap=True)
     if provider:
-
-        if not provider_groups:
-            provider_groups.append(provider.upper())
         module_path = module_path.format(provider=provider)
         # load missing provider kwargs from config
         provider_configuration = prepare_kwargs_configurations(
@@ -71,6 +68,11 @@ def prepare_kwargs_configurations(args, argument_groups, strip_group_prefix=True
     kwargs_configurations = []
     for group in argument_groups:
         name = group.lower()
+        if "_" in name:
+            prefix = tuple(name.split("_"))
+        else:
+            prefix = (name,)
+
         group_kwargs_config = {}
         group_kwargs_config[name] = {}
         action_kwargs = vars(extract_arguments(args, [group]))
@@ -82,13 +84,14 @@ def prepare_kwargs_configurations(args, argument_groups, strip_group_prefix=True
         if group in corc_config_groups:
             valid_action_config = corc_config_groups[group]
             # gen config prefix
-            config_prefix = gen_config_prefix({name: {}})
+            config_prefix = gen_config_prefix(prefix)
             group_kwargs_config[name]["valid_action_config"] = valid_action_config
             group_kwargs_config[name]["config_prefix"] = config_prefix
 
         if group in oci_config_groups:
             valid_action_config = oci_config_groups[group]
-            config_prefix = gen_config_provider_prefix({"oci": {name: {}}})
+            prefix = ("oci",) + prefix
+            config_prefix = gen_config_provider_prefix(prefix)
             group_kwargs_config[name]["valid_action_config"] = valid_action_config
             group_kwargs_config[name]["config_prefix"] = config_prefix
 

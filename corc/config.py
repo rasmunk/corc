@@ -321,7 +321,7 @@ def load_from_env(name, throw=False):
     return False
 
 
-def load_from_config(find_dict, prefix={}, config=None):
+def load_from_config(find_dict, prefix=(), config=None):
 
     if not find_dict or not config_exists():
         return {}
@@ -333,11 +333,14 @@ def load_from_config(find_dict, prefix={}, config=None):
 
     found_config_values = {}
     flat_find_dict = flatten_dict.flatten(find_dict, keep_empty_types=(dict,))
-    flat_prefix = flatten_dict.flatten(prefix, keep_empty_types=(dict,))
+    if isinstance(prefix, dict):
+        flat_prefix = flatten_dict.flatten(prefix, keep_empty_types=(dict,))
+    else:
+        flat_prefix = prefix
     flat_config = flatten_dict.flatten(config, keep_empty_types=(dict,))
     for k, _ in flat_find_dict.items():
         if prefix:
-            prefixed_key = list(flat_prefix.keys())[0] + k
+            prefixed_key = extend_last_tuple(flat_prefix, k)
             if prefixed_key in flat_config:
                 if (
                     isinstance(flat_config[prefixed_key], str)
@@ -353,8 +356,23 @@ def load_from_config(find_dict, prefix={}, config=None):
 
 
 def gen_config_provider_prefix(provider):
-    return gen_config_prefix({"providers": provider})
+    provider_tuple = extend_last_tuple(("providers",), provider)
+    return gen_config_prefix(provider_tuple)
 
 
 def gen_config_prefix(prefix):
-    return {"corc": prefix}
+    return extend_last_tuple(("corc",), prefix)
+
+
+def extend_last_tuple(t, element):
+    last_t = t[-1]
+    if isinstance(element, (tuple, list, set)):
+        tuple_element = tuple(element)
+    else:
+        tuple_element = (element,)
+    if isinstance(last_t, tuple):
+        last_t = last_t + tuple_element
+        new_t = t[:-1] + (last_t,)
+    else:
+        new_t = t + tuple_element
+    return new_t
