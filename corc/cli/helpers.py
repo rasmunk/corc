@@ -1,4 +1,5 @@
 from argparse import Namespace
+import flatten_dict
 from corc.cli.args import extract_arguments
 from corc.cli.providers.helpers import select_provider
 from corc.config import (
@@ -71,11 +72,12 @@ def prepare_kwargs_configurations(args, argument_groups, strip_group_prefix=True
         name = group.lower()
         if "_" in name:
             prefix = tuple(name.split("_"))
+            group_kwargs_config = create_sub_dictionaries(group_kwargs_config, prefix)
         else:
             prefix = (name,)
+            group_kwargs_config[name] = {}
 
         # TODO, subname on split prefix
-        group_kwargs_config[name] = {}
         action_kwargs = vars(extract_arguments(args, [group]))
         if action_kwargs:
             group_kwargs_config[name]["action_kwargs"] = action_kwargs
@@ -119,3 +121,9 @@ def load_missing_action_kwargs(kwargs_configurations):
                 )
             )
     return action_kwargs
+
+
+def create_sub_dictionaries(dictionary, tuple_keys):
+    flat_dict = flatten_dict.flatten(dictionary)
+    flat_dict[tuple_keys] = {}
+    return flatten_dict.unflatten(flat_dict)
