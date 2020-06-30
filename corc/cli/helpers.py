@@ -67,13 +67,14 @@ def prepare_kwargs_configurations(args, argument_groups, strip_group_prefix=True
     # Try to find all available args
     kwargs_configurations = []
     for group in argument_groups:
+        group_kwargs_config = {}
         name = group.lower()
         if "_" in name:
             prefix = tuple(name.split("_"))
         else:
             prefix = (name,)
 
-        group_kwargs_config = {}
+        # TODO, subname on split prefix
         group_kwargs_config[name] = {}
         action_kwargs = vars(extract_arguments(args, [group]))
         if action_kwargs:
