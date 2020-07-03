@@ -1,7 +1,7 @@
 import argparse
 import json
 from corc.defaults import PACKAGE_NAME, AWS_LOWER, OCI_LOWER, PROFILE
-from corc.defaults import CLUSTER, STORAGE, S3, JOB, JOB_META
+from corc.defaults import CLUSTER, STORAGE, S3, JOB, JOB_META, NODE, VCN, SUBNET
 from corc.cli.parsers.job.job import (
     job_group,
     job_meta_group,
@@ -140,7 +140,14 @@ def cluster_cli(parser):
     add_node_group(start_parser)
     add_vcn_group(start_parser)
     add_subnet_group(start_parser)
-    start_parser.set_defaults(func=start_cluster)
+    start_parser.set_defaults(
+        func=cli_exec,
+        module_path="corc.cluster",
+        module_name="cluster",
+        func_name="start_cluster",
+        provider_groups=[PROFILE],
+        argument_groups=[CLUSTER, NODE, VCN, SUBNET],
+    )
 
     stop_parser = cluster_commands.add_parser("stop")
     select_cluster_group(stop_parser)
