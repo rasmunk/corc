@@ -38,7 +38,7 @@ def new_client(oci_client_class, composite_class=None, name="DEFAULT", **kwargs)
 
     client_config = None
     # Try to load from the config_file instead
-    file_config = oci.config.from_file(file_location=file_location, name=name)
+    file_config = oci.config.from_file(file_location=file_location, profile_name=name)
 
     # If an environment path for the key file is provided
     if "OCI_KEY_FILE" in os.environ:

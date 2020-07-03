@@ -85,7 +85,7 @@ def job_cli(parser):
         module_name="job",
         func_name="run",
         provider_groups=[PROFILE],
-        argument_groups=[CLUSTER, JOB, JOB_META, STORAGE, S3],
+        argument_groups=[CLUSTER, JOB_META, JOB, STORAGE, S3],
     )
 
     result_parser = job_commands.add_parser("result")

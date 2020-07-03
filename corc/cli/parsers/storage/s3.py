@@ -11,7 +11,7 @@ def s3_config_group(parser):
     s3_config = parser.add_argument_group(title="S3 Config arguments")
     s3_config.add_argument("--s3-config-file", default="")
     s3_config.add_argument("--s3-credentials-file", default="")
-    s3_config.add_argument("--s3-profile-name", default="")
+    s3_config.add_argument("--s3-name", default="")
 
 
 def select_s3_group(parser):

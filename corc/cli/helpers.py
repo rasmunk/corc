@@ -1,4 +1,5 @@
 from argparse import Namespace
+import copy
 import flatten_dict
 from corc.cli.args import extract_arguments
 from corc.cli.providers.helpers import select_provider
@@ -70,6 +71,7 @@ def prepare_kwargs_configurations(args, argument_groups, strip_group_prefix=True
     for group in argument_groups:
         group_kwargs_config = {}
         name = group.lower()
+        # Flat group_kwargs_config to do direct indexing
         if "_" in name:
             prefix = tuple(name.split("_"))
             group_kwargs_config = create_sub_dictionaries(group_kwargs_config, prefix)
@@ -77,53 +79,138 @@ def prepare_kwargs_configurations(args, argument_groups, strip_group_prefix=True
             prefix = (name,)
             group_kwargs_config[name] = {}
 
+        prefix_action_kwargs = prefix + ("action_kwargs",)
+        prefix_action_config = prefix + ("valid_action_config",)
+        prefix_config_prefix = prefix + ("config_prefix",)
+
+        flat_group_kwargs_config = flatten_dict.flatten(
+            group_kwargs_config, keep_empty_types=(dict,)
+        )
         # TODO, subname on split prefix
         action_kwargs = vars(extract_arguments(args, [group]))
         if action_kwargs:
-            group_kwargs_config[name]["action_kwargs"] = action_kwargs
+            # remove claimed action_kwargs from args
+            args = remove_arguments(args, action_kwargs.keys(), prefix=name + "_")
+            flat_group_kwargs_config[prefix_action_kwargs] = action_kwargs
         else:
-            group_kwargs_config[name]["action_kwargs"] = {}
+            flat_group_kwargs_config[prefix_action_kwargs] = {}
 
         if group in corc_config_groups:
             valid_action_config = corc_config_groups[group]
             # gen config prefix
             config_prefix = gen_config_prefix(prefix)
-            group_kwargs_config[name]["valid_action_config"] = valid_action_config
-            group_kwargs_config[name]["config_prefix"] = config_prefix
+            flat_group_kwargs_config[prefix_action_config] = valid_action_config
+            flat_group_kwargs_config[prefix_config_prefix] = config_prefix
 
         if group in oci_config_groups:
             valid_action_config = oci_config_groups[group]
             prefix = ("oci",) + prefix
             config_prefix = gen_config_provider_prefix(prefix)
-            group_kwargs_config[name]["valid_action_config"] = valid_action_config
-            group_kwargs_config[name]["config_prefix"] = config_prefix
+            flat_group_kwargs_config[prefix_action_config] = valid_action_config
+            flat_group_kwargs_config[prefix_config_prefix] = config_prefix
 
-        if (
-            group_kwargs_config[name]
-            and "valid_action_config" in group_kwargs_config[name]
-        ):
-            kwargs_configurations.append(group_kwargs_config)
+        if flat_group_kwargs_config[prefix_action_config]:
+            unflat_group_group_kwargs_config = flatten_dict.unflatten(
+                flat_group_kwargs_config
+            )
+            kwargs_configurations.append(unflat_group_group_kwargs_config)
     return kwargs_configurations
 
 
 def load_missing_action_kwargs(kwargs_configurations):
-    action_kwargs = {}
+    flat_action_kwargs = {}
     config = load_config()
     for kwargs in kwargs_configurations:
         for group, args in kwargs.items():
-            action_kwargs[group] = {}
-            missing_dict = missing_fields(
-                args["action_kwargs"], args["valid_action_config"]
+            # Set group prefixes
+            kwargs_path = (group,)
+            if kwargs_path not in flat_action_kwargs:
+                flat_action_kwargs[kwargs_path] = {}
+
+            input_dict = find_value_in_dict(args, key="action_kwargs")
+            required_fields = find_value_in_dict(args, key="valid_action_config")
+            missing_dict = missing_fields(input_dict, required_fields)
+            action_kwargs_flat_path = get_dict_path(
+                args, key="action_kwargs", truncate=True
             )
-            action_kwargs[group].update(
-                load_from_config(
-                    missing_dict, prefix=args["config_prefix"], config=config
-                )
+
+            if action_kwargs_flat_path:
+                dict_flat_path = action_kwargs_flat_path[:-1]
+                if kwargs_path != dict_flat_path:
+                    kwargs_path = kwargs_path + dict_flat_path
+                    if kwargs_path not in flat_action_kwargs:
+                        flat_action_kwargs[kwargs_path] = {}
+
+            # Fill in the provided arguments
+            flat_action_kwargs[kwargs_path] = input_dict
+
+            config_prefix = find_value_in_dict(args, key="config_prefix")
+            # Update with missing arguments from config
+            flat_action_kwargs[kwargs_path].update(
+                load_from_config(missing_dict, prefix=config_prefix, config=config,)
             )
-    return action_kwargs
+    return flatten_dict.unflatten(flat_action_kwargs)
+
+
+def get_dict_path(dictionary, key=None, multiple=False, truncate=False):
+    if not key:
+        return None
+    flat_dict = flatten_dict.flatten(dictionary, keep_empty_types=(dict,))
+    matches = []
+    for k, v in flat_dict.items():
+        if isinstance(k, (list, set, tuple)):
+            for idx, k_v in enumerate(k):
+                if k_v == key:
+                    if truncate:
+                        matches.append(k[: idx + 1])
+                    else:
+                        matches.append(k)
+    if not matches:
+        return None
+    if multiple:
+        return matches
+    else:
+        return matches[0]
+
+
+def find_value_in_dict(dictionary, key=None, remain_dict=None):
+    if not key:
+        return None
+
+    if not remain_dict:
+        local_dict = copy.deepcopy(dictionary)
+    else:
+        local_dict = remain_dict
+
+    if key in local_dict:
+        return local_dict[key]
+
+    keys = list(iter(local_dict))
+    rand_key = keys[0]
+    value = local_dict.pop(rand_key)
+
+    if isinstance(value, dict):
+        return find_value_in_dict(value, key=key, remain_dict=local_dict)
+    return find_value_in_dict(local_dict, key=key, remain_dict=local_dict)
 
 
 def create_sub_dictionaries(dictionary, tuple_keys):
     flat_dict = flatten_dict.flatten(dictionary)
     flat_dict[tuple_keys] = {}
     return flatten_dict.unflatten(flat_dict)
+
+
+def remove_arguments(args, attributes, prefix=None):
+    local_args = copy.deepcopy(args)
+    if not attributes:
+        return args
+
+    for attribute in attributes:
+        if prefix:
+            attribute_path = "{}{}".format(prefix, attribute)
+        else:
+            attribute_path = "{}".format(attribute)
+        if hasattr(local_args, attribute_path):
+            delattr(local_args, attribute_path)
+
+    return local_args

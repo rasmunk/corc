@@ -95,39 +95,6 @@ def validate_arguments(provider_kwargs, cluster, job, storage, s3):
 def run(
     provider_kwargs, cluster={}, job={}, storage={}, s3={},
 ):
-    # Try to load the missing values from the config
-    # missing_oci_dict = missing_fields(oci_kwargs, valid_profile_config)
-    # config_profile_prefix = gen_config_provider_prefix({"oci": {"profile": {}}})
-    # oci_kwargs.update(load_from_config(missing_oci_dict, prefix=config_profile_prefix))
-
-    # missing_cluster = missing_fields(cluster, valid_cluster_config)
-    # config_cluster_prefix = gen_config_provider_prefix({"oci": {"cluster": {}}})
-    # cluster.update(
-    #     load_from_config(missing_cluster, prefix=config_cluster_prefix)
-    # )
-
-    # missing_job_dict = missing_fields(job, valid_job_config)
-    # config_job_prefix = gen_config_prefix({"job": {}})
-    # job.update(load_from_config(missing_job_dict, prefix=config_job_prefix))
-
-    # missing_meta_dict = missing_fields(job["meta"], valid_job_meta_config)
-    # config_meta_prefix = gen_config_prefix({"job": {"meta": {}}})
-    # job["meta"].update(
-    #     load_from_config(missing_meta_dict, prefix=config_meta_prefix)
-    # )
-
-    # missing_storage_dict = missing_fields(storage, valid_storage_config)
-    # config_storage_prefix = gen_config_prefix({"storage": {}})
-    # storage.update(
-    #     load_from_config(missing_storage_dict, prefix=config_storage_prefix)
-    # )
-
-    # missing_staging_dict = missing_fields(s3, valid_s3_config)
-    # config_staging_prefix = gen_config_prefix({"storage": {"s3": {}}})
-    # s3.update(
-    #     load_from_config(missing_staging_dict, prefix=config_staging_prefix)
-    # )
-
     validate_arguments(provider_kwargs, cluster, job, storage, s3)
 
     if "name" not in job["meta"] or not job["meta"]["name"]:
@@ -140,20 +107,22 @@ def run(
     container_engine_client = new_client(
         ContainerEngineClient,
         composite_class=ContainerEngineClientCompositeOperations,
-        name=provider_kwargs["name"],
+        name=provider_kwargs["profile"]["name"],
     )
 
-    cluster = get_cluster_by_name(
+    compute_cluster = get_cluster_by_name(
         container_engine_client,
-        provider_kwargs["compartment_id"],
+        provider_kwargs["profile"]["compartment_id"],
         name=cluster["name"],
     )
 
-    if not cluster:
+    if not compute_cluster:
         print("Failed to find a cluster with name: {}".format(cluster["name"]))
         return False
 
-    refreshed = refresh_kube_config(cluster.id, name=provider_kwargs["name"])
+    refreshed = refresh_kube_config(
+        compute_cluster.id, name=provider_kwargs["profile"]["name"]
+    )
     if not refreshed:
         exit(1)
 
