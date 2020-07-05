@@ -24,7 +24,19 @@ from corc.providers.oci.helpers import (
     list_entities,
     get_kubernetes_version,
 )
-from corc.util import parse_yaml
+from corc.providers.oci.config import (
+    valid_profile_config,
+    valid_cluster_config,
+    valid_node_config,
+    valid_vcn_config,
+    valid_subnet_config,
+)
+from corc.util import (
+    parse_yaml,
+    validate_dict_fields,
+    validate_dict_types,
+    validate_dict_values,
+)
 from corc.kubernetes.config import save_kube_config, load_kube_config
 from corc.orchestrator import Orchestrator
 from corc.providers.oci.network import (
@@ -546,46 +558,45 @@ class OCIClusterOrchestrator(Orchestrator):
         if not isinstance(options, dict):
             raise TypeError("options is not a dictionary")
 
-        expected_oci_keys = [
-            "compartment_id",
-            "name",
-        ]
+        validate_dict_fields(
+            options["oci"]["profile"], valid_profile_config, verbose=True, throw=True
+        )
+        validate_dict_values(
+            options["oci"]["profile"], valid_profile_config, verbose=True, throw=True
+        )
 
-        expected_cluster_keys = [
-            "name",
-        ]
-        optional_cluster_keys = ["kubernetes_version", "domain"]
+        validate_dict_fields(
+            options["cluster"], valid_cluster_config, verbose=True, throw=True
+        )
+        required_cluster_fields = ["name"]
+        validate_dict_values(
+            options["cluster"], required_cluster_fields, verbose=True, throw=True
+        )
 
-        expected_node_keys = [
+        required_node_fields = [
             "availability_domain",
             "name",
             "size",
             "node_shape",
             "image",
         ]
-        optional_node_keys = ["ssh_public_key"]
+        validate_dict_fields(
+            options["node"], valid_node_config, verbose=True, throw=True
+        )
+        validate_dict_values(
+            options["node"], required_node_fields, verbose=True, throw=True
+        )
 
-        expected_vcn_keys = ["cidr_block"]
-        optional_vcn_keys = ["id", "display_name", "dns_label"]
+        required_vcn_fields = ["cidr_block"]
+        validate_dict_fields(options["vcn"], valid_vcn_config, verbose=True, throw=True)
+        validate_dict_values(
+            options["vcn"], required_vcn_fields, verbose=True, throw=True
+        )
 
-        expected_subnet_keys = ["cidr_block"]
-        optional_subnet_keys = ["id", "dns_label", "display_name"]
-
-        expected_groups = {
-            "oci": expected_oci_keys,
-            "cluster": expected_cluster_keys + optional_cluster_keys,
-            "node": expected_node_keys + optional_node_keys,
-            "vcn": expected_vcn_keys + optional_vcn_keys,
-            "subnet": expected_subnet_keys + optional_subnet_keys,
-        }
-
-        for group, keys in expected_groups.items():
-            if group not in options:
-                raise KeyError("Missing group: {}".format(group))
-
-            if not isinstance(options[group], dict):
-                raise TypeError("Group: {} must be a dictionary".format(group))
-
-            for key, _ in options[group].items():
-                if key not in keys:
-                    raise KeyError("Incorrect key: {} is not in: {}".format(key, keys))
+        required_subnet_fields = ["cidr_block"]
+        validate_dict_fields(
+            options["subnet"], valid_subnet_config, verbose=True, throw=True
+        )
+        validate_dict_values(
+            options["subnet"], required_subnet_fields, verbose=True, throw=True
+        )
