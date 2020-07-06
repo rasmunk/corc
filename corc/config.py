@@ -314,9 +314,8 @@ def load_from_env_or_config(find_dict={}, prefix=None, throw=False):
     if throw:
         if env_error and not value:
             raise ValueError(
-                "Failed to find var: {} in either environment or config, env_error: {}".format(
-                    prefix, env_error
-                )
+                "Failed to find var: {} in either environment or config, "
+                "env_error: {}".format(prefix, env_error)
             )
 
     return value
