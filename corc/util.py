@@ -1,3 +1,5 @@
+from __future__ import print_function
+import sys
 import os
 import flatten_dict
 import platform
@@ -172,3 +174,7 @@ def open_port(host="127.0.0.1", port=22):
         return True
     else:
         return False
+
+
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)

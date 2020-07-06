@@ -5,7 +5,7 @@ from corc.defaults import (
     CLUSTER,
     CLUSTER_NODE,
     STORAGE,
-    S3,
+    STORAGE_S3,
     JOB,
     JOB_META,
     VCN,
@@ -42,6 +42,7 @@ from corc.cli.parsers.providers.oci import add_oci_group
 from corc.cluster import update_cluster
 from corc.instance import launch_instance
 from corc.cli.helpers import cli_exec
+from corc.util import eprint
 
 
 def run():
@@ -67,13 +68,17 @@ def run():
     args = parser.parse_args()
     # Execute default function
     if hasattr(args, "func"):
-        result = args.func(args)
-        if result:
-            try:
-                json_object = json.loads(result)
-                print(json.dumps(json_object, indent=2))
-            except Exception:
-                print(result)
+        success, response = args.func(args)
+        output = ""
+        try:
+            output = json.dumps(response)
+        except Exception as err:
+            eprint("Failed to format: {}, err: {}".format(output, err))
+
+        if success:
+            print(output)
+        else:
+            eprint(output)
     return None
 
 
@@ -94,7 +99,7 @@ def job_cli(parser):
         module_name="job",
         func_name="run",
         provider_groups=[PROFILE],
-        argument_groups=[CLUSTER, JOB_META, JOB, STORAGE, S3],
+        argument_groups=[CLUSTER, JOB_META, JOB, STORAGE_S3, STORAGE],
     )
 
     list_parser = job_commands.add_parser("list")
@@ -115,7 +120,7 @@ def job_cli(parser):
         module_path="corc.providers.{provider}.job",
         module_name="job",
         func_name="get_results",
-        argument_groups=[JOB_META, JOB, STORAGE, S3],
+        argument_groups=[JOB_META, JOB, STORAGE_S3, STORAGE],
     )
 
     delete_parser = result_commands.add_parser("delete")
@@ -129,7 +134,7 @@ def job_cli(parser):
         module_path="corc.providers.{provider}.job",
         module_name="job",
         func_name="delete_results",
-        argument_groups=[JOB_META, JOB, STORAGE, S3],
+        argument_groups=[JOB_META, JOB, STORAGE_S3, STORAGE],
     )
 
     list_parser = result_commands.add_parser("list")
@@ -142,7 +147,7 @@ def job_cli(parser):
         module_path="corc.providers.{provider}.job",
         module_name="job",
         func_name="list_results",
-        argument_groups=[JOB_META, JOB, STORAGE, S3],
+        argument_groups=[JOB_META, JOB, STORAGE_S3, STORAGE],
     )
 
 

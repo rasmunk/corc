@@ -6,15 +6,16 @@ from corc.providers.oci.instance import OCIInstanceOrchestrator
 class TestInstanceOrchestrator(unittest.TestCase):
     def setUp(self):
         # Load compartment_id from the env
+        prefix = ("oci",)
         oci_compartment_id = load_from_env_or_config(
             {"profile": {"compartment_id": {}}},
-            prefix=gen_config_provider_prefix({"oci": {}}),
+            prefix=gen_config_provider_prefix(prefix),
             throw=True,
         )
 
         oci_name = load_from_env_or_config(
             {"profile": {"name": {}}},
-            prefix=gen_config_provider_prefix({"oci": {}}),
+            prefix=gen_config_provider_prefix(prefix),
             throw=True,
         )
 
@@ -27,7 +28,7 @@ class TestInstanceOrchestrator(unittest.TestCase):
 
         # Add unique test postfix
         test_id = load_from_env_or_config(
-            {"test": {"id": {}}}, prefix=gen_config_provider_prefix({"oci": {}})
+            {"test": {"id": {}}}, prefix=gen_config_provider_prefix(prefix)
         )
         if test_id:
             node_name += test_id

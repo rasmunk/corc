@@ -20,10 +20,7 @@ def cli_exec(args):
     module_path = args.module_path
     module_name = args.module_name
     func_name = args.func_name
-    if hasattr(args, "argument_groups"):
-        argument_groups = args.argument_groups
-    else:
-        argument_groups = []
+    argument_groups = args.argument_groups
     if hasattr(args, "provider_groups"):
         provider_groups = args.provider_groups
     else:

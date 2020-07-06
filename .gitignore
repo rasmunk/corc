@@ -132,3 +132,6 @@ dmypy.json
 *.db
 
 .oci/
+
+# Ignore job downloads
+job-*/

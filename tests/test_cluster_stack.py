@@ -26,19 +26,23 @@ from corc.providers.oci.network import new_vcn_stack, delete_vcn_stack, valid_vc
 class TestClusterStack(unittest.TestCase):
     def setUp(self):
         # Load compartment_id from the env
+        prefix = ("oci",)
         oci_compartment_id = load_from_env_or_config(
             {"profile": {"compartment_id": {}}},
-            prefix=gen_config_provider_prefix({"oci": {}}),
+            prefix=gen_config_provider_prefix(prefix),
             throw=True,
         )
 
         oci_name = load_from_env_or_config(
             {"profile": {"name": {}}},
-            prefix=gen_config_provider_prefix({"oci": {}}),
+            prefix=gen_config_provider_prefix(prefix),
             throw=True,
         )
 
-        oci_options = dict(compartment_id=oci_compartment_id, name=oci_name,)
+        oci_options = {
+            "profile": {"compartment_id": oci_compartment_id, "name": oci_name}
+        }
+        # oci_options = dict(compartment_id=oci_compartment_id, name=oci_name,)
 
         test_name = "Test_Cluster"
         cluster_name = test_name
@@ -48,7 +52,7 @@ class TestClusterStack(unittest.TestCase):
 
         # Add unique test postfix
         test_id = load_from_env_or_config(
-            {"test": {"id": {}}}, prefix=gen_config_provider_prefix({"oci": {}})
+            {"test": {"id": {}}}, prefix=gen_config_provider_prefix(prefix)
         )
         if test_id:
             cluster_name += test_id
@@ -56,7 +60,7 @@ class TestClusterStack(unittest.TestCase):
             vcn_name += test_id
             subnet_name += test_id
 
-        image_options = dict(display_name="Oracle-Linux-7.7-2020.03.23-0",)
+        image_options = dict(display_name="Oracle-Linux-7.7-2020.03.23-0")
         node_options = dict(
             availability_domain="lfcb:EU-FRANKFURT-1-AD-1",
             name=node_name,
@@ -67,8 +71,9 @@ class TestClusterStack(unittest.TestCase):
         vcn_options = dict(
             cidr_block="10.0.0.0/16", display_name=vcn_name, dns_label="ku",
         )
-
-        subnet_options = dict(display_name=subnet_name, dns_label="workers")
+        subnet_options = dict(
+            cidr_block="10.0.2.0/24", display_name=subnet_name, dns_label="workers"
+        )
 
         self.container_engine_client = new_client(
             ContainerEngineClient,
@@ -79,6 +84,7 @@ class TestClusterStack(unittest.TestCase):
         cluster_options = dict(
             name=cluster_name,
             kubernetes_version=get_kubernetes_version(self.container_engine_client),
+            node=node_options,
         )
 
         self.compute_client = new_client(
@@ -96,7 +102,6 @@ class TestClusterStack(unittest.TestCase):
         self.options = dict(
             oci=oci_options,
             cluster=cluster_options,
-            node=node_options,
             vcn=vcn_options,
             subnet=subnet_options,
         )
@@ -112,13 +117,15 @@ class TestClusterStack(unittest.TestCase):
         vcns = list_entities(
             self.network_client,
             "list_vcns",
-            self.options["oci"]["compartment_id"],
+            self.options["oci"]["profile"]["compartment_id"],
             display_name=self.options["vcn"]["display_name"],
         )
 
         for vcn in vcns:
             deleted = delete_vcn_stack(
-                self.network_client, self.options["oci"]["compartment_id"], vcn=vcn
+                self.network_client,
+                self.options["oci"]["profile"]["compartment_id"],
+                vcn=vcn,
             )
             self.assertTrue(deleted)
 
@@ -126,7 +133,7 @@ class TestClusterStack(unittest.TestCase):
         # Need vcn stack for the cluster stack
         self.vcn_stack = new_vcn_stack(
             self.network_client,
-            self.options["oci"]["compartment_id"],
+            self.options["oci"]["profile"]["compartment_id"],
             vcn_kwargs=self.options["vcn"],
             subnet_kwargs=self.options["subnet"],
         )
@@ -136,21 +143,21 @@ class TestClusterStack(unittest.TestCase):
         available_images = list_entities(
             self.compute_client,
             "list_images",
-            self.options["oci"]["compartment_id"],
-            **self.options["node"]["image"]
+            self.options["oci"]["profile"]["compartment_id"],
+            **self.options["cluster"]["node"]["image"]
         )
 
         if not available_images:
             raise ValueError(
                 "No valid image could be found with options: {}".format(
-                    self.options["image"]
+                    self.options["cluster"]["node"]["image"]
                 )
             )
 
         if len(available_images) > 1:
             raise ValueError(
                 "More than 1 image was found with options: {}".format(
-                    self.options["image"]
+                    self.options["cluster"]["node"]["image"]
                 )
             )
 
@@ -171,7 +178,7 @@ class TestClusterStack(unittest.TestCase):
 
         _cluster_stack = get_cluster_stack(
             self.container_engine_client,
-            self.options["oci"]["compartment_id"],
+            self.options["oci"]["profile"]["compartment_id"],
             self.cluster_stack["id"],
         )
         self.assertTrue(valid_cluster_stack(_cluster_stack))
@@ -187,7 +194,7 @@ class TestClusterStack(unittest.TestCase):
 
         new_cluster_name = get_cluster_by_name(
             self.container_engine_client,
-            self.options["oci"]["compartment_id"],
+            self.options["oci"]["profile"]["compartment_id"],
             self.cluster_stack["cluster"].name,
         )
 

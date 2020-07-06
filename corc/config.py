@@ -6,11 +6,11 @@ from corc.defaults import (
     ANSIBLE,
     AWS_LOWER,
     OCI_LOWER,
-    STORAGE,
     PROVIDER,
     JOB,
-    S3,
     JOB_META,
+    STORAGE,
+    STORAGE_S3,
 )
 from corc.util import present_in, correct_type
 
@@ -123,7 +123,7 @@ corc_config_groups = {
     JOB: valid_job_config,
     JOB_META: valid_job_meta_config,
     STORAGE: valid_storage_config,
-    S3: valid_s3_config,
+    STORAGE_S3: valid_s3_config,
     PROVIDER: valid_providers_config,
 }
 
@@ -281,7 +281,7 @@ def valid_config(config, verbose=False):
     return recursive_check_config(config["corc"], valid_corc_config, verbose=verbose)
 
 
-def load_from_env_or_config(find_dict={}, prefix={}, throw=False):
+def load_from_env_or_config(find_dict={}, prefix=None, throw=False):
     value = False
     # Load from environment first
     dict_keys = flatten_dict.flatten(

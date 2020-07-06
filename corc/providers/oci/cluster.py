@@ -64,7 +64,6 @@ def refresh_kube_config(cluster_id, name="DEFAULT"):
         composite_class=ContainerEngineClientCompositeOperations,
         name=name,
     )
-
     # Try to load the existing
     # Create or refresh the kubernetes config
     kube_config = create(container_engine_client, "create_kubeconfig", cluster_id)

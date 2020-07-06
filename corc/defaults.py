@@ -27,8 +27,11 @@ JOB = "JOB"
 META = "META"
 JOB_META = "{}_{}".format(JOB, META)
 RUN = "RUN"
+
 STORAGE = "STORAGE"
 S3 = "S3"
+STORAGE_S3 = "{}_{}".format(STORAGE, S3)
+
 
 # Networking
 SUBNET = "SUBNET"

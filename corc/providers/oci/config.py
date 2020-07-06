@@ -62,9 +62,19 @@ valid_instance_config = {
     "target_shape": str,
 }
 
-default_subnet_config = {"id": "", "dns_label": "workers", "cidr_block": "10.0.1.0/24"}
+default_subnet_config = {
+    "id": "",
+    "display_name": "worker_subnet",
+    "dns_label": "workers",
+    "cidr_block": "10.0.1.0/24",
+}
 
-valid_subnet_config = {"id": str, "dns_label": str, "cidr_block": str}
+valid_subnet_config = {
+    "id": str,
+    "display_name": str,
+    "dns_label": str,
+    "cidr_block": str,
+}
 
 default_vcn_config = {
     "id": "",

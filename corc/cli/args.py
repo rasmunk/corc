@@ -8,7 +8,7 @@ from corc.defaults import (
     JOB,
     OCI,
     STORAGE,
-    S3,
+    STORAGE_S3,
     VCN,
 )
 from corc.cli.configurer.ansible import valid_ansible_group
@@ -38,7 +38,7 @@ argument_groups = {
     JOB: valid_job_group,
     OCI: valid_oci_group,
     STORAGE: valid_storage_group,
-    S3: valid_s3_group,
+    STORAGE_S3: valid_s3_group,
     VCN: valid_vcn_group,
 }
 

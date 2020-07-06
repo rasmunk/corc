@@ -55,7 +55,14 @@ class KubenetesScheduler(Scheduler):
         job_created = create_job(self.batch_client, job)
         if not job_created:
             return False
-        return True
+
+        job = {"job": {}}
+        if hasattr(job_created, "metadata") and hasattr(
+            job_created.metadata, "generate_name"
+        ):
+            job["job"]["id"] = job_created.metadata.generate_name
+
+        return job
 
     def retrieve(self, job_id):
         return self.jobs[job_id]

@@ -25,10 +25,7 @@ from corc.defaults import (
     KUBERNETES_NAMESPACE,
     JOB_DEFAULT_NAME,
 )
-from corc.util import (
-    validate_dict_fields,
-    validate_dict_values,
-)
+from corc.util import validate_dict_fields, validate_dict_values
 from corc.storage.s3 import (
     bucket_exists,
     delete_bucket,
@@ -99,9 +96,9 @@ def _required_run_arguments(provider_kwargs, cluster, job, storage, s3):
     # Storage and Staging are not required to execute a job, only if enabled
 
 
-def run(
-    provider_kwargs, cluster={}, job={}, storage={}, s3={},
-):
+def run(provider_kwargs, cluster={}, job={}, storage={}):
+    # TODO, temp fix
+    s3 = storage["s3"]
     _validate_fields(
         provider=provider_kwargs, cluster=cluster, job=job, storage=storage, s3=s3
     )
@@ -236,11 +233,11 @@ def run(
 
             # If `access_key`
             # TODO, unify argument endpoint, with s3 config endpoint'
-            s3 = boto3.resource("s3", **s3_config)
+            s3_resource = boto3.resource("s3", **s3_config)
 
-            bucket = bucket_exists(s3.meta.client, s3["bucket_name"])
+            bucket = bucket_exists(s3_resource.meta.client, s3["bucket_name"])
             if not bucket:
-                bucket = s3.create_bucket(
+                bucket = s3_resource.create_bucket(
                     Bucket=s3["bucket_name"],
                     CreateBucketConfiguration={
                         "LocationConstraint": s3_config["region_name"]
@@ -252,7 +249,7 @@ def run(
                 if os.path.exists(storage["upload_path"]):
                     if os.path.isdir(storage["upload_path"]):
                         uploaded = upload_directory_to_s3(
-                            s3.meta.client,
+                            s3_resource.meta.client,
                             storage["upload_path"],
                             s3["bucket_name"],
                             s3_prefix=s3["bucket_input_prefix"],
@@ -263,7 +260,7 @@ def run(
                             s3_path = os.path.join(s3["bucket_input_prefix"], s3_path)
                         # Upload
                         uploaded = upload_to_s3(
-                            s3.meta.client,
+                            s3_resource.meta.client,
                             storage["upload_path"],
                             s3_path,
                             s3["bucket_name"],
@@ -333,9 +330,8 @@ def run(
         job_spec_kwargs=job_spec,
     )
 
-    job_id = scheduler.submit(**task)
-    if not job_id:
-        exit(1)
+    job = scheduler.submit(**task)
+    return True, job
 
 
 def _required_get_result_arguments(job, storage, s3):
@@ -346,14 +342,18 @@ def _required_get_result_arguments(job, storage, s3):
     required_meta_fields = {"name": str}
     validate_dict_values(job["meta"], required_meta_fields, verbose=True, throw=True)
 
-    required_storage_fields = {"endpoint": str, "download_path": str}
+    required_storage_fields = {"endpoint": str}
     validate_dict_values(storage, required_storage_fields, verbose=True, throw=True)
     validate_dict_values(s3, required_s3_fields, verbose=True, throw=True)
 
 
-def get_results(job={}, storage={}, s3={}):
+def get_results(job={}, storage={}):
+    # TODO, temp fix
+    s3 = storage["s3"]
     _validate_fields(job=job, storage=storage, s3=s3)
     _required_get_result_arguments(job, storage, s3)
+
+    response = {"id": job["meta"]["name"]}
 
     # S3 storage
     # Look for s3 credentials and config files
@@ -373,9 +373,11 @@ def get_results(job={}, storage={}, s3={}):
 
     bucket = bucket_exists(s3_resource.meta.client, job["meta"]["name"])
     if not bucket:
-        raise RuntimeError(
-            "Could not find a bucket with the name: {}".format(job["meta"]["name"])
+        response["status"] = "failed"
+        response["msg"] = "Could not find a bucket with the name: {}".format(
+            job["meta"]["name"]
         )
+        return (False, response)
 
     expanded = expand_s3_bucket(
         s3_resource,
@@ -385,9 +387,15 @@ def get_results(job={}, storage={}, s3={}):
     )
 
     if not expanded:
-        raise RuntimeError(
-            "Failed to expand the target bucket: {}".format(job["meta"]["name"])
+        response["status"] = "failed"
+        response["msg"] = "Failed to expand the target bucket: {}".format(
+            job["meta"]["name"]
         )
+
+    response["status"] = "success"
+    response["path"] = storage["download_path"]
+    response["msg"] = "Downloaded results"
+    return (True, response)
 
 
 def _required_delete_result_arguments(job, storage, s3):
