@@ -292,7 +292,7 @@ def load_from_env_or_config(find_dict={}, prefix=None, throw=False):
         return False
     env_var = list_keys[0].upper()
 
-    value = load_from_env(env_var)
+    value = load_from_env(env_var, throw=throw)
     if value:
         return value
 
