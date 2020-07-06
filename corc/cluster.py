@@ -1,5 +1,3 @@
-from corc.defaults import OCI, CLUSTER, SUBNET, VCN, NODE
-from corc.cli.args import extract_arguments
 from corc.providers.oci.cluster import (
     list_clusters as oci_list_clusters,
     delete_cluster_stack as oci_delete_cluster_stack,
@@ -21,29 +19,23 @@ def list_clusters(provider_kwargs):
         )
 
 
-def start_cluster(provider_kwargs, cluster={}, node={}, vcn={}, subnet={}):
+def start_cluster(provider_kwargs, cluster={}, vcn={}):
     # Interpolate general arguments with config
     if provider_kwargs:
-        # Interpolate oci arguments with config
-        # Validate oci authentication
         # Node shape is special
-        if "shape" in node:
-            node["node_shape"] = node["shape"]
-            node.pop("shape")
+        if "shape" in cluster["node"]:
+            cluster["node"]["node_shape"] = cluster["node"]["shape"]
+            cluster["node"].pop("shape")
 
-        image_options = {}
-        if "image" in node:
-            image_name = node["image"]
-            image_options = dict(display_name=image_name)
-            node.pop("image")
-
-        node["image"] = image_options
+        # (Adapt) Split VCN and subnet
+        subnet = vcn.pop("subnet")
 
         cluster_options = dict(
-            oci=provider_kwargs, cluster=cluster, node=node, vcn=vcn, subnet=subnet,
+            oci=provider_kwargs, cluster=cluster, vcn=vcn, subnet=subnet,
         )
         OCIClusterOrchestrator.validate_options(cluster_options)
         orchestrator = OCIClusterOrchestrator(cluster_options)
+        # TODO, poll if the cluster already exists
         orchestrator.setup()
 
 

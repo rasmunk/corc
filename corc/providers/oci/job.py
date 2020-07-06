@@ -27,7 +27,6 @@ from corc.defaults import (
 )
 from corc.util import (
     validate_dict_fields,
-    validate_dict_types,
     validate_dict_values,
 )
 from corc.storage.s3 import (
@@ -37,7 +36,6 @@ from corc.storage.s3 import (
     list_objects,
     load_s3_config,
     required_s3_fields,
-    required_s3_values,
     upload_to_s3,
     upload_directory_to_s3,
 )
@@ -73,29 +71,41 @@ required_staging_values = {
 }
 
 
-def validate_arguments(provider_kwargs, cluster, job, storage, s3):
-    validate_dict_fields(
-        provider_kwargs["profile"], valid_profile_config, verbose=True, throw=True
-    )
+def _validate_fields(provider=None, cluster=None, job=None, storage=None, s3=None):
+    if provider:
+        validate_dict_fields(
+            provider["profile"], valid_profile_config, verbose=True, throw=True
+        )
+
+    if cluster:
+        validate_dict_fields(cluster, valid_cluster_config, verbose=True, throw=True)
+
+    if job:
+        validate_dict_fields(job, valid_job_config, verbose=True, throw=True)
+
+    if storage:
+        validate_dict_fields(storage, valid_storage_config, verbose=True, throw=True)
+
+    if s3:
+        validate_dict_fields(s3, valid_s3_config, verbose=True, throw=True)
+
+
+def _required_run_arguments(provider_kwargs, cluster, job, storage, s3):
     validate_dict_values(
         provider_kwargs["profile"], valid_profile_config, verbose=True, throw=True
     )
-
-    validate_dict_fields(cluster, valid_cluster_config, verbose=True, throw=True)
     validate_dict_values(cluster, required_run_cluster_fields, verbose=True, throw=True)
-
-    validate_dict_fields(job, valid_job_config, verbose=True, throw=True)
     validate_dict_values(job, required_run_job_fields, verbose=True, throw=True)
-
     # Storage and Staging are not required to execute a job, only if enabled
-    validate_dict_fields(storage, valid_storage_config, verbose=True, throw=True)
-    validate_dict_fields(s3, valid_s3_config, verbose=True, throw=True)
 
 
 def run(
     provider_kwargs, cluster={}, job={}, storage={}, s3={},
 ):
-    validate_arguments(provider_kwargs, cluster, job, storage, s3)
+    _validate_fields(
+        provider=provider_kwargs, cluster=cluster, job=job, storage=storage, s3=s3
+    )
+    _required_run_arguments(provider_kwargs, cluster, job, storage, s3)
 
     if "name" not in job["meta"] or not job["meta"]["name"]:
         since_epoch = int(time.time())
@@ -204,7 +214,7 @@ def run(
         volume_mounts.append(secret_mount)
 
         if s3:
-            validate_dict_values(s3, required_staging_values, throw=True)
+            validate_dict_values(s3, required_staging_values, verbose=True, throw=True)
             jobio_args.append("--storage-s3")
             # S3 storage
             # Look for s3 credentials and config files
@@ -328,20 +338,27 @@ def run(
         exit(1)
 
 
-def get_results(job={}, s3={}, storage={}):
-    validate_dict_types(s3, required_get_storage_fields, throw=True)
-    validate_dict_values(s3, required_get_storage_values, throw=True)
+def _required_get_result_arguments(job, storage, s3):
 
-    validate_dict_types(storage, required_s3_fields, throw=True)
-    validate_dict_values(storage, required_s3_values, throw=True)
+    required_job_fields = {"meta": dict}
+    validate_dict_values(job, required_job_fields, verbose=True, throw=True)
+
+    required_meta_fields = {"name": str}
+    validate_dict_values(job["meta"], required_meta_fields, verbose=True, throw=True)
+
+    required_storage_fields = {"endpoint": str, "download_path": str}
+    validate_dict_values(storage, required_storage_fields, verbose=True, throw=True)
+    validate_dict_values(s3, required_s3_fields, verbose=True, throw=True)
+
+
+def get_results(job={}, storage={}, s3={}):
+    _validate_fields(job=job, storage=storage, s3=s3)
+    _required_get_result_arguments(job, storage, s3)
 
     # S3 storage
     # Look for s3 credentials and config files
     s3_config = load_s3_config(
-        storage["config_file"],
-        storage["credentials_file"],
-        s3["endpoint"],
-        name=storage["name"],
+        s3["config_file"], s3["credentials_file"], storage["endpoint"], name=s3["name"],
     )
 
     # Download results from s3
@@ -354,35 +371,47 @@ def get_results(job={}, s3={}, storage={}):
         # Use all
         result_prefix = ""
 
-    bucket = bucket_exists(s3_resource.meta.client, job["name"])
+    bucket = bucket_exists(s3_resource.meta.client, job["meta"]["name"])
     if not bucket:
         raise RuntimeError(
-            "Could not find a bucket with the name: {}".format(job["name"])
+            "Could not find a bucket with the name: {}".format(job["meta"]["name"])
         )
 
     expanded = expand_s3_bucket(
-        s3_resource, job["name"], s3["download_path"], s3_prefix=result_prefix,
+        s3_resource,
+        job["meta"]["name"],
+        storage["download_path"],
+        s3_prefix=result_prefix,
     )
 
     if not expanded:
-        raise RuntimeError("Failed to expand the target bucket: {}".format(job["name"]))
+        raise RuntimeError(
+            "Failed to expand the target bucket: {}".format(job["meta"]["name"])
+        )
 
 
-def delete_results(job={}, s3={}, storage={}):
+def _required_delete_result_arguments(job, storage, s3):
 
-    validate_dict_types(s3, required_delete_storage_fields, throw=True)
-    validate_dict_values(s3, required_delete_storage_values, throw=True)
+    required_job_fields = {"meta": dict}
+    validate_dict_values(job, required_job_fields, verbose=True, throw=True)
 
-    validate_dict_types(storage, required_s3_fields, throw=True)
-    validate_dict_values(storage, required_s3_values, throw=True)
+    required_meta_fields = {"name": str}
+    validate_dict_values(job["meta"], required_meta_fields, verbose=True, throw=True)
 
+    required_storage_fields = {
+        "endpoint": str,
+    }
+    validate_dict_values(storage, required_storage_fields, verbose=True, throw=True)
+    validate_dict_values(s3, required_s3_fields, verbose=True, throw=True)
+
+
+def delete_results(job={}, storage={}, s3={}):
+    _validate_fields(job=job, storage=storage, s3=s3)
+    _required_delete_result_arguments(job, storage, s3)
     # S3 storage
     # Look for s3 credentials and config files
     s3_config = load_s3_config(
-        storage["config_file"],
-        storage["credentials_file"],
-        s3["endpoint"],
-        name=storage["name"],
+        s3["config_file"], s3["credentials_file"], storage["endpoint"], name=s3["name"],
     )
 
     # Download results from s3
@@ -395,49 +424,63 @@ def delete_results(job={}, s3={}, storage={}):
         # Use all
         result_prefix = ""
 
-    bucket = bucket_exists(s3_resource.meta.client, job["name"])
+    bucket = bucket_exists(s3_resource.meta.client, job["meta"]["name"])
     if not bucket:
         raise RuntimeError(
-            "Could not find a bucket with the name: {}".format(job["name"])
+            "Could not find a bucket with the name: {}".format(job["meta"]["name"])
         )
 
-    deleted = delete_objects(s3_resource, job["name"], s3_prefix=result_prefix)
+    deleted = delete_objects(s3_resource, job["meta"]["name"], s3_prefix=result_prefix)
 
     if "Errors" in deleted:
         for error in deleted["Errors"]:
             print("Failed to delete: {}".format(error))
 
     # If the bucket is empty, remove it as well
-    results = list_objects(s3_resource, job["name"])
+    results = list_objects(s3_resource, job["meta"]["name"])
 
     if not results:
-        if not delete_bucket(s3_resource.meta.client, job["name"]):
+        if not delete_bucket(s3_resource.meta.client, job["meta"]["name"]):
             return False
     return True
 
 
+def _required_list_results_arguments(job, storage, s3):
+    required_job_fields = {"meta": dict}
+    validate_dict_values(job, required_job_fields, verbose=True, throw=True)
+
+    required_meta_fields = {"name": str}
+    validate_dict_values(job["meta"], required_meta_fields, verbose=True, throw=True)
+
+    required_storage_fields = {
+        "endpoint": str,
+    }
+    validate_dict_values(storage, required_storage_fields, verbose=True, throw=True)
+    validate_dict_values(s3, required_s3_fields, verbose=True, throw=True)
+
+
 def list_results(
-    job={}, s3={}, storage={}, storage_extra_kwargs={},
+    job={}, storage={}, s3={}, storage_extra_kwargs={},
 ):
+    _validate_fields(job=job, storage=storage, s3=s3)
+    _required_list_results_arguments(job, storage, s3)
+
     # S3 storage
     # Look for s3 credentials and config files
     s3_config = load_s3_config(
-        storage["config_file"],
-        storage["credentials_file"],
-        s3["endpoint"],
-        name=storage["name"],
+        s3["config_file"], s3["credentials_file"], storage["endpoint"], name=s3["name"],
     )
 
     s3_resource = stage_s3_resource(**s3_config)
     response = {}
     results = []
-    if "name" in job and job["name"]:
-        bucket = bucket_exists(s3_resource.meta.client, job["name"])
+    if "name" in job["meta"] and job["meta"]["name"]:
+        bucket = bucket_exists(s3_resource.meta.client, job["meta"]["name"])
         if not bucket:
             raise RuntimeError(
-                "Could not find a bucket with the name: {}".format(job["name"])
+                "Could not find a bucket with the name: {}".format(job["meta"]["name"])
             )
-        results = list_objects(s3_resource, job["name"], **storage_extra_kwargs)
+        results = list_objects(s3_resource, job["meta"]["name"], **storage_extra_kwargs)
     else:
         response = s3_resource.meta.client.list_buckets()
         if "Buckets" in response:

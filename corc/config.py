@@ -322,7 +322,6 @@ def load_from_env(name, throw=False):
 
 
 def load_from_config(find_dict, prefix=None, config=None):
-
     if not find_dict or not config_exists():
         return {}
 

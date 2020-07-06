@@ -142,6 +142,11 @@ def validate_dict_values(input_dict, required_values=None, verbose=False, throw=
     return True
 
 
+def prepare_cls_kwargs(cls, **kwargs):
+    cls_kwargs = {k: v for k, v in kwargs.items() if hasattr(cls, k)}
+    return cls_kwargs
+
+
 def ping(host):
     """
     # https://stackoverflow.com/questions/2953462/pinging-servers-in-python

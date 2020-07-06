@@ -1,5 +1,3 @@
-from corc.cli.args import extract_arguments
-from corc.defaults import CLUSTER, PROFILE
 from corc.config import (
     config_exists,
     load_config,
@@ -10,15 +8,14 @@ from corc.config import (
 from corc.providers.oci.config import generate_oci_config, valid_oci_config
 
 
-def init_config(args):
-    oci_profile = vars(extract_arguments(args, [PROFILE]))
-    cluster_kwargs = vars(extract_arguments(args, [CLUSTER]))
-    oci_config_dict = {"oci": {"profile": oci_profile, "cluster": cluster_kwargs,}}
+def init_config(provider_kwargs, cluster={}, vcn={}):
+    oci_config_dict = {"oci": {"cluster": cluster}}
+    oci_config_dict["oci"].update(provider_kwargs)
 
     # Expects that the default corc config is present
     oci_config = generate_oci_config(**oci_config_dict)
 
-    if not valid_oci_config(oci_config):
+    if not valid_oci_config(oci_config, verbose=True):
         raise ValueError("The generated oci config is invalid")
 
     # If no config exists -> create it

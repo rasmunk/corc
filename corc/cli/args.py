@@ -6,10 +6,8 @@ from corc.defaults import (
     CONFIG,
     COMPUTE,
     JOB,
-    NODE,
     OCI,
     STORAGE,
-    SUBNET,
     S3,
     VCN,
 )
@@ -18,9 +16,7 @@ from corc.cli.parsers.cluster.cluster import valid_cluster_group
 from corc.cli.parsers.config.config import valid_config_group
 from corc.cli.parsers.instance.instance import valid_compute_group
 from corc.cli.parsers.job.job import valid_job_group
-from corc.cli.parsers.network.subnet import valid_subnet_group
 from corc.cli.parsers.network.vcn import valid_vcn_group
-from corc.cli.parsers.cluster.node import valid_node_group
 from corc.cli.parsers.providers.oci import valid_oci_group
 from corc.cli.parsers.storage.storage import valid_storage_group
 from corc.cli.parsers.storage.s3 import valid_s3_group
@@ -40,10 +36,8 @@ argument_groups = {
     COMPUTE: valid_compute_group,
     CONFIG: valid_config_group,
     JOB: valid_job_group,
-    NODE: valid_node_group,
     OCI: valid_oci_group,
     STORAGE: valid_storage_group,
-    SUBNET: valid_subnet_group,
     S3: valid_s3_group,
     VCN: valid_vcn_group,
 }

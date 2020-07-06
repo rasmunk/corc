@@ -20,7 +20,10 @@ def cli_exec(args):
     module_path = args.module_path
     module_name = args.module_name
     func_name = args.func_name
-    argument_groups = args.argument_groups
+    if hasattr(args, "argument_groups"):
+        argument_groups = args.argument_groups
+    else:
+        argument_groups = []
     if hasattr(args, "provider_groups"):
         provider_groups = args.provider_groups
     else:
@@ -44,7 +47,7 @@ def cli_exec(args):
     # Load config and fill in missing values
     action_kwargs = load_missing_action_kwargs(kwargs_configuration)
 
-    if provider:
+    if provider and provider_kwargs:
         return func(provider_kwargs, **action_kwargs)
     return func(**action_kwargs)
 

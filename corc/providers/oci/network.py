@@ -9,7 +9,7 @@ from oci.core.models import LocalPeeringGateway
 from oci.core.models import NatGateway
 from oci.core.models import ServiceGateway
 from oci.core.models import Subnet, CreateSubnetDetails
-from corc.cli.args import get_arguments, OCI, SUBNET, VCN
+from corc.cli.args import get_arguments, OCI, VCN
 from corc.providers.oci.helpers import (
     new_client,
     prepare_route_rule,
@@ -144,10 +144,12 @@ def refresh_vcn_stack(
     if "cidr_block" not in subnet_kwargs:
         subnet_kwargs.update(dict(cidr_block="10.0.1.0/24"))
 
+    # Only accept valid kwargs
+
     stack = dict(id=None, vcn=None, internet_gateways=[], subnets=[])
 
     vcn = None
-    if "id" in vcn_kwargs:
+    if "id" in vcn_kwargs and vcn_kwargs["id"]:
         vcn = get(network_client, "get_vcn", vcn_kwargs["id"])
     elif "display_name" in vcn_kwargs:
         vcn = get_vcn_by_name(
@@ -527,7 +529,6 @@ def get_subnet_by_name(network_client, compartment_id, vcn_id, display_name, **k
 
 if __name__ == "__main__":
     vcn_args = get_arguments([VCN], strip_group_prefix=True)
-    subnet_args = get_arguments([SUBNET], strip_group_prefix=True)
     args = get_arguments([OCI], strip_group_prefix=True)
     network_client = new_client(
         VirtualNetworkClient,
