@@ -33,14 +33,14 @@ jobs:
     script: *1
   - stage: config_tests
     python: '3.6'
-    script: &1
+    script: &2
     - travis_wait pytest -s -v tests/test_config.py
   - stage: config_tests
     python: '3.7'
-    script: *1
+    script: *2
   - stage: config_tests
     python: '3.8'
-    script: *1
+    script: *2
   - stage: cluster_tests
     python: '3.6'
     script:
@@ -57,26 +57,26 @@ jobs:
     script: travis_wait pytest -s -v tests/test_instance_orchestrator.py
   - stage: instance_configurer_tests
     python: '3.6'
-    before_script: &2
+    before_script: &3
     - mkdir $TRAVIS_BUILD_DIR/.ssh/
     - ssh-keygen -t rsa -b 4096 -N "" -f $TRAVIS_BUILD_DIR/.ssh/oci_id_rsa
     env:
-      - OCI_INSTANCE_SSH_KEY=$TRAVIS_BUILD_DIR/.ssh/oci_id_rsa
-      - ANSIBLE_HOST_KEY_CHECKING=False
+    - OCI_INSTANCE_SSH_KEY=$TRAVIS_BUILD_DIR/.ssh/oci_id_rsa
+    - ANSIBLE_HOST_KEY_CHECKING=False
     script: travis_wait pytest -s -v tests/test_instance_configurer.py
   - stage: instance_configurer_tests
     python: '3.7'
-    before_script: *2
+    before_script: *3
     env:
-      - OCI_INSTANCE_SSH_KEY=$TRAVIS_BUILD_DIR/.ssh/oci_id_rsa
-      - ANSIBLE_HOST_KEY_CHECKING=False
+    - OCI_INSTANCE_SSH_KEY=$TRAVIS_BUILD_DIR/.ssh/oci_id_rsa
+    - ANSIBLE_HOST_KEY_CHECKING=False
     script: travis_wait pytest -s -v tests/test_instance_configurer.py
   - stage: instance_configurer_tests
     python: '3.8'
-    before_script: *2
+    before_script: *3
     env:
-      - OCI_INSTANCE_SSH_KEY=$TRAVIS_BUILD_DIR/.ssh/oci_id_rsa
-      - ANSIBLE_HOST_KEY_CHECKING=False
+    - OCI_INSTANCE_SSH_KEY=$TRAVIS_BUILD_DIR/.ssh/oci_id_rsa
+    - ANSIBLE_HOST_KEY_CHECKING=False
     script: travis_wait pytest -s -v tests/test_instance_configurer.py
   - stage: vcn_tests
     python: '3.6'
@@ -89,9 +89,9 @@ jobs:
     script: travis_wait pytest -s -v tests/test_vcn_*.py
   - stage: deploy
     python: '3.6'
-    script: &3
-      - python setup.py sdist bdist_wheel
-    deploy: &4
+    script: &4
+    - python setup.py sdist bdist_wheel
+    deploy: &5
       skip_cleanup: true
       skip_existing: true
       distributions: sdist bdist_wheel
@@ -104,16 +104,16 @@ jobs:
         branch: master
   - stage: deploy
     python: '3.7'
-    script: *3
-    deploy: *4
+    script: *4
+    deploy: *5
   - stage: deploy
     python: '3.8'
-    script: *3
-    deploy: *4
+    script: *4
+    deploy: *5
 env:
   global:
   - OCI_TEST_ID="$TRAVIS_JOB_ID-$TRAVIS_JOB_NUMBER"
   - OCI_CONFIG_DIR="$TRAVIS_BUILD_DIR/.oci"
   - OCI_CONFIG_PATH="$OCI_CONFIG_DIR/config"
   - OCI_KEY_FILE="$OCI_CONFIG_DIR/test_api_info"
-  - secure: Pck6ytGvxHS/UZK7oXw9kPDoouH8MB5uy5QoB0bb3BWGeUiLsWyMPqpVbkib0ZCduXVHzgbuHaWwiUnY8plf7yZ+KSJzD57Xp4oMrfSOyqCvhQUY2U+hMu8jAupcxlSgCS7EbPF5vsuyUWWyIHvCwAtoRzHc1RBek4GsIn+esbicUkftnyyDNIW48FrG+PoyDDNOHnWXMr9Sa031MZljQIoLbsuoyifNoURiKi3Hx6pymwwdRvVVGiCXzUNctnLJDpIhdImu44vdjKppAbib1cqhMyBX/JFpzpS8qPN7DpmjfmuNzuqKtOdk7Fp6oNNu7Q76299Bq0/7MwF1yNwcdU4VctYeQPKKVTF7NgkE4yKHBhS1TmblbSZ/eImDQ1qaEQk2ll/iZKblIoUwTaZbuVgVlR2EaIexdiYTwO/JveLq126KlgvJRyoLPIgADTCsO5X9fb5Cib5SEXyg3APVtqvR0CdsCgLvLQSmocNxI0c3GsxxLmUmjfrRQsbAUJd4jVisqsIOiPbifB1IbfZLW1muWpYR1QF/MAis7Ak3aHSZw8gHiQ4ycBFjyTtn02z4D3YQ43SNdDEm4UKU35/DATjw+QgDPUeSsXne6xaM6TR8ZWmrJIq34md0e+YYtkkD/1qEl0nzkl9eV/swRQF5BZr5gkfiqs3px/VzaEbFsTo=
+  - secure: p5Yjduuxz8eIGQXYzMHQB2ftU5YsbGrhJat37mt6XwfplNnKTyQlRmTkban98gASqhIMDDvPr65KKsUwzjUdRAmZE9zHY1pu/5EUENzWPK/d2TlQTsSuNYIDnGN/Fx/BkBI0/3ec8f9jkjwaW+FvewavWkB1yQrdvreYAS/gEaC6soD8U1Y3TCxxsmgNpehL7fJh9NR2xeSEDeFDasJiDdkso5Von2oZDwFvJDzKnyUN/dmtpn+sQNj7ebkBU6FAa5HPGacWFtM3U/d1ncDCiVfHOHBlSmDlPYhWtDLQ8+ciuX+0D7RnH5n8efQc6Aivk4dCR4yaDTBnBI2DiBOeyDIhx+42pF19kWqyLjdqBiEOG/trwg01pNYF3A+P1eGtVrxLLQffraqjygFaZhfYOkbGSciuvnBqVs+uiLPJ563jJO3TAfIeWWl5cVnqJ8fMGARvohqMykXwSFQznQb44iL//yUbdlAhkhAEnjT/M16WmbbP9EUkVnDLMPUGJ1DIgPS843lRGABRFkWPxOVyMbLXbGn+TNuiRr2+duNJLkTg7hB3sokmUdCtCGk/8koIFKVbylmfyHrZOJOf10sxyK8dVkJ3TL1QoJr41wYUVKiFWLLgOmttTPSpqK8YUglkGDbKyoC4ALmmbeak9N2PqYoZF7lWtV5BG89tmGLpEYA=
