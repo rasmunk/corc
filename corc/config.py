@@ -290,9 +290,15 @@ def load_from_env_or_config(find_dict={}, prefix=None, throw=False):
     list_keys = list(dict_keys.keys())
     if len(list_keys) > 1:
         return False
-    env_var = list_keys[0].upper()
 
-    value = load_from_env(env_var, throw=throw)
+    prefix_string = "_".join(prefix).upper()
+    env_var = "{}_{}".format(prefix_string, list_keys[0].upper())
+    env_error = None
+    try:
+        value = load_from_env(env_var, throw=throw)
+    except ValueError as value_error:
+        env_error = value_error
+
     if value:
         return value
 
@@ -305,10 +311,13 @@ def load_from_env_or_config(find_dict={}, prefix=None, throw=False):
             if flat_values and len(flat_values) == 1:
                 value = flat_values[0]
 
-    if throw and not value:
-        raise ValueError(
-            "Failed to find var: {} in either environment or config".format(prefix)
-        )
+    if throw:
+        if env_error and not value:
+            raise ValueError(
+                "Failed to find var: {} in either environment or config, env_error: {}".format(
+                    prefix, env_error
+                )
+            )
 
     return value
 
