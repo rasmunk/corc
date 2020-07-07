@@ -104,6 +104,7 @@ def run(provider_kwargs, cluster={}, job={}, storage={}):
     )
     _required_run_arguments(provider_kwargs, cluster, job, storage, s3)
 
+    response = {"job": {}}
     if "name" not in job["meta"] or not job["meta"]["name"]:
         since_epoch = int(time.time())
         job["meta"]["name"] = "{}-{}".format(JOB_DEFAULT_NAME, since_epoch)
@@ -124,14 +125,17 @@ def run(provider_kwargs, cluster={}, job={}, storage={}):
     )
 
     if not compute_cluster:
-        print("Failed to find a cluster with name: {}".format(cluster["name"]))
-        return False
+        response["msg"] = "Failed to find a cluster with name: {}".format(
+            cluster["name"]
+        )
+        return False, response
 
     refreshed = refresh_kube_config(
         compute_cluster.id, name=provider_kwargs["profile"]["name"]
     )
     if not refreshed:
-        exit(1)
+        response["msg"] = "Failed to refresh the kubernetes config"
+        return False, response
 
     node_manager = NodeManager()
     node_manager.discover()
@@ -267,11 +271,12 @@ def run(provider_kwargs, cluster={}, job={}, storage={}):
                         )
 
                 if not uploaded:
-                    raise RuntimeError(
-                        "Failed to local path: {} in the upload folder to s3".format(
-                            storage["upload_path"]
-                        )
+                    response[
+                        "msg"
+                    ] = "Failed to local path: {} in the upload folder to s3".format(
+                        storage["upload_path"]
                     )
+                    return False, response
 
             jobio_args.extend(
                 [
@@ -306,7 +311,8 @@ def run(provider_kwargs, cluster={}, job={}, storage={}):
     if scheduler_config:
         prepared = scheduler.prepare(**scheduler_config)
         if not prepared:
-            raise RuntimeError("Failed to prepare the scheduler")
+            response["msg"] = "Failed to prepare the scheduler"
+            return False, response
 
     container_spec = dict(
         name=job["meta"]["name"],
@@ -331,7 +337,26 @@ def run(provider_kwargs, cluster={}, job={}, storage={}):
     )
 
     job = scheduler.submit(**task)
-    return True, job
+    if not job:
+        response["msg"] = "Failed to submit the job"
+        return False, response
+
+    response["job"] = job
+    response["msg"] = "Job submitted"
+    return True, response
+
+
+def list_jobs():
+    response = {}
+    # Ensure we have the newest config
+    scheduler = KubenetesScheduler()
+    jobs = scheduler.list_scheduled()
+    if not jobs:
+        response["msg"] = "Failed to retrieve scheduled jobs"
+        return False, response
+
+    response["jobs"] = jobs
+    return True, response
 
 
 def _required_get_result_arguments(job, storage, s3):

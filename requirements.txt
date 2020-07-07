@@ -1,8 +1,8 @@
-oci
 oci-cli
-ansible
+oci
+ansible==2.9.10
 kubernetes
-PyYAML
+PyYAML==5.1.2
 boto3
 jobio
 flatten_dict

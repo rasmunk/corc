@@ -8,5 +8,8 @@ class Scheduler:
     def submit(self, task):
         raise NotImplementedError
 
+    def list_scheduled(self):
+        raise NotImplementedError
+
     def retrieve(self, job_id):
         raise NotImplementedError

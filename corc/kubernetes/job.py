@@ -44,6 +44,12 @@ def create_job(api_instance, job):
     return api_response
 
 
+# TODO, encode response so that datetime objects are converted to JSON formatable
+def list_job(api_instance):
+    api_response = api_instance.list_job_for_all_namespaces().to_dict()
+    return api_response
+
+
 # def update_job(api_instance, job):
 #     # Update container image
 #     job.spec.template.spec.containers[0].image = "perl"

@@ -1,7 +1,7 @@
 from kubernetes import client
 from corc.scheduler import Scheduler
 from corc.kubernetes.config import load_kube_config
-from corc.kubernetes.job import create_job, prepare_job
+from corc.kubernetes.job import create_job, prepare_job, list_job
 from corc.kubernetes.storage import (
     prepare_volume,
     prepare_secret,
@@ -56,13 +56,16 @@ class KubenetesScheduler(Scheduler):
         if not job_created:
             return False
 
-        job = {"job": {}}
+        job = {}
         if hasattr(job_created, "metadata") and hasattr(
             job_created.metadata, "generate_name"
         ):
-            job["job"]["id"] = job_created.metadata.generate_name
+            job["id"] = job_created.metadata.generate_name
 
         return job
+
+    def list_scheduled(self):
+        return list_job(self.batch_client)
 
     def retrieve(self, job_id):
         return self.jobs[job_id]

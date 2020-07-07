@@ -109,6 +109,12 @@ def job_cli(parser):
     list_parser = job_commands.add_parser("list")
     job_meta_group(list_parser)
     cluster_identity_group(list_parser)
+    list_parser.set_defaults(
+        func=cli_exec,
+        module_path="corc.providers.{provider}.job",
+        module_name="job",
+        func_name="list_jobs",
+    )
 
     result_parser = job_commands.add_parser("result")
     result_commands = result_parser.add_subparsers(title="COMMAND")
