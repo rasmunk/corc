@@ -1,4 +1,5 @@
 import argparse
+import datetime
 import json
 from corc.defaults import PACKAGE_NAME, AWS_LOWER, OCI_LOWER, PROFILE
 from corc.defaults import (
@@ -45,6 +46,11 @@ from corc.cli.helpers import cli_exec
 from corc.util import eprint
 
 
+def to_str(o):
+    if isinstance(o, datetime.datetime):
+        return o.__str__()
+
+
 def run():
     parser = argparse.ArgumentParser(prog=PACKAGE_NAME)
     commands = parser.add_subparsers(title="COMMAND")
@@ -76,7 +82,7 @@ def run():
             response["status"] = "failed"
 
         try:
-            output = json.dumps(response, indent=4, sort_keys=True)
+            output = json.dumps(response, indent=4, sort_keys=True, default=to_str)
         except Exception as err:
             eprint("Failed to format: {}, err: {}".format(output, err))
         if success:
