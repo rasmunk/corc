@@ -410,7 +410,8 @@ def _required_delete_result_arguments(job, storage, s3):
     validate_dict_values(s3, required_s3_fields, verbose=True, throw=True)
 
 
-def delete_results(job={}, storage={}, s3={}):
+def delete_results(job={}, storage={}):
+    s3 = storage["s3"]
     _validate_fields(job=job, storage=storage, s3=s3)
     _required_delete_result_arguments(job, storage, s3)
 
@@ -468,9 +469,8 @@ def _required_list_results_arguments(job, storage, s3):
     validate_dict_values(s3, required_s3_fields, verbose=True, throw=True)
 
 
-def list_results(
-    job={}, storage={}, s3={}, storage_extra_kwargs={},
-):
+def list_results(job={}, storage={}):
+    s3 = storage["s3"]
     _validate_fields(job=job, storage=storage, s3=s3)
     _required_list_results_arguments(job, storage, s3)
 
@@ -490,7 +490,7 @@ def list_results(
                 job["meta"]["name"]
             )
             return False, response
-        results = list_objects(s3_resource, job["meta"]["name"], **storage_extra_kwargs)
+        results = list_objects(s3_resource, job["meta"]["name"])
     else:
         response = s3_resource.meta.client.list_buckets()
         if "Buckets" in response:

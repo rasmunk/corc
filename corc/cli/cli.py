@@ -76,7 +76,7 @@ def run():
             response["status"] = "failed"
 
         try:
-            output = json.dumps(response)
+            output = json.dumps(response, indent=4, sort_keys=True)
         except Exception as err:
             eprint("Failed to format: {}, err: {}".format(output, err))
         if success:

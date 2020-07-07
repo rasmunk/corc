@@ -1,3 +1,4 @@
+from oci.util import to_dict
 from corc.providers.oci.cluster import (
     list_clusters as oci_list_clusters,
     delete_cluster_stack as oci_delete_cluster_stack,
@@ -18,7 +19,7 @@ def list_clusters(provider_kwargs):
         clusters = oci_list_clusters(
             container_engine_client, provider_kwargs["profile"]["compartment_id"]
         )
-        response["clusters"] = clusters
+        response["clusters"] = to_dict(clusters)
         return True, response
     return False, response
 

@@ -1,4 +1,4 @@
-from corc.cli.parser import ParseKwargs
+# from corc.cli.parser import ParseKwargs
 
 
 def valid_s3_group(parser):
@@ -34,5 +34,8 @@ def list_s3_group(parser):
 
 
 def s3_extra(parser):
-    s3_extra = parser.add_argument_group(title="S3 Extra arguments")
-    s3_extra.add_argument("--storage-s3-extra-kwargs", nargs="*", action=ParseKwargs)
+    pass
+
+
+#    s3_extra = parser.add_argument_group(title="S3 Extra arguments")
+#    s3_extra.add_argument("--storage-s3-extra-kwargs", nargs="*", action=ParseKwargs)
