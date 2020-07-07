@@ -156,8 +156,6 @@ def config_cli(parser):
     # AWS
     aws_parser = config_commands.add_parser(AWS_LOWER)
     add_aws_group(aws_parser)
-    # aws_commands = aws_parser.add_subparsers(title="COMMAND")
-    # aws_init_parser = aws_commands.add_parser("init")
 
     # OCI
     oci_parser = config_commands.add_parser(OCI_LOWER)

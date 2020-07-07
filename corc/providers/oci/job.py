@@ -416,6 +416,8 @@ def _required_delete_result_arguments(job, storage, s3):
 def delete_results(job={}, storage={}, s3={}):
     _validate_fields(job=job, storage=storage, s3=s3)
     _required_delete_result_arguments(job, storage, s3)
+
+    response = {"id": job["meta"]["name"]}
     # S3 storage
     # Look for s3 credentials and config files
     s3_config = load_s3_config(
@@ -424,7 +426,6 @@ def delete_results(job={}, storage={}, s3={}):
 
     # Download results from s3
     s3_resource = stage_s3_resource(**s3_config)
-
     # Whether to expand all or a single result
     if "result_prefix" in job and job["result_prefix"]:
         result_prefix = job["result_prefix"]
@@ -434,8 +435,9 @@ def delete_results(job={}, storage={}, s3={}):
 
     bucket = bucket_exists(s3_resource.meta.client, job["meta"]["name"])
     if not bucket:
-        raise RuntimeError(
-            "Could not find a bucket with the name: {}".format(job["meta"]["name"])
+        response["status"] = "failed"
+        response["msg"] = "Could not find a bucket with the name: {}".format(
+            job["meta"]["name"]
         )
 
     deleted = delete_objects(s3_resource, job["meta"]["name"], s3_prefix=result_prefix)
@@ -449,8 +451,13 @@ def delete_results(job={}, storage={}, s3={}):
 
     if not results:
         if not delete_bucket(s3_resource.meta.client, job["meta"]["name"]):
-            return False
-    return True
+            response["status"] = "failed"
+            response["msg"] = "Failed to delete: {}".format(job["meta"]["name"])
+            return False, response
+
+    response["status"] = "success"
+    response["msg"] = "Deleted {}".format(job["meta"]["name"])
+    return True, response
 
 
 def _required_list_results_arguments(job, storage, s3):
@@ -480,17 +487,22 @@ def list_results(
     )
 
     s3_resource = stage_s3_resource(**s3_config)
-    response = {}
+    response = {"id": job["meta"]["name"]}
     results = []
     if "name" in job["meta"] and job["meta"]["name"]:
         bucket = bucket_exists(s3_resource.meta.client, job["meta"]["name"])
         if not bucket:
-            raise RuntimeError(
-                "Could not find a bucket with the name: {}".format(job["meta"]["name"])
+            response["status"] = "failed"
+            response["msg"] = "Could not find a bucket with the name: {}".format(
+                job["meta"]["name"]
             )
+            return False, response
         results = list_objects(s3_resource, job["meta"]["name"], **storage_extra_kwargs)
     else:
         response = s3_resource.meta.client.list_buckets()
         if "Buckets" in response:
             results = response["Buckets"]
-    return results
+
+    response["status"] = "success"
+    response["results"] = results
+    return True, response
