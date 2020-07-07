@@ -39,8 +39,10 @@ def prepare_job(container_kwargs=None, pod_spec_kwargs=None, job_spec_kwargs=Non
     return job
 
 
-def create_job(api_instance, job):
-    api_response = api_instance.create_namespaced_job(body=job, namespace="default")
+def create_job(api_instance, job, namespace="default"):
+    api_response = api_instance.create_namespaced_job(
+        body=job, namespace=namespace
+    ).to_dict()
     return api_response
 
 

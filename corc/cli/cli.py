@@ -121,7 +121,7 @@ def job_cli(parser):
         module_name="job",
         func_name="delete_job",
         provider_groups=[PROFILE],
-        argument_groups=[CLUSTER, JOB_META, JOB]
+        argument_groups=[CLUSTER, JOB_META, JOB],
     )
 
     list_parser = job_commands.add_parser("list")

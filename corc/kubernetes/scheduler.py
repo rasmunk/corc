@@ -1,7 +1,15 @@
 from kubernetes import client
+from kubernetes.client.models import V1DeleteOptions
 from corc.scheduler import Scheduler
 from corc.kubernetes.config import load_kube_config
-from corc.kubernetes.job import create_job, prepare_job, list_job
+from corc.kubernetes.crud import delete
+from corc.kubernetes.job import (
+    create_job,
+    prepare_job,
+    list_job,
+    remove_job,
+    prepare_job_delete,
+)
 from corc.kubernetes.storage import (
     prepare_volume,
     prepare_secret,
@@ -69,3 +77,8 @@ class KubenetesScheduler(Scheduler):
 
     def retrieve(self, job_id):
         return self.jobs[job_id]
+
+    def remove(self, job_id):
+        func = self.batch_client.delete_namespace_job
+        delete_options = V1DeleteOptions()
+        return delete(func, job_id, delete_options)

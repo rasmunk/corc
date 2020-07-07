@@ -347,7 +347,7 @@ def run(provider_kwargs, cluster={}, job={}, storage={}):
 
 
 def delete_job(provider_kwargs, cluster={}, job={}):
-
+    # TODO, validate that either id or all are in the job argument
     _validate_fields(provider=provider_kwargs, job=job, cluster=cluster)
 
     response = {}
@@ -379,10 +379,16 @@ def delete_job(provider_kwargs, cluster={}, job={}):
 
     scheduler = KubenetesScheduler()
     scheduler.retrieve()
+
+    if job_id:
+        scheduler.remove(job_id)
+
     jobs = scheduler.list_scheduled()
     if not jobs:
         response["msg"] = "Failed to retrieve scheduled jobs"
         return False, response
+
+    scheduler.remove(job_id)
 
     response["jobs"] = jobs
     return True, response

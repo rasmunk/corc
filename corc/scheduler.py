@@ -13,3 +13,6 @@ class Scheduler:
 
     def retrieve(self, job_id):
         raise NotImplementedError
+
+    def remove(self, job_id):
+        raise NotImplementedError
