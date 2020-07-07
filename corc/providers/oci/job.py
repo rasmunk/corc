@@ -373,7 +373,6 @@ def get_results(job={}, storage={}):
 
     bucket = bucket_exists(s3_resource.meta.client, job["meta"]["name"])
     if not bucket:
-        response["status"] = "failed"
         response["msg"] = "Could not find a bucket with the name: {}".format(
             job["meta"]["name"]
         )
@@ -387,12 +386,10 @@ def get_results(job={}, storage={}):
     )
 
     if not expanded:
-        response["status"] = "failed"
         response["msg"] = "Failed to expand the target bucket: {}".format(
             job["meta"]["name"]
         )
 
-    response["status"] = "success"
     response["path"] = storage["download_path"]
     response["msg"] = "Downloaded results"
     return (True, response)
@@ -435,7 +432,6 @@ def delete_results(job={}, storage={}, s3={}):
 
     bucket = bucket_exists(s3_resource.meta.client, job["meta"]["name"])
     if not bucket:
-        response["status"] = "failed"
         response["msg"] = "Could not find a bucket with the name: {}".format(
             job["meta"]["name"]
         )
@@ -451,11 +447,9 @@ def delete_results(job={}, storage={}, s3={}):
 
     if not results:
         if not delete_bucket(s3_resource.meta.client, job["meta"]["name"]):
-            response["status"] = "failed"
             response["msg"] = "Failed to delete: {}".format(job["meta"]["name"])
             return False, response
 
-    response["status"] = "success"
     response["msg"] = "Deleted {}".format(job["meta"]["name"])
     return True, response
 
@@ -492,7 +486,6 @@ def list_results(
     if "name" in job["meta"] and job["meta"]["name"]:
         bucket = bucket_exists(s3_resource.meta.client, job["meta"]["name"])
         if not bucket:
-            response["status"] = "failed"
             response["msg"] = "Could not find a bucket with the name: {}".format(
                 job["meta"]["name"]
             )
@@ -503,6 +496,5 @@ def list_results(
         if "Buckets" in response:
             results = response["Buckets"]
 
-    response["status"] = "success"
     response["results"] = results
     return True, response

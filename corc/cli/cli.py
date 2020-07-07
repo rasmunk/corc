@@ -70,11 +70,15 @@ def run():
     if hasattr(args, "func"):
         success, response = args.func(args)
         output = ""
+        if success:
+            response["status"] = "success"
+        else:
+            response["status"] = "failed"
+
         try:
             output = json.dumps(response)
         except Exception as err:
             eprint("Failed to format: {}, err: {}".format(output, err))
-
         if success:
             print(output)
         else:

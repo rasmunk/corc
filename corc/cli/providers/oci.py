@@ -14,9 +14,10 @@ def init_config(provider_kwargs, cluster={}, vcn={}):
 
     # Expects that the default corc config is present
     oci_config = generate_oci_config(**oci_config_dict)
-
+    response = {}
     if not valid_oci_config(oci_config, verbose=True):
-        raise ValueError("The generated oci config is invalid")
+        response["msg"] = "The generated oci config is invalid"
+        return False, response
 
     # If no config exists -> create it
     config = {}
@@ -27,13 +28,19 @@ def init_config(provider_kwargs, cluster={}, vcn={}):
         config = load_config()
 
     if not config_exists():
-        raise RuntimeError("Failed to find a config")
+        response["msg"] = "Failed to find a config"
+        return False, response
 
     # Update with user arguments
     config["corc"]["providers"].update(oci_config)
 
     if not save_config(config):
-        raise RuntimeError("Failed to save new config")
+        response["msg"] = "Failed to save new config"
+        return False, response
 
     if not valid_config(config, verbose=True):
-        raise ValueError("The generated config is invalid")
+        response["msg"] = "The generated config is invalid"
+        return False, response
+
+    response["msg"] = "Generated a new configuration"
+    return True, response

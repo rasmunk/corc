@@ -18,11 +18,8 @@ def list_clusters(provider_kwargs):
         clusters = oci_list_clusters(
             container_engine_client, provider_kwargs["profile"]["compartment_id"]
         )
-        response["status"] = "success"
         response["clusters"] = clusters
         return True, response
-    else:
-        response["status"] = "failed"
     return False, response
 
 
@@ -47,16 +44,13 @@ def start_cluster(provider_kwargs, cluster={}, vcn={}):
         orchestrator.setup()
         orchestrator.poll()
         if not orchestrator.is_ready():
-            response["status"] = "failed"
             response["msg"] = "The cluster is not ready"
             return False, response
 
         if not orchestrator.is_reachable():
-            response["status"] = "failed"
             response["msg"] = "The cluster is ready but not reachable"
             return False, response
 
-        response["status"] = "success"
         return True, response
     return False, response
 
@@ -66,7 +60,6 @@ def stop_cluster(provider_kwargs, cluster={}):
     if provider_kwargs:
         # Discover the vcn_stack for the cluster
         if not cluster["id"] and not cluster["name"]:
-            response["status"] = "failed"
             response["msg"] = "Either the id or name of the cluster must be provided"
             return False, response
 
@@ -86,11 +79,8 @@ def stop_cluster(provider_kwargs, cluster={}):
         response["id"] = cluster_id
         deleted = oci_delete_cluster_stack(container_engine_client, cluster_id)
         if not deleted:
-            response["status"] = "failed"
             response["msg"] = "Failed to delete cluster"
             return False, response
-
-        response["status"] = "success"
         return True, response
 
 
