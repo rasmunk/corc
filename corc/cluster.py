@@ -10,17 +10,25 @@ from corc.providers.oci.cluster import (
 
 
 def list_clusters(provider_kwargs):
+    response = {}
     if provider_kwargs:
         container_engine_client = new_cluster_engine_client(
             name=provider_kwargs["profile"]["name"]
         )
-        return oci_list_clusters(
+        clusters = oci_list_clusters(
             container_engine_client, provider_kwargs["profile"]["compartment_id"]
         )
+        response["status"] = "success"
+        response["clusters"] = clusters
+        return True, response
+    else:
+        response["status"] = "failed"
+    return False, response
 
 
 def start_cluster(provider_kwargs, cluster={}, vcn={}):
     # Interpolate general arguments with config
+    response = {}
     if provider_kwargs:
         # Node shape is special
         if "shape" in cluster["node"]:
@@ -37,13 +45,30 @@ def start_cluster(provider_kwargs, cluster={}, vcn={}):
         orchestrator = OCIClusterOrchestrator(cluster_options)
         # TODO, poll if the cluster already exists
         orchestrator.setup()
+        orchestrator.poll()
+        if not orchestrator.is_ready():
+            response["status"] = "failed"
+            response["msg"] = "The cluster is not ready"
+            return False, response
+
+        if not orchestrator.is_reachable():
+            response["status"] = "failed"
+            response["msg"] = "The cluster is ready but not reachable"
+            return False, response
+
+        response["status"] = "success"
+        return True, response
+    return False, response
 
 
 def stop_cluster(provider_kwargs, cluster={}):
+    response = {}
     if provider_kwargs:
         # Discover the vcn_stack for the cluster
         if not cluster["id"] and not cluster["name"]:
-            raise ValueError("Either the id or name of the cluster must" "be provided")
+            response["status"] = "failed"
+            response["msg"] = "Either the id or name of the cluster must be provided"
+            return False, response
 
         container_engine_client = new_cluster_engine_client(
             name=provider_kwargs["profile"]["name"]
@@ -58,7 +83,15 @@ def stop_cluster(provider_kwargs, cluster={}):
             )
             cluster_id = cluster_object.id
 
-        return oci_delete_cluster_stack(container_engine_client, cluster_id)
+        response["id"] = cluster_id
+        deleted = oci_delete_cluster_stack(container_engine_client, cluster_id)
+        if not deleted:
+            response["status"] = "failed"
+            response["msg"] = "Failed to delete cluster"
+            return False, response
+
+        response["status"] = "success"
+        return True, response
 
 
 def update_cluster(provier_kwargs):
