@@ -346,7 +346,49 @@ def run(provider_kwargs, cluster={}, job={}, storage={}):
     return True, response
 
 
-def list_jobs():
+def delete_job(provider_kwargs, cluster={}, job={}):
+
+    _validate_fields(provider=provider_kwargs, job=job, cluster=cluster)
+
+    response = {}
+    # Ensure we have the newest config
+    container_engine_client = new_client(
+        ContainerEngineClient,
+        composite_class=ContainerEngineClientCompositeOperations,
+        name=provider_kwargs["profile"]["name"],
+    )
+
+    compute_cluster = get_cluster_by_name(
+        container_engine_client,
+        provider_kwargs["profile"]["compartment_id"],
+        name=cluster["name"],
+    )
+
+    if not compute_cluster:
+        response["msg"] = "Failed to find a cluster with name: {}".format(
+            cluster["name"]
+        )
+        return False, response
+
+    refreshed = refresh_kube_config(
+        compute_cluster.id, name=provider_kwargs["profile"]["name"]
+    )
+    if not refreshed:
+        response["msg"] = "Failed to refresh the kubernetes config"
+        return False, response
+
+    scheduler = KubenetesScheduler()
+    scheduler.retrieve()
+    jobs = scheduler.list_scheduled()
+    if not jobs:
+        response["msg"] = "Failed to retrieve scheduled jobs"
+        return False, response
+
+    response["jobs"] = jobs
+    return True, response
+
+
+def list_job():
     response = {}
     # Ensure we have the newest config
     scheduler = KubenetesScheduler()
