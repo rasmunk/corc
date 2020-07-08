@@ -63,11 +63,8 @@ class KubenetesScheduler(Scheduler):
             return False
 
         job = {}
-        if hasattr(job_created, "metadata") and hasattr(
-            job_created.metadata, "generate_name"
-        ):
-            job["id"] = job_created.metadata.generate_name
-
+        if "metadata" in job_created and "name" in job_created["metadata"]:
+            job["id"] = job_created["metadata"]["name"]
         return job
 
     def list_scheduled(self):
