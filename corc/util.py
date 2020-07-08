@@ -73,7 +73,6 @@ def missing_fields(input_dict, required_fields, verbose=False, throw=False):
 
 
 def validate_dict_fields(input_dict, valid_fields, verbose=False, throw=False):
-
     for key, value in input_dict.items():
         if not present_in(key, valid_fields, verbose=verbose):
             if throw:
@@ -93,29 +92,6 @@ def validate_dict_fields(input_dict, valid_fields, verbose=False, throw=False):
                         value, valid_fields[key], type(value)
                     )
                 )
-            return False
-    return True
-
-
-def validate_dict_types(input_dict, required_fields=None, verbose=False, throw=False):
-    if not required_fields:
-        required_fields = {}
-    for var, _type in required_fields.items():
-        if not present_in(var, input_dict, verbose=verbose):
-            if throw:
-                raise KeyError(
-                    "Missing required: {} in {}".format(var, required_fields)
-                )
-            return False
-        if not isinstance(input_dict[var], _type):
-            if verbose:
-                print(
-                    "variable: {} value: {} is of incorrect type: {}".format(
-                        var, input_dict[var], type(input_dict[var])
-                    )
-                )
-            if throw:
-                raise TypeError("{}: should be {}".format(var, _type))
             return False
     return True
 
@@ -142,6 +118,37 @@ def validate_dict_values(input_dict, required_values=None, verbose=False, throw=
                 )
             return False
     return True
+
+
+def validate_either_values(input_dict, either_values, verbose=False, throw=False):
+    """either values have to be present in input_dict"""
+
+    valid = False
+    is_set = {}
+    for k, v in either_values.items():
+        if k in input_dict and input_dict[k]:
+            is_set[k] = True
+
+    which_set = [k for k, v in is_set.items() if v]
+    if not which_set:
+        msg = "Neither: {} values were present in: {}".format(
+            either_values.keys(), input_dict
+        )
+        if verbose:
+            print(msg)
+        if throw:
+            raise ValueError(msg)
+    elif len(which_set) > 1:
+        msg = "Only one of: {} can be used, but: {} were set".format(
+            either_values.keys(), which_set
+        )
+        if verbose:
+            print(msg)
+        if throw:
+            raise ValueError(msg)
+    else:
+        valid = True
+    return valid
 
 
 def prepare_cls_kwargs(cls, **kwargs):

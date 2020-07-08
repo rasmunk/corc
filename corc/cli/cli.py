@@ -113,8 +113,8 @@ def job_cli(parser):
     )
 
     delete_job_parser = job_commands.add_parser("delete")
+    select_job_group(delete_job_parser)
     cluster_identity_group(delete_job_parser)
-
     delete_job_parser.set_defaults(
         func=cli_exec,
         module_path="corc.providers.{provider}.job",
