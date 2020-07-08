@@ -46,7 +46,6 @@ def create_job(api_instance, job, namespace="default"):
     return api_response
 
 
-# TODO, encode response so that datetime objects are converted to JSON formatable
 def list_job(api_instance):
     jobs_list = api_instance.list_job_for_all_namespaces()
     jobs = jobs_list.items
