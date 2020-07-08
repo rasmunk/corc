@@ -44,29 +44,3 @@ def create_job(api_instance, job, namespace="default"):
         body=job, namespace=namespace
     ).to_dict()
     return api_response
-
-
-def list_job(api_instance):
-    jobs_list = api_instance.list_job_for_all_namespaces()
-    jobs = jobs_list.items
-    return jobs
-
-
-# def update_job(api_instance, job):
-#     # Update container image
-#     job.spec.template.spec.containers[0].image = "perl"
-#     api_response = api_instance.patch_namespaced_job(
-#         name=JOB_NAME, namespace="default", body=job
-#     )
-#     print("Job updated. status='%s'" % str(api_response.status))
-
-
-# def delete_job(api_instance):
-#     api_response = api_instance.delete_namespaced_job(
-#         name=JOB_NAME,
-#         namespace="default",
-#         body=client.V1DeleteOptions(
-#             propagation_policy="Foreground", grace_period_seconds=5
-#         ),
-#     )
-#     print("Job deleted. status='%s'" % str(api_response.status))
