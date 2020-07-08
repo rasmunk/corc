@@ -72,12 +72,15 @@ class KubenetesScheduler(Scheduler):
 
     def list_scheduled(self):
         success, response = request(self.batch_client.list_job_for_all_namespaces)
-        if success:
+        if not success:
+            return None
+
+        if hasattr(response, "items"):
             return [item.to_dict() for item in response.items]
         return []
 
     def retrieve(self, job_id):
-        return self.jobs[job_id]
+        return self.submit[job_id]
 
     def remove(self, job_id):
         removed = False

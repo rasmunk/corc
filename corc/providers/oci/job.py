@@ -433,7 +433,7 @@ def list_job():
     # Ensure we have the newest config
     scheduler = KubenetesScheduler()
     jobs = scheduler.list_scheduled()
-    if not jobs:
+    if not isinstance(jobs, list):
         response["msg"] = "Failed to retrieve scheduled jobs"
         return False, response
 
