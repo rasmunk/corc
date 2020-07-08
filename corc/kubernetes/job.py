@@ -22,7 +22,7 @@ def prepare_job(container_kwargs=None, pod_spec_kwargs=None, job_spec_kwargs=Non
     # V1PodSpec Can use node_selector to target specific node
     # Create and configurate a spec section
     template = client.V1PodTemplateSpec(
-        metadata=client.V1ObjectMeta(generate_name=container_kwargs["name"]),
+        metadata=client.V1ObjectMeta(name=container_kwargs["name"]),
         spec=client.V1PodSpec(
             restart_policy="Never", containers=[container], **pod_spec_kwargs
         ),
@@ -33,7 +33,7 @@ def prepare_job(container_kwargs=None, pod_spec_kwargs=None, job_spec_kwargs=Non
     job = client.V1Job(
         api_version="batch/v1",
         kind="Job",
-        metadata=client.V1ObjectMeta(generate_name=container_kwargs["name"]),
+        metadata=client.V1ObjectMeta(name=container_kwargs["name"]),
         spec=spec,
     )
     return job
