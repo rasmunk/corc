@@ -43,6 +43,7 @@ default_job_config = {
     "meta": default_job_meta_config,
     "capture": True,
     "output_path": "/tmp/output",
+    "working_dir": "",
 }
 
 valid_job_config = {
@@ -51,6 +52,7 @@ valid_job_config = {
     "args": list,
     "capture": bool,
     "output_path": str,
+    "working_dir": str,
 }
 
 default_providers_config = {AWS_LOWER: {}, OCI_LOWER: {}}

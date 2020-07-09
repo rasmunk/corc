@@ -321,6 +321,10 @@ def run(provider_kwargs, cluster={}, job={}, storage={}):
         args=jobio_args,
         volume_mounts=volume_mounts,
     )
+
+    if "working_dir" in job:
+        container_spec.update({"working_dir": job["working_dir"]})
+
     # args=jobio_args,
     pod_spec = dict(node_name=node.metadata.name, volumes=volumes, dns_policy="Default")
 

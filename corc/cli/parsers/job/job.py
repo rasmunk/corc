@@ -26,3 +26,4 @@ def job_group(parser):
     job_group.add_argument("--job-args", nargs="*", default=[])
     job_group.add_argument("--job-capture", action="store_true")
     job_group.add_argument("--job-output-path", type=str, default="")
+    job_group.add_argument("--job-working-dir", type=str, default="")
