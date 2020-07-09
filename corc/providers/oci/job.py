@@ -25,7 +25,7 @@ from corc.defaults import (
     KUBERNETES_NAMESPACE,
     JOB_DEFAULT_NAME,
 )
-from corc.util import validate_dict_fields, validate_dict_values
+from corc.util import validate_dict_fields, validate_dict_values, validate_either_values
 from corc.storage.s3 import (
     bucket_exists,
     delete_bucket,
@@ -250,6 +250,7 @@ def run(provider_kwargs, cluster={}, job={}, storage={}):
 
             if "upload_path" in storage and storage["upload_path"]:
                 # Upload local path to the bucket as designated input for the job
+                uploaded = None
                 if os.path.exists(storage["upload_path"]):
                     if os.path.isdir(storage["upload_path"]):
                         uploaded = upload_directory_to_s3(
@@ -350,12 +351,93 @@ def run(provider_kwargs, cluster={}, job={}, storage={}):
     return True, response
 
 
-def list_jobs():
+def _required_delete_job_arguments(cluster, job):
+
+    required_cluster_fields = {"name": str}
+    validate_dict_values(cluster, required_cluster_fields, verbose=True, throw=True)
+
+    required_job_fields = {"meta": dict}
+    validate_dict_values(job, required_job_fields, verbose=True, throw=True)
+
+    either_meta_fields = {"name": str, "all": str}
+    validate_either_values(job["meta"], either_meta_fields, verbose=True, throw=True)
+
+
+def delete_job(provider_kwargs, cluster={}, job={}):
+    _validate_fields(provider=provider_kwargs, job=job, cluster=cluster)
+    _required_delete_job_arguments(cluster, job)
+
+    response = {}
+    # Ensure we have the newest config
+    container_engine_client = new_client(
+        ContainerEngineClient,
+        composite_class=ContainerEngineClientCompositeOperations,
+        name=provider_kwargs["profile"]["name"],
+    )
+
+    compute_cluster = get_cluster_by_name(
+        container_engine_client,
+        provider_kwargs["profile"]["compartment_id"],
+        name=cluster["name"],
+    )
+
+    if not compute_cluster:
+        response["msg"] = "Failed to find a cluster with name: {}".format(
+            cluster["name"]
+        )
+        return False, response
+
+    refreshed = refresh_kube_config(
+        compute_cluster.id, name=provider_kwargs["profile"]["name"]
+    )
+    if not refreshed:
+        response["msg"] = "Failed to refresh the kubernetes config"
+        return False, response
+
+    scheduler = KubenetesScheduler()
+
+    if "name" in job["meta"] and job["meta"]["name"]:
+        removed = scheduler.remove(job["meta"]["name"])
+        if removed:
+            response["msg"] = "Removed: {}".format(job["meta"]["name"])
+            return True, response
+
+        response["msg"] = "Failed to remove: {}".format(job["meta"]["name"])
+        return False, response
+
+    if "all" in job["meta"] and job["meta"]["all"]:
+        jobs = scheduler.list_scheduled()
+
+        if not jobs:
+            response["msg"] = "Failed to retrieve scheduled jobs"
+            return False, response
+
+        failed = []
+        # Kubernetes jobs
+        for job in jobs:
+            removed = scheduler.remove(job["metadata"]["name"])
+            if not removed:
+                failed.append(job)
+
+        if failed:
+            response["msg"] = "Failed to remove: {}".format(
+                [job["metadata"]["name"] for job in jobs]
+            )
+            return False, response
+
+        response["msg"] = "Removed all jobs"
+        return True, response
+
+    response["msg"] = "Neither a single name or all jobs were specified to be removed"
+    return False, response
+
+
+def list_job():
     response = {}
     # Ensure we have the newest config
     scheduler = KubenetesScheduler()
     jobs = scheduler.list_scheduled()
-    if not jobs:
+    if not isinstance(jobs, list):
         response["msg"] = "Failed to retrieve scheduled jobs"
         return False, response
 

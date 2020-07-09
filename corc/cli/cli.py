@@ -112,6 +112,18 @@ def job_cli(parser):
         argument_groups=[CLUSTER, JOB_META, JOB, STORAGE_S3, STORAGE],
     )
 
+    delete_job_parser = job_commands.add_parser("delete")
+    select_job_group(delete_job_parser)
+    cluster_identity_group(delete_job_parser)
+    delete_job_parser.set_defaults(
+        func=cli_exec,
+        module_path="corc.providers.{provider}.job",
+        module_name="job",
+        func_name="delete_job",
+        provider_groups=[PROFILE],
+        argument_groups=[CLUSTER, JOB_META, JOB],
+    )
+
     list_parser = job_commands.add_parser("list")
     job_meta_group(list_parser)
     cluster_identity_group(list_parser)
@@ -119,7 +131,7 @@ def job_cli(parser):
         func=cli_exec,
         module_path="corc.providers.{provider}.job",
         module_name="job",
-        func_name="list_jobs",
+        func_name="list_job",
     )
 
     result_parser = job_commands.add_parser("result")

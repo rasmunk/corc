@@ -1,8 +1,4 @@
-from corc.cli.parsers.job.result import results_group
-
-
 def valid_job_group(parser):
-    results_group(parser)
     job_meta_group(parser)
     job_group(parser)
 
@@ -10,6 +6,7 @@ def valid_job_group(parser):
 def select_job_group(parser):
     job_group = parser.add_argument_group(title="Job Identity arguments")
     job_group.add_argument("--job-meta-name", type=str, default="")
+    job_group.add_argument("--job-meta-all", action="store_true", default=False)
 
 
 def job_meta_group(parser):

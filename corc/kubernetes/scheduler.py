@@ -1,7 +1,12 @@
 from kubernetes import client
+from kubernetes.client.models import V1DeleteOptions
 from corc.scheduler import Scheduler
 from corc.kubernetes.config import load_kube_config
-from corc.kubernetes.job import create_job, prepare_job, list_job
+from corc.kubernetes.crud import request
+from corc.kubernetes.job import (
+    create_job,
+    prepare_job,
+)
 from corc.kubernetes.storage import (
     prepare_volume,
     prepare_secret,
@@ -17,6 +22,7 @@ class KubenetesScheduler(Scheduler):
             raise RuntimeError("Failed to load the kubernetes config")
         self.batch_client = client.BatchV1Api()
         self.core_client = client.CoreV1Api()
+        self.namespace = "default"
 
     def prepare(self, **config):
         if not config:
@@ -57,15 +63,32 @@ class KubenetesScheduler(Scheduler):
             return False
 
         job = {}
-        if hasattr(job_created, "metadata") and hasattr(
-            job_created.metadata, "generate_name"
-        ):
-            job["id"] = job_created.metadata.generate_name
-
+        if "metadata" in job_created and "name" in job_created["metadata"]:
+            job["id"] = job_created["metadata"]["name"]
         return job
 
     def list_scheduled(self):
-        return list_job(self.batch_client)
+        success, response = request(self.batch_client.list_job_for_all_namespaces)
+        if not success:
+            return None
+
+        if hasattr(response, "items"):
+            return [item.to_dict() for item in response.items]
+        return []
 
     def retrieve(self, job_id):
-        return self.jobs[job_id]
+        return self.submit[job_id]
+
+    def remove(self, job_id):
+        removed = False
+        body = V1DeleteOptions()
+        success, response = request(
+            self.batch_client.delete_namespaced_job,
+            job_id,
+            self.namespace,
+            body=body,
+            catch=True,
+        )
+        if success:
+            removed = True
+        return removed

@@ -1,5 +1,4 @@
-oci-cli
-oci
+oci-cli==2.12.2
 ansible==2.9.10
 kubernetes
 PyYAML==5.1.2
