@@ -48,49 +48,50 @@ As mentioned, corc is a command-line tool for managing cloud resources, such ins
 
 The available options can be discovered through the CLI itself, e.g::
 
-    corc -h
-    usage: corc [-h] [--oci-profile-name OCI_PROFILE_NAME]
-                [--oci-compartment-id OCI_COMPARTMENT_ID]
-                {OCI} {instance,cluster,job} ...
+    usage: corc [-h] {config,aws,oci} ...
 
     optional arguments:
-    -h, --help            show this help message and exit
-
-    Available Platforms:
-    {OCI}
-
-    OCI arguments:
-    --oci-profile-name OCI_PROFILE_NAME
-    --oci-compartment-id OCI_COMPARTMENT_ID
+      -h, --help        show this help message and exit
 
     COMMAND:
-    {instance,cluster,job}
+      {config,aws,oci}
 
-As show above, the first thing that is specified is which of the `Available Platforms` is the target of the specified `COMMAND`.
-Expanding on this, the `cluster` command provides the following functionalities::
+A good start is to first generate the corc configuration. Afterwards the provider specific details such as the OCI ``compartment_id`` should be filled into this.
+By default the corc configuration is placed into the ``~/.corc/config`` file. Currently OCI is the only supported provider, which means that this is also the only provider that will be put into the configuration file.
 
-    corc OCI cluster -h
-    usage: corc {OCI} cluster [-h] {start,stop,list,update} ...
+The specific values can be overwritten during the config generation, details about this can be displayed via ``corc config oci generate -h``.
 
-    optional arguments:
-    -h, --help            show this help message and exit
+---------------
+Getting Started
+---------------
 
-    Commands:
-    {start,stop,list,update}
+To start utilizing the OCI provider, corc requires that the authentication details for this provider is first defined via the default ``~/.oci/config`` as defined by OCI. In addition, `corc` needs to know which `compartment` to operate the given task on. This is defined via the ``corc.providers.oci.profile.compartment_id`` configuration variable.
 
-A cluster currently only means a Kubernetes Cluster created from a specified set of VM nodes.
-On a cluster, you can submit jobs via the `job` command::
+After these steps have been fulfilled, corc is ready to either orchestrate resources or schedule tasks/jobs on the providers infrastructure.
 
-    corc OCI job -h
-    usage: corc {OCI} job [-h] {run,result} ...
+For instance, the following command orchestrates a Kubernetes cluster called ``cluster`` at OCI with 5 nodes::
 
-    optional arguments:
-    -h, --help    show this help message and exit
+    :~# corc oci orchestration cluster start --cluster-node-size 5
 
-    Commands:
-    {run,result}
+After this is completed, a simple hello world job can be schduled straight after::
 
+    # Schedule the job
+    :~# corc oci job run --storage-enable /bin/echo --job-args "Hello World"
+    {
+        "job": {
+            "id": "job-1594378280"
+        },
+        "msg": "Job submitted",
+        "status": "success"
+    }
 
+    # Retrieve the results
+    :~# corc oci job result get --job-meta-name job-1594378280
+    
+Which will download the generated content available in the default output directory ``/tmp/output`` in the execution environment.
+This by default includes a ``job`` description file that details what command was executed and how it went.
+
+The ``get`` COMMAND will unless otherwise specified, download the job output into the current directory with the ``job-name`` as the prefix, and a automatically unique generated postfix string. The ``corc oci job result get --job-meta-name job-15943782`` for instance produced a local directory called ``job-1594378280-mgjb2`` that contains the job output file.
 
 **Note**, corc is still very much in early development, therefore not every command and option will run as expected.
 
