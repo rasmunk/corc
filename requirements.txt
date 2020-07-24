@@ -1,5 +1,6 @@
 oci-cli==2.12.2
 ansible==2.9.10
+apache-libcloud
 kubernetes
 PyYAML==5.1.2
 boto3

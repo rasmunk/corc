@@ -1,12 +1,16 @@
-from corc.defaults import OCI
+from libcloud.container.drivers.ecs import ElasticContainerDriver
+from libcloud.container.types import Provider as ContainerProvider
+from corc.providers.defaults import (
+    OCI,
+    ECS,
+    CONTAINER,
+    CONTAINER_CLUSTER,
+    KUBERNETES,
+    SERVER,
+    DOCKER,
+)
 from corc.providers.oci.cluster import OCIClusterOrchestrator
-from corc.providers.oci.job import OCIContainerScheduler
-from corc.providers.oci.instance import OCIInstanceOrchestrator
 from corc.providers.apache.cluster import ApacheClusterOrchestrator
-
-
-VIRTUAL_MACHINE = "virtual_machine"
-CONTAINER_CLUSTER = "container_cluster"
 
 
 # Define orchestrators for the various cloud backends
@@ -14,11 +18,31 @@ CONTAINER_CLUSTER = "container_cluster"
 ORCHESTRATORS = {
     CONTAINER_CLUSTER: {
         OCI: {"klass": OCIClusterOrchestrator},
-        AWS: {"klass": ApacheClusterOrchestrator, "kwargs": {}},
+        ECS: {
+            "klass": ApacheClusterOrchestrator,
+            "options": {"driver": {"provider": ContainerProvider.ECS}},
+        },
+        KUBERNETES: {
+            "klass": ApacheClusterOrchestrator,
+            "options": {"driver": {"provider": ContainerProvider.KUBERNETES}},
+        },
     },
 }
 
-CONTAINER = "container"
+# SCHEDULERS = {
+#     DOCKER: {"klass": }
+# }
 
-# Provide driver and arguments to base container classes
-SCHEDULERS = {CONTAINER: {}}
+
+def get_orchestrator(orchestrator, provider):
+    orchestrator_definition = ORCHESTRATORS[orchestrator][provider]
+    klass = orchestrator_definition.get("klass", None)
+    options = orchestrator_definition.get("options", {})
+    return klass, options
+
+
+# def get_scheduler(scheduler, provider):
+#     scheduler_definition = SCHEDULERS[scheduler][provider]
+#     klass = scheduler_definition.get("klass", None)
+#     options = scheduler_definition.get("options", {})
+#     return klass, options

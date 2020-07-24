@@ -1,6 +1,7 @@
 from libcloud.container.base import ContainerCluster, ClusterLocation
 from libcloud.container.providers import get_driver
 from corc.orchestrator import Orchestrator
+from corc.util import validate_dict_fields, validate_dict_values
 
 
 def valid_cluster(cluster):
@@ -9,7 +10,10 @@ def valid_cluster(cluster):
 
 
 def get_cluster_by_name(client, name):
-    clusters = client.list_clusters()
+    try:
+        clusters = client.list_clusters()
+    except Exception as err:
+        print(err)
     for cluster in clusters:
         if cluster.name == name:
             return cluster
@@ -27,18 +31,24 @@ valid_cluster_config = {"name": str, "location": dict}
 
 class ApacheClusterOrchestrator(Orchestrator):
     def __init__(self, options):
-        super().__init__options(options)
+        super().__init__(options)
 
-        self.options = options
         # Setup the specific container driver provider
         if "driver" not in options:
             raise KeyError("key: 'driver' must be specified")
 
-        if "kwargs" not in options:
-            raise KeyError("key: 'kwargs' must be specified")
+        if "args" in options["driver"]:
+            driver_args = options["driver"]["args"]
+        else:
+            driver_args = tuple()
 
-        cls = get_driver(options["driver"]["name"])
-        self.client = cls(options["driver"]["kwargs"])
+        if "kwargs" in options["driver"]:
+            driver_kwargs = options["driver"]["kwargs"]
+        else:
+            driver_kwargs = {}
+
+        cls = get_driver(options["driver"]["provider"])
+        self.client = cls(*driver_args, **driver_kwargs)
         self.cluster = None
 
     def endpoint(self, select=None):
@@ -48,7 +58,7 @@ class ApacheClusterOrchestrator(Orchestrator):
         raise NotImplementedError
 
     def setup(self):
-        cluster = self.client.create_cluster(**self.options["cluster"])
+        cluster = self.client.create_cluster(self.options["cluster"]["name"])
         if valid_cluster(cluster):
             self.cluster = cluster
         else:
@@ -79,5 +89,3 @@ class ApacheClusterOrchestrator(Orchestrator):
     def validate_options(cls, options):
         if not isinstance(options, dict):
             raise TypeError("options is not a dictionary")
-
-        required_cluster_fields = {"name": str}
