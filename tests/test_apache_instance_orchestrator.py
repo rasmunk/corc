@@ -9,9 +9,14 @@ class TestEC2InstanceOrchestrator(unittest.TestCase):
         node_name = test_name + "_Node"
 
         compute_options = dict(name=node_name)
-        self.options = dict(compute=compute_options,)
+        # (access_key_id)
+        ec2_args = ("AKIAT7Z3YSHTWQ5UMZS2",)
+        ec2_kwargs = {"secret": "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"}
 
+        self.options = dict(compute=compute_options)
         EC2Orchestrator, options = get_orchestrator(INSTANCE, EC2)
+        options["driver"]["args"] = ec2_args
+        options["driver"]["kwargs"] = ec2_kwargs
         self.options.update(options)
 
         EC2Orchestrator.validate_options(self.options)

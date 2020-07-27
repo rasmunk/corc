@@ -19,10 +19,13 @@ class Orchestrator:
     def poll(self):
         raise NotImplementedError
 
-    def setup(self):
+    def setup(self, **resource_requirements):
         raise NotImplementedError
 
     def tear_down(self):
+        raise NotImplementedError
+
+    def discover_resource_options(**kwargs):
         raise NotImplementedError
 
     @classmethod

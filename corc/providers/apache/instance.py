@@ -57,7 +57,7 @@ class ApacheInstanceOrchestrator(Orchestrator):
         raise NotImplementedError
 
     def setup(self):
-        instance = self.client.create_node(self.options["instance"])
+        instance = self.client.create_node(self.options["compute"])
         if valid_instance(instance):
             self.instance = instance
         else:

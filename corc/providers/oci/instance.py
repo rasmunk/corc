@@ -454,6 +454,27 @@ class OCIInstanceOrchestrator(Orchestrator):
             if open_port(target_endpoint, self.port):
                 self._is_reachable = True
 
+
+    def discover_resource_options(cpu=None, memory=None, accelerators=None):
+        options = {}
+
+        available_shapes = list_entities(
+            self.compute_client, "list_shapes", self.options["oci"]["compartment_id"]
+        )
+
+        # Subset selection
+        if cpu:
+            cpu_shapes = []
+            for shape in available_shapes:
+                # Either dynamic or fixed ocpu count
+                if hasattr(shape, "ocpu_options") and shape.ocipu_options \
+                    and shape.ocipu_options.max >= cpu:
+                    cpu_shapes.append(shape)
+            available_shapes = [shape for shape in available_shapes
+                                if hasattr(shape, "ocpu_options") and shape]
+
+
+
     @classmethod
     def validate_options(cls, options):
         if not isinstance(options, dict):
