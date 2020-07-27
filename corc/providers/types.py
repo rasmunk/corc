@@ -1,20 +1,23 @@
+from libcloud.compute.types import Provider as ComputeProvider
 from libcloud.container.drivers.ecs import ElasticContainerDriver
 from libcloud.container.types import Provider as ContainerProvider
 from corc.providers.defaults import (
-    OCI,
-    ECS,
+    AWS,
     CONTAINER,
     CONTAINER_CLUSTER,
-    KUBERNETES,
-    SERVER,
     DOCKER,
+    EC2,
+    ECS,
+    INSTANCE,
+    KUBERNETES,
+    OCI,
 )
+from corc.providers.oci.instance import OCIInstanceOrchestrator
 from corc.providers.oci.cluster import OCIClusterOrchestrator
 from corc.providers.apache.cluster import ApacheClusterOrchestrator
-
+from corc.providers.apache.instance import ApacheInstanceOrchestrator
 
 # Define orchestrators for the various cloud backends
-# Provides the
 ORCHESTRATORS = {
     CONTAINER_CLUSTER: {
         OCI: {"klass": OCIClusterOrchestrator},
@@ -27,11 +30,14 @@ ORCHESTRATORS = {
             "options": {"driver": {"provider": ContainerProvider.KUBERNETES}},
         },
     },
+    INSTANCE: {
+        OCI: {"klass": OCIInstanceOrchestrator},
+        EC2: {
+            "klass": ApacheInstanceOrchestrator,
+            "options": {"driver": {"provider": ComputeProvider.EC2}},
+        },
+    },
 }
-
-# SCHEDULERS = {
-#     DOCKER: {"klass": }
-# }
 
 
 def get_orchestrator(orchestrator, provider):

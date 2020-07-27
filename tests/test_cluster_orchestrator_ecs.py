@@ -3,8 +3,8 @@ import json
 from libcloud.container.types import Provider
 from libcloud.container.providers import get_driver
 from libcloud.container.drivers.ecs import ROOT
-from corc.providers.defaults import ECS, KUBERNETES
-from corc.providers.types import get_orchestrator, CONTAINER_CLUSTER
+from corc.providers.defaults import ECS, KUBERNETES, CONTAINER_CLUSTER
+from corc.providers.types import get_orchestrator
 
 
 class TestClusterOrchestratorECS(unittest.TestCase):
@@ -50,8 +50,8 @@ class TestClusterOrchestrationKubernetes(unittest.TestCase):
     def setUp(self):
         test_name = "Test_C_Orch"
         cluster_name = test_name
-
         cluster_options = dict(name=cluster_name)
+
         ClusterOrchestrator, options = get_orchestrator(CONTAINER_CLUSTER, KUBERNETES)
         options["cluster"] = cluster_options
         ClusterOrchestrator.validate_options(options)
