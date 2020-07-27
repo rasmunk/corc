@@ -68,6 +68,12 @@ class TestInstanceOrchestrator(unittest.TestCase):
         self.orchestrator.setup()
         self.assertTrue(self.orchestrator.is_ready())
 
+    def test_setup_instance_resource_requirements(self):
+        res_req = self.orchestrator.make_resource_requirements(cpu=8.0, memory=8)
+        self.assertIsNotNone(res_req)
+        self.orchestrator.setup(res_req)
+        self.assertTrue(self.orchestrator.is_ready())
+
     def test_teardown_instance(self):
         self.assertFalse(self.orchestrator.is_ready())
         self.orchestrator.tear_down()

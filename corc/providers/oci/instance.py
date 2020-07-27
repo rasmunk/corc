@@ -334,9 +334,13 @@ class OCIInstanceOrchestrator(Orchestrator):
                     break
         return public_endpoint
 
-    def setup(self, **resource_requirements):
+    def setup(self, resource_requirements=None):
         # If shape in resource_requirements, override general options
         options = copy.deepcopy(self.options)
+        if not resource_requirements:
+            resource_requirements = {}
+
+        # TODO, check isinstance dict resource_requirements
         if "shape" in resource_requirements:
             options["compute"]["shape"] = resource_requirements["shape"]
 
@@ -458,7 +462,7 @@ class OCIInstanceOrchestrator(Orchestrator):
             if open_port(target_endpoint, self.port):
                 self._is_reachable = True
 
-    def make_resource_requirements(cpu=None, memory=None, accelerators=None):
+    def make_resource_requirements(self, cpu=None, memory=None, accelerators=None):
         resource_requirements = {}
 
         available_shapes = list_entities(
@@ -470,8 +474,13 @@ class OCIInstanceOrchestrator(Orchestrator):
             cpu_shapes = []
             for shape in available_shapes:
                 # Either dynamic or fixed ocpu count
-                if hasattr(shape, "ocpu_options") and shape.ocipu_options \
-                        and shape.ocipu_options.max >= cpu:
+                if (
+                    hasattr(shape, "ocpu_options")
+                    and shape.ocpu_options
+                    and shape.ocpu_options.max >= cpu
+                ):
+                    # Requires shape config
+                    shape.ocpus = cpu
                     cpu_shapes.append(shape)
                 else:
                     if shape.ocpus >= cpu:
@@ -481,8 +490,13 @@ class OCIInstanceOrchestrator(Orchestrator):
         if memory:
             memory_shapes = []
             for shape in available_shapes:
-                if hasattr(shape, "memory_options") and shape.memory_options \
-                        and shape.memory_options.max_in_g_bs >= memory:
+                if (
+                    hasattr(shape, "memory_options")
+                    and shape.memory_options
+                    and shape.memory_options.max_in_g_bs >= memory
+                ):
+                    # Dynamic memory range
+                    shape.memory_in_gbs = memory
                     memory_shapes.append(shape)
                 else:
                     if shape.memory_in_gbs >= memory:
@@ -499,8 +513,12 @@ class OCIInstanceOrchestrator(Orchestrator):
 
         # TODO, Minimum shape available
         if available_shapes:
-            resource_requirements["shape"] = available_shapes[0]
-        return options
+            # sort on cpu and memory
+            minimum_resources = sorted(
+                available_shapes, key=lambda shape: (shape.ocpus, shape.memory_in_gbs)
+            )[0]
+            resource_requirements["shape"] = minimum_resources.shape
+        return resource_requirements
 
     @classmethod
     def validate_options(cls, options):
