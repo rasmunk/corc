@@ -10,8 +10,8 @@ class TestEC2InstanceOrchestrator(unittest.TestCase):
 
         compute_options = dict(name=node_name)
         # (access_key_id)
-        ec2_args = ("AKIAT7Z3YSHTWQ5UMZS2",)
-        ec2_kwargs = {"secret": "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"}
+        ec2_args = ("",)
+        ec2_kwargs = {"secret": ""}
 
         self.options = dict(compute=compute_options)
         EC2Orchestrator, options = get_orchestrator(INSTANCE, EC2)
