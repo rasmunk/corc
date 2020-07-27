@@ -1,3 +1,4 @@
+import copy
 import oci
 from oci.core import (
     ComputeClient,
@@ -283,7 +284,6 @@ class OCIInstanceOrchestrator(Orchestrator):
         self.port = 22
         self.instance = None
         self.vcn_stack = None
-        self._is_ready = False
 
     def _get_vcn_stack(self):
         stack = {}
@@ -332,10 +332,14 @@ class OCIInstanceOrchestrator(Orchestrator):
                 if hasattr(vnic, "public_ip") and vnic.public_ip:
                     public_endpoint = vnic.public_ip
                     break
-
         return public_endpoint
 
-    def setup(self):
+    def setup(self, **resource_requirements):
+        # If shape in resource_requirements, override general options
+        options = copy.deepcopy(self.options)
+        if "shape" in resource_requirements:
+            options["compute"]["shape"] = resource_requirements["shape"]
+
         # Ensure we have a VCN stack ready
         vcn_stack = self._get_vcn_stack()
         if not vcn_stack:
@@ -355,25 +359,25 @@ class OCIInstanceOrchestrator(Orchestrator):
         # Find the selected subnet in the VCN
         subnet = get_subnet_by_name(
             self.network_client,
-            self.options["oci"]["compartment_id"],
+            options["oci"]["compartment_id"],
             self.vcn_stack["id"],
-            self.options["subnet"]["display_name"],
+            options["subnet"]["display_name"],
         )
 
         if not subnet:
             raise RuntimeError(
                 "Failed to find a subnet with the name: {} in vcn: {}".format(
-                    self.options["subnet"]["display_name"], self.vcn_stack["vcn"].id
+                    options["subnet"]["display_name"], self.vcn_stack["vcn"].id
                 )
             )
 
         # Available images
         available_images = list_entities(
-            self.compute_client, "list_images", self.options["oci"]["compartment_id"]
+            self.compute_client, "list_images", options["oci"]["compartment_id"]
         )
 
         available_shapes = list_entities(
-            self.compute_client, "list_shapes", self.options["oci"]["compartment_id"]
+            self.compute_client, "list_shapes", options["oci"]["compartment_id"]
         )
 
         instance_details = _gen_instance_stack_details(
@@ -381,15 +385,15 @@ class OCIInstanceOrchestrator(Orchestrator):
             subnet.id,
             available_images,
             available_shapes,
-            **self.options,
+            **options,
         )
 
         instance = None
-        if "display_name" in self.options["compute"]:
+        if "display_name" in options["compute"]:
             instance = get_instance_by_name(
                 self.compute_client,
-                self.options["oci"]["compartment_id"],
-                self.options["compute"]["display_name"],
+                options["oci"]["compartment_id"],
+                options["compute"]["display_name"],
             )
 
         if not instance:
@@ -454,9 +458,8 @@ class OCIInstanceOrchestrator(Orchestrator):
             if open_port(target_endpoint, self.port):
                 self._is_reachable = True
 
-
-    def discover_resource_options(cpu=None, memory=None, accelerators=None):
-        options = {}
+    def make_resource_requirements(cpu=None, memory=None, accelerators=None):
+        resource_requirements = {}
 
         available_shapes = list_entities(
             self.compute_client, "list_shapes", self.options["oci"]["compartment_id"]
@@ -468,12 +471,36 @@ class OCIInstanceOrchestrator(Orchestrator):
             for shape in available_shapes:
                 # Either dynamic or fixed ocpu count
                 if hasattr(shape, "ocpu_options") and shape.ocipu_options \
-                    and shape.ocipu_options.max >= cpu:
+                        and shape.ocipu_options.max >= cpu:
                     cpu_shapes.append(shape)
-            available_shapes = [shape for shape in available_shapes
-                                if hasattr(shape, "ocpu_options") and shape]
+                else:
+                    if shape.ocpus >= cpu:
+                        cpu_shapes.append(shape)
+            available_shapes = cpu_shapes
 
+        if memory:
+            memory_shapes = []
+            for shape in available_shapes:
+                if hasattr(shape, "memory_options") and shape.memory_options \
+                        and shape.memory_options.max_in_g_bs >= memory:
+                    memory_shapes.append(shape)
+                else:
+                    if shape.memory_in_gbs >= memory:
+                        memory_shapes.append(shape)
+            available_shapes = memory_shapes
 
+        if accelerators:
+            accelerator_shapes = []
+            for accelerator in accelerator_shapes:
+                for shape in available_shapes:
+                    if hasattr(shape, accelerator):
+                        accelerator_shapes.append(shape)
+            available_shapes = accelerator_shapes
+
+        # TODO, Minimum shape available
+        if available_shapes:
+            resource_requirements["shape"] = available_shapes[0]
+        return options
 
     @classmethod
     def validate_options(cls, options):
