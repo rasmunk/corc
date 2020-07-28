@@ -10,6 +10,7 @@ from oci.identity import IdentityClient, IdentityClientCompositeOperations
 from oci.core.models import (
     InstanceSourceViaImageDetails,
     LaunchInstanceDetails,
+    InstanceShapeConfig,
     CreateVnicDetails,
     Instance,
 )
@@ -344,6 +345,9 @@ class OCIInstanceOrchestrator(Orchestrator):
         if "shape" in resource_requirements:
             options["compute"]["shape"] = resource_requirements["shape"]
 
+        if "shape_config" in resource_requirements:
+            options["compute"]["shape_config"] = resource_requirements["shape_config"]
+
         # Ensure we have a VCN stack ready
         vcn_stack = self._get_vcn_stack()
         if not vcn_stack:
@@ -462,6 +466,18 @@ class OCIInstanceOrchestrator(Orchestrator):
             if open_port(target_endpoint, self.port):
                 self._is_reachable = True
 
+    # def __minimum_resources(shape):
+    #     cpus = 0
+    #     memory = 0
+    #     if hasattr(shape, "ocpu_options") and shape.ocpu_options \
+    #             and hasattr(shape, "memory_options") and shape.memory_options:
+    #         # Return ShapeConfig
+    #         instance_shape_config = InstanceShapeConfig(**shape)
+    #     else:
+    #         # Return shape name
+    #         cpus = shape.ocpus
+    #     return (cpus, memory)
+
     def make_resource_requirements(self, cpu=None, memory=None, accelerators=None):
         resource_requirements = {}
 
@@ -478,6 +494,7 @@ class OCIInstanceOrchestrator(Orchestrator):
                     hasattr(shape, "ocpu_options")
                     and shape.ocpu_options
                     and shape.ocpu_options.max >= cpu
+                    and shape.ocpu_options.min <= cpu
                 ):
                     # Requires shape config
                     shape.ocpus = cpu
@@ -494,6 +511,7 @@ class OCIInstanceOrchestrator(Orchestrator):
                     hasattr(shape, "memory_options")
                     and shape.memory_options
                     and shape.memory_options.max_in_g_bs >= memory
+                    and shape.memory_options.min_in_g_bs <= memory
                 ):
                     # Dynamic memory range
                     shape.memory_in_gbs = memory
@@ -514,10 +532,26 @@ class OCIInstanceOrchestrator(Orchestrator):
         # TODO, Minimum shape available
         if available_shapes:
             # sort on cpu and memory
-            minimum_resources = sorted(
+            minimum_shape = sorted(
                 available_shapes, key=lambda shape: (shape.ocpus, shape.memory_in_gbs)
             )[0]
-            resource_requirements["shape"] = minimum_resources.shape
+            # If a dynamic resource instance -> needs to be a shape_config
+            if (
+                hasattr(minimum_shape, "ocpu_options")
+                and minimum_shape.ocpu_options
+                and hasattr(minimum_shape, "memory_options")
+                and minimum_shape.memory_options
+            ):
+                # pass shape values to shapeconfig
+                instance_shape_details = {}
+                attributes = minimum_shape.attribute_map
+                for k, v in attributes.items():
+                    if hasattr(InstanceShapeConfig, k):
+                        instance_shape_details[k] = getattr(minimum_shape, k)
+                shape_config = InstanceShapeConfig(**instance_shape_details)
+                resource_requirements["shape_config"] = shape_config
+            else:
+                resource_requirements["shape"] = minimum_shape.shape
         return resource_requirements
 
     @classmethod
