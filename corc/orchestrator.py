@@ -3,6 +3,7 @@ class Orchestrator:
     options = None
     _is_ready = False
     _is_reachable = False
+    _resource_id = None
 
     def __init__(self, options):
         self.options = options
@@ -19,10 +20,20 @@ class Orchestrator:
     def poll(self):
         raise NotImplementedError
 
-    def setup(self):
+    def setup(self, **resource_config):
+        raise NotImplementedError
+
+    def resource_id(self):
+        return self._resource_id
+
+    def get_resource(self):
         raise NotImplementedError
 
     def tear_down(self):
+        raise NotImplementedError
+
+    @classmethod
+    def make_resource_config(cls, **kwargs):
         raise NotImplementedError
 
     @classmethod

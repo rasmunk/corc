@@ -85,7 +85,6 @@ def refresh_kube_config(cluster_id, name="DEFAULT"):
 
 # FIXME, no node_pools should be allowed
 def valid_cluster_stack(stack):
-
     if not isinstance(stack, dict):
         raise TypeError("The Cluster stack must be a dictionary to be valid")
 
@@ -447,9 +446,6 @@ class OCIClusterOrchestrator(Orchestrator):
             subnet_kwargs=subnet_kwargs,
         )
         return stack
-
-    def poll(self):
-        pass
 
     def setup(self):
         # Ensure we have a VCN stack ready

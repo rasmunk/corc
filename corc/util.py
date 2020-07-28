@@ -122,7 +122,6 @@ def validate_dict_values(input_dict, required_values=None, verbose=False, throw=
 
 def validate_either_values(input_dict, either_values, verbose=False, throw=False):
     """either values have to be present in input_dict"""
-
     valid = False
     is_set = {}
     for k, v in either_values.items():
