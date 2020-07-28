@@ -11,6 +11,7 @@ from oci.core.models import (
     InstanceSourceViaImageDetails,
     LaunchInstanceDetails,
     InstanceShapeConfig,
+    LaunchInstanceShapeConfigDetails,
     CreateVnicDetails,
     Instance,
 )
@@ -54,7 +55,6 @@ def create_instance(
         wait_for_states=wait_for_states,
         **kwargs,
     )
-
     if not instance:
         return None
     return instance
@@ -81,90 +81,6 @@ def get_instance_by_name(compute_client, compartment_id, display_name, kwargs=No
     if instances:
         return instances[0]
     return None
-
-
-def launch_instance(compute_kwargs={}, oci_kwargs={}, subnet_kwargs={}, vcn_kwargs={}):
-    raise NotImplementedError
-    # compute_client = new_client(
-    #     ComputeClient,
-    #     composite_class=ComputeClientCompositeOperations,
-    #     name=oci_kwargs["name"],
-    # )
-
-    # identity_client = new_client(
-    #     IdentityClient,
-    #     composite_class=IdentityClientCompositeOperations,
-    #     name=oci_kwargs["name"],
-    # )
-
-    # network_client = new_client(
-    #     VirtualNetworkClient,
-    #     composite_class=VirtualNetworkClientCompositeOperations,
-    #     name=oci_kwargs["name"],
-    # )
-
-    # # AD
-    # selected_availability_domain = None
-    # available_domains = list_entities(
-    #     identity_client,
-    #     "list_availability_domains",
-    #     compartment_id=oci_kwargs["compartment_id"],
-    # )
-
-    # for domain in available_domains:
-    #     if domain.name == compute_kwargs["ad"]:
-    #         selected_availability_domain = domain
-
-    # if not selected_availability_domain:
-    #     print("Failed to find the selected AD: {}".format(compute_kwargs["ad"]))
-    #     print("Available are: {}".format(available_domains))
-    #     return False
-
-    # # Available images
-    # available_images = list_entities(
-    #     compute_client, "list_images", oci_kwargs["compartment_id"]
-    # )
-
-    # available_shapes = list_entities(
-    #     compute_client, "list_shapes", oci_kwargs["compartment_id"]
-    # )
-
-    # instance_details = _gen_instance_stack_details(
-    #     self.vcn_stack["vcn"].id,
-    #     subnet.id,
-    #     available_images,
-    #     available_shapes,
-    #     self.options,
-    # )
-
-    # # Network (VCN)
-    # selected_vcn = None
-    # get_vcn_by_name(
-    #     network_client, oci_kwargs["compartment_id"],
-    # )
-
-    # # VCN Subnet
-    # selected_subnet = None
-    # if not selected_subnet:
-    #     print("Failed to find the selected subnet: {}".format(subnet_kwargs["id"]))
-    #     return False
-
-    # # Existing or create new vnic
-    # create_vnic_details = CreateVnicDetails(subnet_id=selected_subnet.id)
-
-    # launch_instance_details = LaunchInstanceDetails(
-    #     compartment_id=oci_kwargs["compartment_id"],
-    #     availability_domain=selected_availability_domain.name,
-    #     shape=selected_shape.shape,
-    # )
-
-    # instance = create_instance(
-    #     compute_client,
-    #     launch_instance_details,
-    #     wait_for_states=[oci.core.models.Instance.LIFECYCLE_STATE_PROVISIONING],
-    # )
-
-    # print("Instance: {}".format(instance))
 
 
 def _prepare_source_details(available_images, **kwargs):
@@ -202,6 +118,14 @@ def _prepare_shape(available_shapes, **kwargs):
     return selected_shape
 
 
+def _prepare_shape_config(**kwargs):
+    shape_kwargs = {
+        k: v for k, v in kwargs.items() if hasattr(LaunchInstanceShapeConfigDetails, k)
+    }
+    shape_config_details = LaunchInstanceShapeConfigDetails(**shape_kwargs)
+    return shape_config_details
+
+
 def _prepare_vnic_details(**kwargs):
     create_nvic_kwargs = {
         k: v for k, v in kwargs.items() if hasattr(CreateVnicDetails, k)
@@ -232,10 +156,17 @@ def _prepare_launch_instance_details(**kwargs):
 
 def _gen_instance_stack_details(vcn_id, subnet_id, images, shapes, **options):
     instance_stack_details = {}
-
     source_details = _prepare_source_details(images, **options["compute"])
 
+    # Either static or dynamic shape
+    shape_config = None
+    if "shape_config" in options["compute"]:
+        shape_config = _prepare_shape_config(**options["compute"]["shape_config"])
+        options["compute"].pop("shape_config")
+
     shape = _prepare_shape(shapes, **options["compute"])
+    if "shape" in options["compute"]:
+        options["compute"].pop("shape")
 
     create_vnic_details = _prepare_vnic_details(subnet_id=subnet_id)
 
@@ -244,10 +175,7 @@ def _gen_instance_stack_details(vcn_id, subnet_id, images, shapes, **options):
     if "compute_metadata" in options:
         metadata = _prepare_metadata(**options["compute_metadata"])
 
-    if "shape" in options["compute"]:
-        options["compute"].pop("shape")
-
-    launch_instance_details = _prepare_launch_instance_details(
+    launch_instance_dict = dict(
         compartment_id=options["oci"]["compartment_id"],
         shape=shape,
         create_vnic_details=create_vnic_details,
@@ -255,6 +183,11 @@ def _gen_instance_stack_details(vcn_id, subnet_id, images, shapes, **options):
         metadata=metadata,
         **options["compute"],
     )
+
+    if shape_config:
+        launch_instance_dict.update({"shape_config": shape_config})
+
+    launch_instance_details = _prepare_launch_instance_details(**launch_instance_dict)
 
     instance_stack_details["launch_instance"] = launch_instance_details
     return instance_stack_details
@@ -335,18 +268,21 @@ class OCIInstanceOrchestrator(Orchestrator):
                     break
         return public_endpoint
 
-    def setup(self, resource_requirements=None):
-        # If shape in resource_requirements, override general options
+    def get_resource(self):
+        return self.resource_id, self.instance
+
+    def setup(self, resource_config=None):
+        # If shape in resource_config, override general options
         options = copy.deepcopy(self.options)
-        if not resource_requirements:
-            resource_requirements = {}
+        if not resource_config:
+            resource_config = {}
 
-        # TODO, check isinstance dict resource_requirements
-        if "shape" in resource_requirements:
-            options["compute"]["shape"] = resource_requirements["shape"]
+        # TODO, check isinstance dict resource_config
+        if "shape" in resource_config:
+            options["compute"]["shape"] = resource_config["shape"]
 
-        if "shape_config" in resource_requirements:
-            options["compute"]["shape_config"] = resource_requirements["shape_config"]
+        if "shape_config" in resource_config:
+            options["compute"]["shape_config"] = resource_config["shape_config"]
 
         # Ensure we have a VCN stack ready
         vcn_stack = self._get_vcn_stack()
@@ -385,7 +321,10 @@ class OCIInstanceOrchestrator(Orchestrator):
         )
 
         available_shapes = list_entities(
-            self.compute_client, "list_shapes", options["oci"]["compartment_id"]
+            self.compute_client,
+            "list_shapes",
+            options["oci"]["compartment_id"],
+            availability_domain=options["compute"]["availability_domain"],
         )
 
         instance_details = _gen_instance_stack_details(
@@ -402,6 +341,9 @@ class OCIInstanceOrchestrator(Orchestrator):
                 self.compute_client,
                 options["oci"]["compartment_id"],
                 options["compute"]["display_name"],
+                kwargs={
+                    "availability_domain": options["compute"]["availability_domain"]
+                },
             )
 
         if not instance:
@@ -410,14 +352,15 @@ class OCIInstanceOrchestrator(Orchestrator):
                 self.compute_client, instance_details["launch_instance"]
             )
             if valid_instance(instance):
-                self.instance = instance
+                self.resource_id, self.instance = instance.id, instance
             else:
                 raise ValueError("The new instance: {} is not valid".format(instance))
         else:
             if valid_instance(instance):
-                self.instance = instance
+                self.resource_id, self.instance = instance.id, instance
 
-        if self.instance:
+        if self.instance and self.resource_id:
+            # Assign unique id to instance
             self._is_ready = True
 
     def tear_down(self):
@@ -426,6 +369,11 @@ class OCIInstanceOrchestrator(Orchestrator):
                 self.compute_client,
                 self.options["oci"]["compartment_id"],
                 self.options["compute"]["display_name"],
+                kwargs={
+                    "availability_domain": self.options["compute"][
+                        "availability_domain"
+                    ]
+                },
             )
 
         if self.instance:
@@ -437,9 +385,9 @@ class OCIInstanceOrchestrator(Orchestrator):
                 wait_for_states=[Instance.LIFECYCLE_STATE_TERMINATED],
             )
             if deleted:
-                self.instance = None
+                self.resource_id, self.instance = None, None
         else:
-            self.instance = None
+            self.resource_id, self.instance = None, None
 
         if not self.vcn_stack:
             # refresh
@@ -466,23 +414,31 @@ class OCIInstanceOrchestrator(Orchestrator):
             if open_port(target_endpoint, self.port):
                 self._is_reachable = True
 
-    # def __minimum_resources(shape):
-    #     cpus = 0
-    #     memory = 0
-    #     if hasattr(shape, "ocpu_options") and shape.ocpu_options \
-    #             and hasattr(shape, "memory_options") and shape.memory_options:
-    #         # Return ShapeConfig
-    #         instance_shape_config = InstanceShapeConfig(**shape)
-    #     else:
-    #         # Return shape name
-    #         cpus = shape.ocpus
-    #     return (cpus, memory)
+    @classmethod
+    def make_resource_config(
+        cls,
+        oci_options=None,
+        oci_availability_domain=None,
+        cpu=None,
+        memory=None,
+        gpus=None,
+    ):
+        if not oci_options:
+            oci_options = {}
 
-    def make_resource_requirements(self, cpu=None, memory=None, accelerators=None):
-        resource_requirements = {}
+        # TODO, load OCI environment variables
+        compute_client = new_client(
+            ComputeClient,
+            composite_class=ComputeClientCompositeOperations,
+            name=oci_options["name"],
+        )
 
+        resource_config = {}
         available_shapes = list_entities(
-            self.compute_client, "list_shapes", self.options["oci"]["compartment_id"]
+            compute_client,
+            "list_shapes",
+            oci_options["compartment_id"],
+            availability_domain=oci_availability_domain,
         )
 
         # Subset selection
@@ -514,20 +470,24 @@ class OCIInstanceOrchestrator(Orchestrator):
                     and shape.memory_options.min_in_g_bs <= memory
                 ):
                     # Dynamic memory range
-                    shape.memory_in_gbs = memory
+                    # HACK, since you can't atm set the dynamic memory amount
+                    # Ensure that we rank the flexible shapes by how
+                    # much the total allocated memory is assigned to the instance
+                    shape.memory_in_gbs = (
+                        shape.memory_options.default_per_ocpu_in_g_bs * shape.ocpus
+                    )
                     memory_shapes.append(shape)
                 else:
                     if shape.memory_in_gbs >= memory:
                         memory_shapes.append(shape)
             available_shapes = memory_shapes
 
-        if accelerators:
-            accelerator_shapes = []
-            for accelerator in accelerator_shapes:
-                for shape in available_shapes:
-                    if hasattr(shape, accelerator):
-                        accelerator_shapes.append(shape)
-            available_shapes = accelerator_shapes
+        if gpus:
+            gpu_shapes = []
+            for shape in available_shapes:
+                if hasattr(shape, "gpus") and shape.gpus >= gpus:
+                    gpu_shapes.append(shape)
+            available_shapes = gpu_shapes
 
         # TODO, Minimum shape available
         if available_shapes:
@@ -548,11 +508,10 @@ class OCIInstanceOrchestrator(Orchestrator):
                 for k, v in attributes.items():
                     if hasattr(InstanceShapeConfig, k):
                         instance_shape_details[k] = getattr(minimum_shape, k)
-                shape_config = InstanceShapeConfig(**instance_shape_details)
-                resource_requirements["shape_config"] = shape_config
-            else:
-                resource_requirements["shape"] = minimum_shape.shape
-        return resource_requirements
+                # shape_config = InstanceShapeConfig(**instance_shape_details)
+                resource_config["shape_config"] = instance_shape_details
+            resource_config["shape"] = minimum_shape.shape
+        return resource_config
 
     @classmethod
     def validate_options(cls, options):

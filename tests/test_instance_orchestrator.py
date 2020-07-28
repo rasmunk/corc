@@ -36,7 +36,7 @@ class TestInstanceOrchestrator(unittest.TestCase):
             subnet_name += test_id
 
         compute_options = dict(
-            availability_domain="lfcb:EU-FRANKFURT-1-AD-1",
+            availability_domain="lfcb:EU-FRANKFURT-1-AD-2",
             shape="VM.Standard1.1",
             operating_system="CentOS",
             operating_system_version="7",
@@ -68,11 +68,28 @@ class TestInstanceOrchestrator(unittest.TestCase):
         self.orchestrator.setup()
         self.assertTrue(self.orchestrator.is_ready())
 
-    def test_setup_instance_resource_requirements(self):
-        res_req = self.orchestrator.make_resource_requirements(cpu=8.0, memory=8)
-        self.assertIsNotNone(res_req)
-        self.orchestrator.setup(res_req)
+    def test_setup_instance_resource_config(self):
+        required_num_cpus = 4.0
+        required_gb_mem = 8.0
+
+        resource_config = OCIInstanceOrchestrator.make_resource_config(
+            oci_options=self.options["oci"],
+            oci_availability_domain=self.options["compute"]["availability_domain"],
+            cpu=required_num_cpus,
+            memory=required_gb_mem,
+        )
+        self.assertIsNotNone(resource_config)
+        self.assertNotEqual(resource_config, {})
+        self.orchestrator.setup(resource_config)
         self.assertTrue(self.orchestrator.is_ready())
+
+        identifer, resource = self.orchestrator.get_resource()
+        self.assertIsNotNone(identifer)
+        self.assertIsNotNone(resource)
+
+        # Correct spec?
+        self.assertGreaterEqual(resource.shape_config.ocpus, required_num_cpus)
+        self.assertGreaterEqual(resource.shape_config.memory_in_gbs, required_gb_mem)
 
     def test_teardown_instance(self):
         self.assertFalse(self.orchestrator.is_ready())

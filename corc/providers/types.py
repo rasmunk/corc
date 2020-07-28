@@ -1,11 +1,7 @@
 from libcloud.compute.types import Provider as ComputeProvider
-from libcloud.container.drivers.ecs import ElasticContainerDriver
 from libcloud.container.types import Provider as ContainerProvider
 from corc.providers.defaults import (
-    AWS,
-    CONTAINER,
     CONTAINER_CLUSTER,
-    DOCKER,
     EC2,
     ECS,
     INSTANCE,

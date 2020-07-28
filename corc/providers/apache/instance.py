@@ -1,7 +1,6 @@
 from libcloud.compute.base import Node
 from libcloud.compute.providers import get_driver
 from corc.orchestrator import Orchestrator
-from corc.util import validate_dict_fields, validate_dict_values
 
 
 def valid_instance(instance):

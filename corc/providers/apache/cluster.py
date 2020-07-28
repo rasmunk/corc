@@ -1,7 +1,6 @@
-from libcloud.container.base import ContainerCluster, ClusterLocation
+from libcloud.container.base import ContainerCluster
 from libcloud.container.providers import get_driver
 from corc.orchestrator import Orchestrator
-from corc.util import validate_dict_fields, validate_dict_values
 
 
 def valid_cluster(cluster):
