@@ -9,6 +9,7 @@ from corc.config import (
     valid_config,
 )
 from corc.config import default_corc_config
+from corc.providers.config import get_profile, set_profile
 from corc.providers.oci.config import generate_oci_config, valid_oci_config
 
 
@@ -45,3 +46,14 @@ class ConfigTest(unittest.TestCase):
         local_copy = copy.deepcopy(config)
         self.assertTrue(valid_oci_config(config, verbose=True))
         self.assertDictEqual(local_copy, config)
+
+    def test_provider_profile(self):
+        provider = "oci"
+        config = generate_default_config()
+        profile = get_profile(provider, config=config)
+        self.assertDictEqual(profile, {})
+        test_profile = {"name": "DEFAULT", "compartment_id": "test"}
+        self.assertTrue(set_profile(provider, test_profile, config=config))
+        profile = get_profile(provider, config=config)
+        self.assertDictEqual(profile, test_profile)
+        self.assertTrue(valid_config(config))

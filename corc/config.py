@@ -134,6 +134,16 @@ def generate_default_config():
     return default_corc_config
 
 
+def get_config_path(path=None):
+    if "CORC_CONFIG_FILE" in os.environ:
+        path = os.environ["CORC_CONFIG_FILE"]
+    else:
+        # If no path is set programmatically
+        if not path:
+            path = os.path.join(os.path.expanduser("~"), ".corc", "config")
+    return path
+
+
 def save_config(config, path=None):
     if "CORC_CONFIG_FILE" in os.environ:
         path = os.environ["CORC_CONFIG_FILE"]
@@ -161,22 +171,7 @@ def save_config(config, path=None):
 
 
 def update_config(config, path=None):
-    if "CORC_CONFIG_FILE" in os.environ:
-        path = os.environ["CORC_CONFIG_FILE"]
-    else:
-        if not path:
-            # Ensure the directory path is there
-            path = os.path.join(os.path.expanduser("~"), ".corc", "config")
-
-    if not os.path.exists(path):
-        raise Exception("Trying to update a config that doesn't exist")
-
     if not config:
-        return False
-
-    # Load config
-    existing_config = load_config(path=path)
-    if not existing_config:
         return False
 
     try:
@@ -239,7 +234,6 @@ def remove_config(path=None):
 def recursive_check_config(
     config, valid_dict, remain_config=None, remain_valid=None, verbose=False
 ):
-
     local_config = copy.deepcopy(config)
 
     while local_config.items():
@@ -335,6 +329,9 @@ def load_from_config(find_dict, prefix=None, config=None):
     if not find_dict or not config_exists():
         return {}
 
+    if not prefix:
+        prefix = tuple()
+
     if not config:
         config = load_config()
         if not config:
@@ -343,20 +340,15 @@ def load_from_config(find_dict, prefix=None, config=None):
     found_config_values = {}
     flat_find_dict = flatten_dict.flatten(find_dict, keep_empty_types=(dict,))
     flat_config = flatten_dict.flatten(config, keep_empty_types=(dict,))
-    for k, _ in flat_find_dict.items():
-        if prefix:
-            prefixed_key = prefix + k
-            if prefixed_key in flat_config:
-                if (
-                    isinstance(flat_config[prefixed_key], str)
-                    and flat_config[prefixed_key]
-                ):
-                    found_config_values[k] = flat_config[prefixed_key]
-                else:
-                    found_config_values[k] = flat_config[prefixed_key]
-        else:
-            if k in flat_config and flat_config[k]:
-                found_config_values[k] = flat_config[k]
+    for find_key, _ in flat_find_dict.items():
+        for flat_key, flat_value in flat_config.items():
+            prefixed_key = prefix + find_key
+            intersection = tuple([v for v in prefixed_key if v in flat_key])
+            difference = tuple([v for v in flat_key if v not in prefixed_key])
+            if prefixed_key == intersection:
+                if isinstance(flat_value, str) and flat_value:
+                    sub_key = find_key + difference
+                    found_config_values[sub_key] = flat_value
     return flatten_dict.unflatten(found_config_values)
 
 

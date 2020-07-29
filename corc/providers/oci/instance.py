@@ -83,6 +83,10 @@ def get_instance_by_name(compute_client, compartment_id, display_name, kwargs=No
     return None
 
 
+def launch_instance(compute_kwargs={}, oci_kwargs={}, subnet_kwargs={}, vcn_kwargs={}):
+    raise NotImplementedError
+
+
 def _prepare_source_details(available_images, **kwargs):
     selected_image = None
     for image in available_images:
