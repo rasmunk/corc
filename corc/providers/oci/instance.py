@@ -425,9 +425,9 @@ class OCIInstanceOrchestrator(Orchestrator):
                 self._is_reachable = True
 
     @classmethod
-    def load_config_options(cls, path=None):
+    def load_config_options(cls, provider="oci", path=None):
         options = {}
-        provider_prefix = ("oci",)
+        provider_prefix = (provider,)
         oci_profile = load_from_config(
             {"profile": {}},
             prefix=gen_config_provider_prefix(provider_prefix),

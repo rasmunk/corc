@@ -33,7 +33,7 @@ class Orchestrator:
         raise NotImplementedError
 
     @classmethod
-    def load_config_options(cls, path=None):
+    def load_config_options(cls, provider="", path=None):
         raise NotImplementedError
 
     @classmethod

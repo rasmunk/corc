@@ -84,6 +84,18 @@ class ApacheInstanceOrchestrator(Orchestrator):
             self._is_ready = False
 
     @classmethod
+    def load_from_config(cls, provider="", path=None):
+        options = {}
+        provider_prefix = ("apache", provider)
+
+        apache_profile = load_from_config(
+            {"profile": {}},
+            prefix=gen_config_provider_prefix(provider_prefix),
+            path=path,
+        )
+        return options
+
+    @classmethod
     def validate_options(cls, options):
         if not isinstance(options, dict):
             raise TypeError("options is not a dictionary")
