@@ -50,10 +50,15 @@ class ConfigTest(unittest.TestCase):
     def test_provider_profile(self):
         provider = "oci"
         config = generate_default_config()
-        profile = get_profile(provider, config=config)
+        save_config(config, path=self.config_path)
+
+        profile = get_profile(provider, config_path=self.config_path)
         self.assertDictEqual(profile, {})
         test_profile = {"name": "DEFAULT", "compartment_id": "test"}
-        self.assertTrue(set_profile(provider, test_profile, config=config))
-        profile = get_profile(provider, config=config)
+        self.assertTrue(
+            set_profile(provider, test_profile, config_path=self.config_path)
+        )
+        profile = get_profile(provider, config_path=self.config_path)
         self.assertDictEqual(profile, test_profile)
         self.assertTrue(valid_config(config))
+        self.assertTrue(remove_config(path=self.config_path))

@@ -145,18 +145,13 @@ def get_config_path(path=None):
 
 
 def save_config(config, path=None):
-    if "CORC_CONFIG_FILE" in os.environ:
-        path = os.environ["CORC_CONFIG_FILE"]
-    else:
-        if not path:
-            # Ensure the directory path is there
-            path = os.path.join(os.path.expanduser("~"), ".corc", "config")
-            dir_path = os.path.dirname(path)
-            if not os.path.exists(dir_path):
-                try:
-                    os.makedirs(os.path.dirname(path))
-                except Exception as err:
-                    print("Failed to create config directory: {}".format(err))
+    path = get_config_path(path)
+    dir_path = os.path.dirname(path)
+    if not os.path.exists(dir_path):
+        try:
+            os.makedirs(os.path.dirname(path))
+        except Exception as err:
+            print("Failed to create config directory: {}".format(err))
 
     if not config:
         return False
@@ -171,6 +166,7 @@ def save_config(config, path=None):
 
 
 def update_config(config, path=None):
+    path = get_config_path(path)
     if not config:
         return False
 
@@ -184,15 +180,11 @@ def update_config(config, path=None):
 
 
 def load_config(path=None):
-    config = {}
-    if "CORC_CONFIG_FILE" in os.environ:
-        path = os.environ["CORC_CONFIG_FILE"]
-    else:
-        if not path:
-            path = os.path.join(os.path.expanduser("~"), ".corc", "config")
-
+    path = get_config_path(path)
     if not os.path.exists(path):
         return False
+
+    config = {}
     try:
         with open(path, "r") as fh:
             config = yaml.safe_load(fh)
@@ -202,24 +194,14 @@ def load_config(path=None):
 
 
 def config_exists(path=None):
-    if "CORC_CONFIG_FILE" in os.environ:
-        path = os.environ["CORC_CONFIG_FILE"]
-    else:
-        if not path:
-            path = os.path.join(os.path.expanduser("~"), ".corc", "config")
-
+    path = get_config_path(path)
     if not path:
         return False
-
     return os.path.exists(path)
 
 
 def remove_config(path=None):
-    if "CORC_CONFIG_FILE" in os.environ:
-        path = os.environ["CORC_CONFIG_FILE"]
-    else:
-        if not path:
-            path = os.path.join(os.path.expanduser("~"), ".corc", "config")
+    path = get_config_path(path=path)
 
     if not os.path.exists(path):
         return True
@@ -325,17 +307,30 @@ def load_from_env(name, throw=False):
     return False
 
 
-def load_from_config(find_dict, prefix=None, config=None):
-    if not find_dict or not config_exists():
-        return {}
-
+def set_in_config(set_dict, prefix=None, path=None):
     if not prefix:
         prefix = tuple()
 
+    config = load_config(path=path)
     if not config:
-        config = load_config()
-        if not config:
-            return {}
+        return False
+
+    flat_set_dict = flatten_dict.flatten(set_dict, keep_empty_types=(dict,))
+    flat_config = flatten_dict.flatten(config, keep_empty_types=(dict,))
+    for set_key, set_value in flat_set_dict.items():
+        flat_config[prefix + set_key] = set_value
+
+    unflatten_dict = flatten_dict.unflatten(flat_config)
+    return update_config(unflatten_dict, path=path)
+
+
+def load_from_config(find_dict, prefix=None, path=None):
+    if not prefix:
+        prefix = tuple()
+
+    config = load_config(path=path)
+    if not config:
+        return {}
 
     found_config_values = {}
     flat_find_dict = flatten_dict.flatten(find_dict, keep_empty_types=(dict,))
