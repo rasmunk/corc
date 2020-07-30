@@ -341,9 +341,8 @@ def load_from_config(find_dict, prefix=None, path=None):
             intersection = tuple([v for v in prefixed_key if v in flat_key])
             difference = tuple([v for v in flat_key if v not in prefixed_key])
             if prefixed_key == intersection:
-                if isinstance(flat_value, str) and flat_value:
-                    sub_key = find_key + difference
-                    found_config_values[sub_key] = flat_value
+                sub_key = find_key + difference
+                found_config_values[sub_key] = flat_value
     return flatten_dict.unflatten(found_config_values)
 
 

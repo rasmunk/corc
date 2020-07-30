@@ -33,6 +33,10 @@ class Orchestrator:
         raise NotImplementedError
 
     @classmethod
+    def load_config_options(cls, path=None):
+        raise NotImplementedError
+
+    @classmethod
     def make_resource_config(cls, **kwargs):
         raise NotImplementedError
 

@@ -17,7 +17,11 @@ from oci.core.models import (
 )
 from corc.orchestrator import Orchestrator
 from corc.util import open_port
-from corc.config import load_from_env_or_config, gen_config_provider_prefix
+from corc.config import (
+    load_from_config,
+    load_from_env_or_config,
+    gen_config_provider_prefix,
+)
 from corc.providers.config import get_provider_profile
 from corc.providers.oci.helpers import (
     create,
@@ -162,17 +166,17 @@ def _prepare_launch_instance_details(**kwargs):
 
 def _gen_instance_stack_details(vcn_id, subnet_id, images, shapes, **options):
     instance_stack_details = {}
-    source_details = _prepare_source_details(images, **options["compute"])
+    source_details = _prepare_source_details(images, **options["instance"])
 
     # Either static or dynamic shape
     shape_config = None
-    if "shape_config" in options["compute"]:
-        shape_config = _prepare_shape_config(**options["compute"]["shape_config"])
-        options["compute"].pop("shape_config")
+    if "shape_config" in options["instance"]:
+        shape_config = _prepare_shape_config(**options["instance"]["shape_config"])
+        options["instance"].pop("shape_config")
 
-    shape = _prepare_shape(shapes, **options["compute"])
-    if "shape" in options["compute"]:
-        options["compute"].pop("shape")
+    shape = _prepare_shape(shapes, **options["instance"])
+    if "shape" in options["instance"]:
+        options["instance"].pop("shape")
 
     create_vnic_details = _prepare_vnic_details(subnet_id=subnet_id)
 
@@ -182,12 +186,12 @@ def _gen_instance_stack_details(vcn_id, subnet_id, images, shapes, **options):
         metadata = _prepare_metadata(**options["compute_metadata"])
 
     launch_instance_dict = dict(
-        compartment_id=options["oci"]["compartment_id"],
+        compartment_id=options["profile"]["compartment_id"],
         shape=shape,
         create_vnic_details=create_vnic_details,
         source_details=source_details,
         metadata=metadata,
-        **options["compute"],
+        **options["instance"],
     )
 
     if shape_config:
@@ -206,19 +210,19 @@ class OCIInstanceOrchestrator(Orchestrator):
         self.compute_client = new_client(
             ComputeClient,
             composite_class=ComputeClientCompositeOperations,
-            name=options["oci"]["name"],
+            name=options["profile"]["name"],
         )
 
         self.identity_client = new_client(
             IdentityClient,
             composite_class=IdentityClientCompositeOperations,
-            name=options["oci"]["name"],
+            name=options["profile"]["name"],
         )
 
         self.network_client = new_client(
             VirtualNetworkClient,
             composite_class=VirtualNetworkClientCompositeOperations,
-            name=options["oci"]["name"],
+            name=options["profile"]["name"],
         )
 
         self.port = 22
@@ -229,19 +233,19 @@ class OCIInstanceOrchestrator(Orchestrator):
         stack = {}
         vcn = get_vcn_by_name(
             self.network_client,
-            self.options["oci"]["compartment_id"],
+            self.options["profile"]["compartment_id"],
             self.options["vcn"]["display_name"],
         )
         if vcn:
             stack = get_vcn_stack(
-                self.network_client, self.options["oci"]["compartment_id"], vcn.id
+                self.network_client, self.options["profile"]["compartment_id"], vcn.id
             )
         return stack
 
     def _new_vcn_stack(self):
         stack = new_vcn_stack(
             self.network_client,
-            self.options["oci"]["compartment_id"],
+            self.options["profile"]["compartment_id"],
             vcn_kwargs=self.options["vcn"],
             subnet_kwargs=self.options["subnet"],
         )
@@ -250,7 +254,7 @@ class OCIInstanceOrchestrator(Orchestrator):
     def _refresh_vcn_stack(self, vcn_stack):
         stack = refresh_vcn_stack(
             self.network_client,
-            self.options["oci"]["compartment_id"],
+            self.options["profile"]["compartment_id"],
             vcn_kwargs=self.options["vcn"],
             subnet_kwargs=self.options["subnet"],
         )
@@ -263,7 +267,7 @@ class OCIInstanceOrchestrator(Orchestrator):
             vnic_attachments = list_entities(
                 self.compute_client,
                 "list_vnic_attachments",
-                self.options["oci"]["compartment_id"],
+                self.options["profile"]["compartment_id"],
                 instance_id=self.instance.id,
             )
             # For now just pick the first attachment
@@ -285,10 +289,10 @@ class OCIInstanceOrchestrator(Orchestrator):
 
         # TODO, check isinstance dict resource_config
         if "shape" in resource_config:
-            options["compute"]["shape"] = resource_config["shape"]
+            options["instance"]["shape"] = resource_config["shape"]
 
         if "shape_config" in resource_config:
-            options["compute"]["shape_config"] = resource_config["shape_config"]
+            options["instance"]["shape_config"] = resource_config["shape_config"]
 
         # Ensure we have a VCN stack ready
         vcn_stack = self._get_vcn_stack()
@@ -309,7 +313,7 @@ class OCIInstanceOrchestrator(Orchestrator):
         # Find the selected subnet in the VCN
         subnet = get_subnet_by_name(
             self.network_client,
-            options["oci"]["compartment_id"],
+            options["profile"]["compartment_id"],
             self.vcn_stack["id"],
             options["subnet"]["display_name"],
         )
@@ -323,14 +327,14 @@ class OCIInstanceOrchestrator(Orchestrator):
 
         # Available images
         available_images = list_entities(
-            self.compute_client, "list_images", options["oci"]["compartment_id"]
+            self.compute_client, "list_images", options["profile"]["compartment_id"]
         )
 
         available_shapes = list_entities(
             self.compute_client,
             "list_shapes",
-            options["oci"]["compartment_id"],
-            availability_domain=options["compute"]["availability_domain"],
+            options["profile"]["compartment_id"],
+            availability_domain=options["instance"]["availability_domain"],
         )
 
         instance_details = _gen_instance_stack_details(
@@ -342,13 +346,13 @@ class OCIInstanceOrchestrator(Orchestrator):
         )
 
         instance = None
-        if "display_name" in options["compute"]:
+        if "display_name" in options["instance"]:
             instance = get_instance_by_name(
                 self.compute_client,
-                options["oci"]["compartment_id"],
-                options["compute"]["display_name"],
+                options["profile"]["compartment_id"],
+                options["instance"]["display_name"],
                 kwargs={
-                    "availability_domain": options["compute"]["availability_domain"]
+                    "availability_domain": options["instance"]["availability_domain"]
                 },
             )
 
@@ -373,10 +377,10 @@ class OCIInstanceOrchestrator(Orchestrator):
         if not self.instance:
             self.instance = get_instance_by_name(
                 self.compute_client,
-                self.options["oci"]["compartment_id"],
-                self.options["compute"]["display_name"],
+                self.options["profile"]["compartment_id"],
+                self.options["instance"]["display_name"],
                 kwargs={
-                    "availability_domain": self.options["compute"][
+                    "availability_domain": self.options["instance"][
                         "availability_domain"
                     ]
                 },
@@ -403,7 +407,7 @@ class OCIInstanceOrchestrator(Orchestrator):
         if self.vcn_stack:
             vcn_deleted = delete_vcn_stack(
                 self.network_client,
-                self.options["oci"]["compartment_id"],
+                self.options["profile"]["compartment_id"],
                 vcn_id=self.vcn_stack["id"],
             )
             if stack_was_deleted(vcn_deleted):
@@ -421,6 +425,39 @@ class OCIInstanceOrchestrator(Orchestrator):
                 self._is_reachable = True
 
     @classmethod
+    def load_config_options(cls, path=None):
+        options = {}
+        provider_prefix = ("oci",)
+        oci_profile = load_from_config(
+            {"profile": {}},
+            prefix=gen_config_provider_prefix(provider_prefix),
+            path=path,
+        )
+
+        oci_instance = load_from_config(
+            {"instance": {}},
+            prefix=gen_config_provider_prefix(provider_prefix),
+            path=path,
+        )
+
+        oci_vcn = load_from_config(
+            {"vcn": {}}, prefix=gen_config_provider_prefix(provider_prefix), path=path
+        )
+
+        if "profile" in oci_profile:
+            options["profile"] = oci_profile["profile"]
+
+        if "instance" in oci_instance:
+            options["instance"] = oci_instance["instance"]
+
+        if "vcn" in oci_vcn:
+            vcn = oci_vcn["vcn"]
+            options["subnet"] = vcn.pop("subnet")
+            options["vcn"] = vcn
+
+        return options
+
+    @classmethod
     def make_resource_config(
         cls,
         provider_profile=None,
@@ -430,17 +467,19 @@ class OCIInstanceOrchestrator(Orchestrator):
         gpus=None,
     ):
         if not provider_profile:
-            provider_profile = get_provider_profile("oci")
+            provider_profile = get_provider_profile("profile")
 
         if not provider_kwargs:
             provider_kwargs = {}
 
         availability_domain = ""
-        if "availability_domain" not in provider_kwargs:
+        if "availability_domain" in provider_kwargs:
+            availability_domain = provider_kwargs["availability_domain"]
+        else:
             # Try load from config
             availability_domain = load_from_env_or_config(
                 {"instance": {"availability_domain": {}}},
-                prefix=gen_config_provider_prefix(("oci",)),
+                prefix=gen_config_provider_prefix(("profile",)),
             )
 
         # TODO, load OCI environment variables
@@ -535,34 +574,31 @@ class OCIInstanceOrchestrator(Orchestrator):
         if not isinstance(options, dict):
             raise ValueError("options is not a dictionary")
 
-        expected_oci_keys = [
+        expected_profile_keys = [
             "compartment_id",
             "name",
         ]
 
-        expected_compute_keys = [
+        expected_instance_keys = [
             "availability_domain",
             "shape",
             "operating_system",
             "operating_system_version",
         ]
-
-        optional_compute_metadata_keys = ["ssh_authorized_keys"]
-        optional_compute_keys = ["display_name"]
+        optional_instance_metadata_keys = ["ssh_authorized_keys"]
+        optional_instance_keys = ["display_name"]
 
         expected_vcn_keys = ["cidr_block", "dns_label", "display_name"]
-
         optional_vcn_keys = ["id"]
 
         expected_subnet_keys = ["dns_label"]
-
         optional_subnet_keys = ["id", "cidr_block", "display_name"]
 
         expected_groups = {
-            "oci": expected_oci_keys,
-            "compute": expected_compute_keys
-            + optional_compute_metadata_keys
-            + optional_compute_keys,
+            "profile": expected_profile_keys,
+            "instance": expected_instance_keys
+            + optional_instance_metadata_keys
+            + optional_instance_keys,
             "vcn": expected_vcn_keys + optional_vcn_keys,
             "subnet": expected_subnet_keys + optional_subnet_keys,
         }

@@ -39,7 +39,8 @@ ORCHESTRATORS = {
 def get_orchestrator(orchestrator, provider):
     orchestrator_definition = ORCHESTRATORS[orchestrator][provider]
     klass = orchestrator_definition.get("klass", None)
-    options = orchestrator_definition.get("options", {})
+    options = klass.load_config_options()
+    options.update(orchestrator_definition.get("options", {}))
     return klass, options
 
 

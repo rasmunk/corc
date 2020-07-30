@@ -51,7 +51,7 @@ default_instance_config = {
     "availability_domain": "",
     "operating_system": "CentOS",
     "operating_system_version": "7",
-    "target_shape": "VM.Standard2.1",
+    "shape": "VM.Standard2.1",
 }
 
 valid_instance_config = {
@@ -59,7 +59,7 @@ valid_instance_config = {
     "availability_domain": str,
     "operating_system": str,
     "operating_system_version": str,
-    "target_shape": str,
+    "shape": str,
 }
 
 default_subnet_config = {

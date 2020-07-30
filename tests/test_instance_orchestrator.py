@@ -1,5 +1,13 @@
+import os
 import unittest
-from corc.config import load_from_env_or_config, gen_config_provider_prefix
+from corc.config import (
+    load_from_env_or_config,
+    gen_config_provider_prefix,
+    generate_default_config,
+    save_config,
+    remove_config,
+)
+from corc.providers.oci.config import generate_oci_config
 from corc.providers.oci.instance import OCIInstanceOrchestrator
 
 
@@ -19,7 +27,7 @@ class TestInstanceOrchestrator(unittest.TestCase):
             throw=True,
         )
 
-        oci_options = dict(compartment_id=oci_compartment_id, name=oci_name,)
+        oci_profile_options = dict(compartment_id=oci_compartment_id, name=oci_name,)
 
         test_name = "Test_Instance_Orch"
         node_name = test_name + "_Node"
@@ -35,7 +43,7 @@ class TestInstanceOrchestrator(unittest.TestCase):
             vcn_name += test_id
             subnet_name += test_id
 
-        compute_options = dict(
+        instance_options = dict(
             availability_domain="lfcb:EU-FRANKFURT-1-AD-2",
             shape="VM.Standard1.1",
             operating_system="CentOS",
@@ -47,8 +55,8 @@ class TestInstanceOrchestrator(unittest.TestCase):
         subnet_options = dict(display_name=subnet_name, dns_label="workers")
 
         self.options = dict(
-            oci=oci_options,
-            compute=compute_options,
+            profile=oci_profile_options,
+            instance=instance_options,
             vcn=vcn_options,
             subnet=subnet_options,
         )
@@ -68,15 +76,27 @@ class TestInstanceOrchestrator(unittest.TestCase):
         self.orchestrator.setup()
         self.assertTrue(self.orchestrator.is_ready())
 
+    def test_valid_load_instance_config(self):
+        test_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tmp")
+        config_path = os.path.join(test_dir, "config")
+        config = generate_default_config()
+        oci_config = generate_oci_config()
+
+        config["corc"]["providers"].update(oci_config)
+        self.assertTrue(save_config(config, path=config_path))
+        options = OCIInstanceOrchestrator.load_config_options(path=config_path)
+        self.assertIsNone(OCIInstanceOrchestrator.validate_options(options))
+        self.assertTrue(remove_config(config_path))
+
     def test_setup_instance_resource_config(self):
         required_num_cpus = 4.0
         required_gb_mem = 8.0
 
         provider_kwargs = dict(
-            availability_domain=self.options["compute"]["availability_domain"]
+            availability_domain=self.options["instance"]["availability_domain"]
         )
         resource_config = OCIInstanceOrchestrator.make_resource_config(
-            provider_profile=self.options["oci"],
+            provider_profile=self.options["profile"],
             provider_kwargs=provider_kwargs,
             cpu=required_num_cpus,
             memory=required_gb_mem,
