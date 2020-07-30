@@ -29,8 +29,9 @@ class TestVCNStack(unittest.TestCase):
             throw=True,
         )
 
-        self.oci_options = {
-            "profile": {"compartment_id": oci_compartment_id, "name": oci_name}
+        self.oci_profile_options = {
+            "compartment_id": oci_compartment_id,
+            "name": oci_name,
         }
 
         test_name = "Test_VCN"
@@ -52,13 +53,15 @@ class TestVCNStack(unittest.TestCase):
         self.subnet_options = dict(display_name=subnet_name, dns_label="workers")
 
         self.options = dict(
-            oci=self.oci_options, vcn=self.vcn_options, subnet=self.subnet_options,
+            profile=self.oci_profile_options,
+            vcn=self.vcn_options,
+            subnet=self.subnet_options,
         )
 
         self.network_client = new_client(
             VirtualNetworkClient,
             composite_class=VirtualNetworkClientCompositeOperations,
-            name=self.options["oci"]["profile"]["name"],
+            name=self.options["profile"]["name"],
         )
 
     def tearDown(self):
@@ -66,15 +69,13 @@ class TestVCNStack(unittest.TestCase):
         vcns = list_entities(
             self.network_client,
             "list_vcns",
-            self.options["oci"]["profile"]["compartment_id"],
+            self.options["profile"]["compartment_id"],
             display_name=self.vcn_options["display_name"],
         )
 
         for vcn in vcns:
             deleted_stack = delete_vcn_stack(
-                self.network_client,
-                self.options["oci"]["profile"]["compartment_id"],
-                vcn=vcn,
+                self.network_client, self.options["profile"]["compartment_id"], vcn=vcn,
             )
             self.assertTrue(stack_was_deleted(deleted_stack))
 
@@ -82,7 +83,7 @@ class TestVCNStack(unittest.TestCase):
         # Extract the ip of the instance
         self.vcn_stack = new_vcn_stack(
             self.network_client,
-            self.options["oci"]["profile"]["compartment_id"],
+            self.options["profile"]["compartment_id"],
             vcn_kwargs=self.options["vcn"],
             subnet_kwargs=self.options["subnet"],
         )
@@ -90,7 +91,7 @@ class TestVCNStack(unittest.TestCase):
         self.assertTrue(valid_vcn_stack(self.vcn_stack))
         _vcn_stack = get_vcn_stack(
             self.network_client,
-            self.options["oci"]["profile"]["compartment_id"],
+            self.options["profile"]["compartment_id"],
             self.vcn_stack["id"],
         )
         self.assertTrue(valid_vcn_stack(_vcn_stack))
@@ -111,7 +112,7 @@ class TestVCNStack(unittest.TestCase):
 
         new_vcn_name = get_vcn_by_name(
             self.network_client,
-            self.options["oci"]["profile"]["compartment_id"],
+            self.options["profile"]["compartment_id"],
             self.options["vcn"]["display_name"],
         )
 
@@ -122,7 +123,7 @@ class TestVCNStack(unittest.TestCase):
         # Extract the ip of the instance
         self.vcn_stack = new_vcn_stack(
             self.network_client,
-            self.options["oci"]["profile"]["compartment_id"],
+            self.options["profile"]["compartment_id"],
             vcn_kwargs=self.options["vcn"],
             subnet_kwargs=self.options["subnet"],
         )
@@ -131,7 +132,7 @@ class TestVCNStack(unittest.TestCase):
 
         created_vcn_stack = get_vcn_stack(
             self.network_client,
-            self.options["oci"]["profile"]["compartment_id"],
+            self.options["profile"]["compartment_id"],
             self.vcn_stack["id"],
         )
 
@@ -140,7 +141,7 @@ class TestVCNStack(unittest.TestCase):
 
         deleted_stack = delete_vcn_stack(
             self.network_client,
-            self.options["oci"]["profile"]["compartment_id"],
+            self.options["profile"]["compartment_id"],
             self.vcn_stack["id"],
         )
         self.assertTrue(stack_was_deleted(deleted_stack))
@@ -149,7 +150,7 @@ class TestVCNStack(unittest.TestCase):
         # Extract the ip of the instance
         self.vcn_stack = new_vcn_stack(
             self.network_client,
-            self.options["oci"]["profile"]["compartment_id"],
+            self.options["profile"]["compartment_id"],
             vcn_kwargs=self.options["vcn"],
             subnet_kwargs=self.options["subnet"],
         )
@@ -159,7 +160,7 @@ class TestVCNStack(unittest.TestCase):
 
         refreshed_vcn = refresh_vcn_stack(
             self.network_client,
-            self.options["oci"]["profile"]["compartment_id"],
+            self.options["profile"]["compartment_id"],
             vcn_kwargs=refresh_stack,
         )
         self.assertTrue(valid_vcn_stack(refreshed_vcn))
@@ -169,7 +170,7 @@ class TestVCNStack(unittest.TestCase):
 
         refreshed_vcn = refresh_vcn_stack(
             self.network_client,
-            self.options["oci"]["profile"]["compartment_id"],
+            self.options["profile"]["compartment_id"],
             vcn_kwargs=refresh_stack,
         )
         self.assertTrue(valid_vcn_stack(refreshed_vcn))

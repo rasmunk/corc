@@ -39,10 +39,7 @@ class TestClusterStack(unittest.TestCase):
             throw=True,
         )
 
-        oci_options = {
-            "profile": {"compartment_id": oci_compartment_id, "name": oci_name}
-        }
-        # oci_options = dict(compartment_id=oci_compartment_id, name=oci_name,)
+        oci_profile_options = {"compartment_id": oci_compartment_id, "name": oci_name}
 
         test_name = "Test_Cluster"
         cluster_name = test_name
@@ -100,7 +97,7 @@ class TestClusterStack(unittest.TestCase):
         )
 
         self.options = dict(
-            oci=oci_options,
+            profile=oci_profile_options,
             cluster=cluster_options,
             vcn=vcn_options,
             subnet=subnet_options,
@@ -117,15 +114,13 @@ class TestClusterStack(unittest.TestCase):
         vcns = list_entities(
             self.network_client,
             "list_vcns",
-            self.options["oci"]["profile"]["compartment_id"],
+            self.options["profile"]["compartment_id"],
             display_name=self.options["vcn"]["display_name"],
         )
 
         for vcn in vcns:
             deleted = delete_vcn_stack(
-                self.network_client,
-                self.options["oci"]["profile"]["compartment_id"],
-                vcn=vcn,
+                self.network_client, self.options["profile"]["compartment_id"], vcn=vcn,
             )
             self.assertTrue(deleted)
 
@@ -133,7 +128,7 @@ class TestClusterStack(unittest.TestCase):
         # Need vcn stack for the cluster stack
         self.vcn_stack = new_vcn_stack(
             self.network_client,
-            self.options["oci"]["profile"]["compartment_id"],
+            self.options["profile"]["compartment_id"],
             vcn_kwargs=self.options["vcn"],
             subnet_kwargs=self.options["subnet"],
         )
@@ -143,7 +138,7 @@ class TestClusterStack(unittest.TestCase):
         available_images = list_entities(
             self.compute_client,
             "list_images",
-            self.options["oci"]["profile"]["compartment_id"],
+            self.options["profile"]["compartment_id"],
             **self.options["cluster"]["node"]["image"]
         )
 
@@ -178,7 +173,7 @@ class TestClusterStack(unittest.TestCase):
 
         _cluster_stack = get_cluster_stack(
             self.container_engine_client,
-            self.options["oci"]["profile"]["compartment_id"],
+            self.options["profile"]["compartment_id"],
             self.cluster_stack["id"],
         )
         self.assertTrue(valid_cluster_stack(_cluster_stack))
@@ -194,7 +189,7 @@ class TestClusterStack(unittest.TestCase):
 
         new_cluster_name = get_cluster_by_name(
             self.container_engine_client,
-            self.options["oci"]["profile"]["compartment_id"],
+            self.options["profile"]["compartment_id"],
             self.cluster_stack["cluster"].name,
         )
 

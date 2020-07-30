@@ -25,7 +25,7 @@ class TestInstanceConfigurer(unittest.TestCase):
             prefix=gen_config_provider_prefix(prefix),
             throw=True,
         )
-        oci_options = dict(compartment_id=oci_compartment_id, name=oci_name,)
+        oci_profile_options = dict(compartment_id=oci_compartment_id, name=oci_name,)
 
         test_name = "Test_Instance_Conf"
         node_name = test_name + "_Node"
@@ -41,7 +41,7 @@ class TestInstanceConfigurer(unittest.TestCase):
             vcn_name += test_id
             subnet_name += test_id
 
-        compute_options = dict(
+        instance_options = dict(
             availability_domain="lfcb:EU-FRANKFURT-1-AD-1",
             shape="VM.Standard1.1",
             operating_system="CentOS",
@@ -78,7 +78,7 @@ class TestInstanceConfigurer(unittest.TestCase):
                 "Failed to load the specified OCI_INSTANCE_SSH_KEY public key"
             )
 
-        compute_metadata_options = dict(ssh_authorized_keys=[ssh_public_key])
+        instance_metadata_options = dict(ssh_authorized_keys=[ssh_public_key])
 
         vcn_options = dict(
             cidr_block="10.0.0.0/16", display_name=vcn_name, dns_label="ku",
@@ -86,9 +86,9 @@ class TestInstanceConfigurer(unittest.TestCase):
         subnet_options = dict(display_name=subnet_name, dns_label="workers")
 
         self.options = dict(
-            oci=oci_options,
-            compute=compute_options,
-            compute_metadata=compute_metadata_options,
+            profile=oci_profile_options,
+            instance=instance_options,
+            instance_metadata=instance_metadata_options,
             vcn=vcn_options,
             subnet=subnet_options,
         )

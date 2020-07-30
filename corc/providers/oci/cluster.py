@@ -322,7 +322,7 @@ def gen_cluster_stack_details(vnc_id, subnets, image, **options):
 
     create_cluster_details = prepare_create_cluster_details(
         vcn_id=vnc_id,
-        compartment_id=options["oci"]["profile"]["compartment_id"],
+        compartment_id=options["profile"]["compartment_id"],
         **options["cluster"],
     )
     cluster_details["create_cluster"] = create_cluster_details
@@ -349,7 +349,7 @@ def gen_cluster_stack_details(vnc_id, subnets, image, **options):
     create_node_pool_details = prepare_create_node_pool_details(
         node_config_details=node_config_details,
         kubernetes_version=options["cluster"]["kubernetes_version"],
-        compartment_id=options["oci"]["profile"]["compartment_id"],
+        compartment_id=options["profile"]["compartment_id"],
         **options["cluster"]["node"],
     )
     cluster_details["create_node_pool"] = create_node_pool_details
@@ -374,17 +374,17 @@ class OCIClusterOrchestrator(Orchestrator):
         self.compute_client = new_client(
             ComputeClient,
             composite_class=ComputeClientCompositeOperations,
-            name=options["oci"]["profile"]["name"],
+            name=options["profile"]["name"],
         )
         self.container_engine_client = new_client(
             ContainerEngineClient,
             composite_class=ContainerEngineClientCompositeOperations,
-            name=options["oci"]["profile"]["name"],
+            name=options["profile"]["name"],
         )
         self.network_client = new_client(
             VirtualNetworkClient,
             composite_class=VirtualNetworkClientCompositeOperations,
-            name=options["oci"]["profile"]["name"],
+            name=options["profile"]["name"],
         )
 
         if (
@@ -403,7 +403,7 @@ class OCIClusterOrchestrator(Orchestrator):
         if "id" in self.options["vcn"] and self.options["vcn"]["id"]:
             return get_vcn_stack(
                 self.network_client,
-                self.options["oci"]["profile"]["compartment_id"],
+                self.options["profile"]["compartment_id"],
                 self.options["vcn"]["id"],
             )
 
@@ -414,13 +414,13 @@ class OCIClusterOrchestrator(Orchestrator):
         ):
             vcn = get_vcn_by_name(
                 self.network_client,
-                self.options["oci"]["profile"]["compartment_id"],
+                self.options["profile"]["compartment_id"],
                 self.options["vcn"]["display_name"],
             )
             if vcn:
                 stack = get_vcn_stack(
                     self.network_client,
-                    self.options["oci"]["profile"]["compartment_id"],
+                    self.options["profile"]["compartment_id"],
                     vcn.id,
                 )
         return stack
@@ -428,7 +428,7 @@ class OCIClusterOrchestrator(Orchestrator):
     def _new_vcn_stack(self):
         stack = new_vcn_stack(
             self.network_client,
-            self.options["oci"]["profile"]["compartment_id"],
+            self.options["profile"]["compartment_id"],
             vcn_kwargs=self.options["vcn"],
             subnet_kwargs=self.options["subnet"],
         )
@@ -441,7 +441,7 @@ class OCIClusterOrchestrator(Orchestrator):
         )
         stack = refresh_vcn_stack(
             self.network_client,
-            self.options["oci"]["profile"]["compartment_id"],
+            self.options["profile"]["compartment_id"],
             vcn_kwargs=self.options["vcn"],
             subnet_kwargs=subnet_kwargs,
         )
@@ -467,7 +467,7 @@ class OCIClusterOrchestrator(Orchestrator):
         available_images = list_entities(
             self.compute_client,
             "list_images",
-            self.options["oci"]["profile"]["compartment_id"],
+            self.options["profile"]["compartment_id"],
             **self.options["cluster"]["node"]["image"],
         )
 
@@ -493,7 +493,7 @@ class OCIClusterOrchestrator(Orchestrator):
 
         cluster = get_cluster_by_name(
             self.container_engine_client,
-            self.options["oci"]["profile"]["compartment_id"],
+            self.options["profile"]["compartment_id"],
             self.options["cluster"]["name"],
         )
         if not cluster:
@@ -513,7 +513,7 @@ class OCIClusterOrchestrator(Orchestrator):
         else:
             cluster_stack = get_cluster_stack(
                 self.container_engine_client,
-                self.options["oci"]["profile"]["compartment_id"],
+                self.options["profile"]["compartment_id"],
                 cluster.id,
             )
 
@@ -538,7 +538,7 @@ class OCIClusterOrchestrator(Orchestrator):
             # refresh
             self.cluster_stack = get_cluster_by_name(
                 self.container_engine_client,
-                self.options["oci"]["profile"]["compartment_id"],
+                self.options["profile"]["compartment_id"],
                 self.options["cluster"]["name"],
             )
 
@@ -557,7 +557,7 @@ class OCIClusterOrchestrator(Orchestrator):
         if self.vcn_stack:
             vcn_deleted = delete_vcn_stack(
                 self.network_client,
-                self.options["oci"]["profile"]["compartment_id"],
+                self.options["profile"]["compartment_id"],
                 vcn_id=self.vcn_stack["id"],
             )
             if vcn_deleted:
@@ -574,10 +574,10 @@ class OCIClusterOrchestrator(Orchestrator):
             raise TypeError("options is not a dictionary")
 
         validate_dict_fields(
-            options["oci"]["profile"], valid_profile_config, verbose=True, throw=True
+            options["profile"], valid_profile_config, verbose=True, throw=True
         )
         validate_dict_values(
-            options["oci"]["profile"], valid_profile_config, verbose=True, throw=True
+            options["profile"], valid_profile_config, verbose=True, throw=True
         )
 
         validate_dict_fields(

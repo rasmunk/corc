@@ -182,8 +182,8 @@ def _gen_instance_stack_details(vcn_id, subnet_id, images, shapes, **options):
 
     # Extract metadata
     metadata = {}
-    if "compute_metadata" in options:
-        metadata = _prepare_metadata(**options["compute_metadata"])
+    if "instance_metadata" in options:
+        metadata = _prepare_metadata(**options["instance_metadata"])
 
     launch_instance_dict = dict(
         compartment_id=options["profile"]["compartment_id"],

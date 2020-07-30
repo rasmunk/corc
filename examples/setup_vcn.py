@@ -4,7 +4,7 @@ from corc.providers.oci.network import new_vcn_stack
 
 
 def prepare_options():
-    oci_options = dict(
+    oci_profile_options = dict(
         compartment_id="ocid1.tenancy.oc1..aaaaaaaakfmksyrf7hl2gfexmjpb6pbyrirm6k3ro7wd4"
         "64y2pr7atpxpv4q",
         name="XNOVOTECH",
@@ -20,7 +20,7 @@ def prepare_options():
         cidr_block="10.0.1.0/24", display_name="workers", dns_label="workers"
     )
 
-    options = dict(oci=oci_options, vcn=vcn_options, subnet=subnet_options,)
+    options = dict(profile=oci_profile_options, vcn=vcn_options, subnet=subnet_options,)
     return options
 
 
