@@ -1,6 +1,10 @@
 from libcloud.compute.base import Node
 from libcloud.compute.providers import get_driver
 from corc.orchestrator import Orchestrator
+from corc.config import (
+    load_from_config,
+    gen_config_provider_prefix,
+)
 
 
 def valid_instance(instance):
@@ -84,7 +88,7 @@ class ApacheInstanceOrchestrator(Orchestrator):
             self._is_ready = False
 
     @classmethod
-    def load_from_config(cls, provider="", path=None):
+    def load_config_options(cls, provider="", path=None):
         options = {}
         provider_prefix = ("apache", provider)
 
@@ -93,6 +97,10 @@ class ApacheInstanceOrchestrator(Orchestrator):
             prefix=gen_config_provider_prefix(provider_prefix),
             path=path,
         )
+
+        if "profile" in apache_profile:
+            options["profile"] = apache_profile["profile"]
+
         return options
 
     @classmethod
