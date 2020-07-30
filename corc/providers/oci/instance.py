@@ -17,6 +17,8 @@ from oci.core.models import (
 )
 from corc.orchestrator import Orchestrator
 from corc.util import open_port
+from corc.config import load_from_env_or_config, gen_config_provider_prefix
+from corc.providers.config import get_provider_profile
 from corc.providers.oci.helpers import (
     create,
     delete,
@@ -421,28 +423,39 @@ class OCIInstanceOrchestrator(Orchestrator):
     @classmethod
     def make_resource_config(
         cls,
-        oci_options=None,
-        oci_availability_domain=None,
+        provider_profile=None,
+        provider_kwargs=None,
         cpu=None,
         memory=None,
         gpus=None,
     ):
-        if not oci_options:
-            oci_options = {}
+        if not provider_profile:
+            provider_profile = get_provider_profile("oci")
+
+        if not provider_kwargs:
+            provider_kwargs = {}
+
+        availability_domain = ""
+        if "availability_domain" not in provider_kwargs:
+            # Try load from config
+            availability_domain = load_from_env_or_config(
+                {"instance": {"availability_domain": {}}},
+                prefix=gen_config_provider_prefix(("oci",)),
+            )
 
         # TODO, load OCI environment variables
         compute_client = new_client(
             ComputeClient,
             composite_class=ComputeClientCompositeOperations,
-            name=oci_options["name"],
+            name=provider_profile["name"],
         )
 
         resource_config = {}
         available_shapes = list_entities(
             compute_client,
             "list_shapes",
-            oci_options["compartment_id"],
-            availability_domain=oci_availability_domain,
+            provider_profile["compartment_id"],
+            availability_domain=availability_domain,
         )
 
         # Subset selection

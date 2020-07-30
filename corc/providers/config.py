@@ -5,7 +5,8 @@ from corc.config import (
 )
 
 
-def get_profile(provider, config_path=None):
+# TODO, check environment variables first
+def get_provider_profile(provider, config_path=None):
     profile = load_from_config(
         {"profile": {}},
         prefix=gen_config_provider_prefix((provider,)),
@@ -16,7 +17,7 @@ def get_profile(provider, config_path=None):
     return profile
 
 
-def set_profile(provider, profile, config_path=None):
+def set_provider_profile(provider, profile, config_path=None):
     return set_in_config(
         {"profile": profile},
         prefix=gen_config_provider_prefix((provider,)),

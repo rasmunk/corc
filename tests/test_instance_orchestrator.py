@@ -72,9 +72,12 @@ class TestInstanceOrchestrator(unittest.TestCase):
         required_num_cpus = 4.0
         required_gb_mem = 8.0
 
+        provider_kwargs = dict(
+            availability_domain=self.options["compute"]["availability_domain"]
+        )
         resource_config = OCIInstanceOrchestrator.make_resource_config(
-            oci_options=self.options["oci"],
-            oci_availability_domain=self.options["compute"]["availability_domain"],
+            provider_profile=self.options["oci"],
+            provider_kwargs=provider_kwargs,
             cpu=required_num_cpus,
             memory=required_gb_mem,
         )
