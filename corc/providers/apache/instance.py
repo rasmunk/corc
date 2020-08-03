@@ -17,9 +17,12 @@ def get_instance_by_name(client, name):
         instances = client.list_nodes()
     except Exception as err:
         print(err)
-    for instance in instances:
-        if instance.name == name:
-            return instance
+        return None
+
+    if instances:
+        for instance in instances:
+            if instance.name == name:
+                return instance
     return None
 
 
@@ -60,7 +63,10 @@ class ApacheInstanceOrchestrator(Orchestrator):
         raise NotImplementedError
 
     def setup(self):
-        instance = self.client.create_node(self.options["compute"])
+        # TODO, find the image to run
+        # images = self.client.list_images()
+        # image = self.client.get_image("")
+        instance = self.client.create_node(*self.options["instance"]["args"])
         if valid_instance(instance):
             self.instance = instance
         else:

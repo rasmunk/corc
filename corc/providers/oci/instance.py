@@ -588,11 +588,11 @@ class OCIInstanceOrchestrator(Orchestrator):
         optional_instance_metadata_keys = ["ssh_authorized_keys"]
         optional_instance_keys = ["display_name"]
 
-        expected_vcn_keys = ["cidr_block", "dns_label", "display_name"]
-        optional_vcn_keys = ["id"]
+        expected_vcn_keys = ["dns_label", "display_name"]
+        optional_vcn_keys = ["id", "cidr_block"]
 
-        expected_subnet_keys = ["dns_label"]
-        optional_subnet_keys = ["id", "cidr_block", "display_name"]
+        expected_subnet_keys = ["dns_label", "display_name"]
+        optional_subnet_keys = ["id", "cidr_block"]
 
         expected_groups = {
             "profile": expected_profile_keys,
