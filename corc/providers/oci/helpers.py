@@ -151,6 +151,12 @@ def get_subnet_gateway_id(network_client, vcn_id, subnet_id, compartment_id):
     return route.network_entity_id
 
 
+def prepare_details(details_klass, **kwargs):
+    details_kwargs = {k: v for k, v in kwargs.items() if hasattr(details_klass, k)}
+    details = details_klass(**details_kwargs)
+    return details
+
+
 def prepare_route_rule(network_entity_id, **route_rule_kwargs):
     route_rule = oci.core.models.RouteRule(
         network_entity_id=network_entity_id, **route_rule_kwargs
@@ -187,8 +193,12 @@ def stack_was_deleted(stack):
         if isinstance(value_type, (bool, str)):
             if not value_type:
                 return False
-        if isinstance(value_type, (list, tuple)):
+        if isinstance(value_type, (list, tuple, set)):
             for result in value_type:
+                if not result:
+                    return False
+        if isinstance(value_type, (dict,)):
+            for key, result in value_type.items():
                 if not result:
                     return False
     return True

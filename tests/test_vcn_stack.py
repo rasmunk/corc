@@ -10,6 +10,7 @@ from corc.providers.oci.network import (
     get_vcn_by_name,
     equal_vcn_stack,
     refresh_vcn_stack,
+    update_vcn_stack,
 )
 
 
@@ -97,7 +98,7 @@ class TestVCNStack(unittest.TestCase):
         self.assertTrue(valid_vcn_stack(_vcn_stack))
         self.assertEqual(self.vcn_stack["id"], _vcn_stack["id"])
         self.assertEqual(self.vcn_stack["vcn"], _vcn_stack["vcn"])
-        self.assertListEqual(
+        self.assertDictEqual(
             self.vcn_stack["internet_gateways"], _vcn_stack["internet_gateways"]
         )
         self.assertListEqual(self.vcn_stack["subnets"], _vcn_stack["subnets"])
@@ -175,6 +176,48 @@ class TestVCNStack(unittest.TestCase):
         )
         self.assertTrue(valid_vcn_stack(refreshed_vcn))
         self.assertTrue(equal_vcn_stack(self.vcn_stack, refreshed_vcn))
+
+    def test_vcn_stack_update_ig(self):
+        self.vcn_stack = new_vcn_stack(
+            self.network_client,
+            self.options["profile"]["compartment_id"],
+            vcn_kwargs=self.options["vcn"],
+            subnet_kwargs=self.options["subnet"],
+        )
+
+        self.assertTrue(valid_vcn_stack(self.vcn_stack))
+        # Created the default internet gateway
+        self.assertEqual(len(self.vcn_stack["internet_gateways"]), 1)
+        default_ig_id, default_ig = self.vcn_stack["internet_gateways"].popitem()
+        vcn_kwargs = {"id": self.vcn_stack["id"]}
+
+        # Update the VCN Internet Gateway display_name and disable it
+        new_gateway_kwargs = {
+            "id": default_ig_id,
+            "display_name": "New Gateway Name",
+            "is_enabled": False,
+        }
+
+        updated_stack = update_vcn_stack(
+            self.network_client,
+            self.options["profile"]["compartment_id"],
+            vcn_kwargs=vcn_kwargs,
+            gateway_kwargs=new_gateway_kwargs,
+        )
+
+        self.assertEqual(len(updated_stack["internet_gateways"]), 1)
+        self.assertIn(default_ig_id, updated_stack["internet_gateways"])
+        updated_ig = updated_stack["internet_gateways"][default_ig_id]
+
+        self.assertEqual(updated_ig.display_name, new_gateway_kwargs["display_name"])
+        self.assertEqual(updated_ig.is_enabled, new_gateway_kwargs["is_enabled"])
+
+        deleted_stack = delete_vcn_stack(
+            self.network_client,
+            self.options["profile"]["compartment_id"],
+            self.vcn_stack["id"],
+        )
+        self.assertTrue(stack_was_deleted(deleted_stack))
 
 
 if __name__ == "__main__":

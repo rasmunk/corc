@@ -14,6 +14,7 @@ from oci.core.models import (
     LaunchInstanceShapeConfigDetails,
     CreateVnicDetails,
     Instance,
+    CreateSubnetDetails,
 )
 from corc.orchestrator import Orchestrator
 from corc.util import open_port
@@ -30,6 +31,7 @@ from corc.providers.oci.helpers import (
     list_entities,
     new_client,
     stack_was_deleted,
+    prepare_details,
 )
 from corc.providers.oci.network import (
     get_vcn_by_name,
@@ -39,6 +41,8 @@ from corc.providers.oci.network import (
     get_subnet_by_name,
     delete_vcn_stack,
     refresh_vcn_stack,
+    create_subnet,
+    update_vcn_stack,
 )
 
 
@@ -237,8 +241,17 @@ class OCIInstanceOrchestrator(Orchestrator):
             self.options["vcn"]["display_name"],
         )
         if vcn:
+            list_subnet_kwargs = {}
+            if "display_name" in self.options["subnet"]:
+                list_subnet_kwargs.update(
+                    {"display_name": self.options["subnet"]["display_name"]}
+                )
+
             stack = get_vcn_stack(
-                self.network_client, self.options["profile"]["compartment_id"], vcn.id
+                self.network_client,
+                self.options["profile"]["compartment_id"],
+                vcn.id,
+                subnet_kwargs=list_subnet_kwargs,
             )
         return stack
 
@@ -259,6 +272,31 @@ class OCIInstanceOrchestrator(Orchestrator):
             subnet_kwargs=self.options["subnet"],
         )
         return stack
+
+    def _update_vcn_stack(self, vcn_stack):
+        stack = update_vcn_stack(
+            self.network_client,
+            self.options["profile"]["compartment_id"],
+            vcn_kwargs=self.options["vcn"],
+            subnet_kwargs=self.options["subnet"],
+        )
+        return stack
+
+    def _valid_vcn_stack(self, vcn_stack):
+        required_vcn = dict(
+            display_name=self.options["vcn"]["display_name"],
+            dns_label=self.options["vcn"]["dns_label"],
+        )
+        required_subnets = [
+            dict(
+                display_name=self.options["subnet"]["display_name"],
+                dns_label=self.options["subnet"]["dns_label"],
+            )
+        ]
+
+        return valid_vcn_stack(
+            vcn_stack, required_vcn=required_vcn, required_subnets=required_subnets
+        )
 
     def endpoint(self, select=None):
         # Return the endpoint that is being orchestrated
@@ -299,16 +337,14 @@ class OCIInstanceOrchestrator(Orchestrator):
         if not vcn_stack:
             vcn_stack = self._new_vcn_stack()
 
-        if valid_vcn_stack(vcn_stack):
-            self.vcn_stack = vcn_stack
-        else:
-            # FIXME, creates a duplicate VCN
-            self.vcn_stack = self._refresh_vcn_stack(vcn_stack)
+        if not self._valid_vcn_stack(vcn_stack):
+            vcn_stack = self._refresh_vcn_stack(vcn_stack)
 
-        if not valid_vcn_stack(self.vcn_stack):
+        if not self._valid_vcn_stack(vcn_stack):
             raise RuntimeError(
-                "Failed to fix the broken VCN stack: {}".format(vcn_stack)
+                "A valid VCN stack could not be found: {}".format(vcn_stack)
             )
+        self.vcn_stack = vcn_stack
 
         # Find the selected subnet in the VCN
         subnet = get_subnet_by_name(
@@ -317,6 +353,20 @@ class OCIInstanceOrchestrator(Orchestrator):
             self.vcn_stack["id"],
             options["subnet"]["display_name"],
         )
+
+        if not subnet:
+            # Create new subnet and attach to the vcn_stack
+            create_subnet_details = prepare_details(
+                CreateSubnetDetails,
+                compartment_id=options["profile"]["compartment_id"],
+                vcn_id=self.vcn_stack["id"],
+                route_table_id=self.vcn_stack["vcn"]["route_table"],
+                **self.options["subnet"],
+            )
+            subnet = create_subnet(
+                self.network_client, create_subnet_details, self.vcn_stack["id"]
+            )
+            self.vcn_stack = self._refresh_vcn_stack(vcn_stack)
 
         if not subnet:
             raise RuntimeError(
