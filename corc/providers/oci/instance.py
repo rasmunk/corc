@@ -241,17 +241,8 @@ class OCIInstanceOrchestrator(Orchestrator):
             self.options["vcn"]["display_name"],
         )
         if vcn:
-            list_subnet_kwargs = {}
-            if "display_name" in self.options["subnet"]:
-                list_subnet_kwargs.update(
-                    {"display_name": self.options["subnet"]["display_name"]}
-                )
-
             stack = get_vcn_stack(
-                self.network_client,
-                self.options["profile"]["compartment_id"],
-                vcn.id,
-                subnet_kwargs=list_subnet_kwargs,
+                self.network_client, self.options["profile"]["compartment_id"], vcn.id
             )
         return stack
 
@@ -264,6 +255,14 @@ class OCIInstanceOrchestrator(Orchestrator):
         )
         return stack
 
+    def _update_vcn_stack(self):
+        return update_vcn_stack(
+            self.network_client,
+            self.options["profile"]["compartment_id"],
+            vcn_kwargs=self.options["vcn"],
+            subnet_kwargs=self.options["subnet"],
+        )
+
     def _refresh_vcn_stack(self, vcn_stack):
         stack = refresh_vcn_stack(
             self.network_client,
@@ -273,7 +272,7 @@ class OCIInstanceOrchestrator(Orchestrator):
         )
         return stack
 
-    def _update_vcn_stack(self, vcn_stack):
+    def _update_vcn_stack(self):
         stack = update_vcn_stack(
             self.network_client,
             self.options["profile"]["compartment_id"],
@@ -338,7 +337,7 @@ class OCIInstanceOrchestrator(Orchestrator):
             vcn_stack = self._new_vcn_stack()
 
         if not self._valid_vcn_stack(vcn_stack):
-            vcn_stack = self._refresh_vcn_stack(vcn_stack)
+            vcn_stack = self._update_vcn_stack()
 
         if not self._valid_vcn_stack(vcn_stack):
             raise RuntimeError(

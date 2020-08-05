@@ -70,7 +70,7 @@ if __name__ == "__main__":
         exit(2)
 
     vcn = stack["vcn"]
-    subnet = stack["subnets"][0]
+    subnet_id, subnet = stack["subnets"].popitem()
 
     if not vcn:
         print("Failed to find a vcn")

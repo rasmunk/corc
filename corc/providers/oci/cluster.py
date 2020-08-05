@@ -328,7 +328,7 @@ def gen_cluster_stack_details(vnc_id, subnets, image, **options):
 
     node_pool_place_configs = []
     if subnets:
-        for subnet in subnets:
+        for subnet_id, subnet in subnets.items():
             node_pool_place_configs.append(
                 prepare_node_pool_placement_config(
                     subnet_id=subnet.id, **options["cluster"]["node"]

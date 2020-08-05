@@ -101,7 +101,7 @@ class TestVCNStack(unittest.TestCase):
         self.assertDictEqual(
             self.vcn_stack["internet_gateways"], _vcn_stack["internet_gateways"]
         )
-        self.assertListEqual(self.vcn_stack["subnets"], _vcn_stack["subnets"])
+        self.assertDictEqual(self.vcn_stack["subnets"], _vcn_stack["subnets"])
 
         new_vcn_id = get(self.network_client, "get_vcn", self.vcn_stack["id"])
 
