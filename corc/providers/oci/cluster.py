@@ -120,7 +120,6 @@ def new_cluster_stack(
 
     if node_pool:
         stack["node_pools"].append(node_pool)
-
     return stack
 
 
@@ -363,10 +362,13 @@ class OCIClusterOrchestrator(Orchestrator):
 
         image_options = {}
         # Adapt the node image to the OCI API
-        if "node" in options["cluster"] and "image" in options["cluster"]["node"]:
+        # If the image name is just defined, else expect a dict structure
+        if isinstance(options["cluster"]["node"]["image"], str):
             image_name = options["cluster"]["node"]["image"]
             image_options = dict(display_name=image_name)
             self.options["cluster"]["node"].pop("image")
+        else:
+            image_options = options["cluster"]["node"]["image"]
 
         self.options["cluster"]["node"]["image"] = image_options
 
@@ -593,7 +595,7 @@ class OCIClusterOrchestrator(Orchestrator):
             "name": str,
             "size": int,
             "node_shape": str,
-            "image": str,
+            "image": (str, dict),
         }
 
         validate_dict_fields(
