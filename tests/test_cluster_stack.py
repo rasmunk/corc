@@ -57,7 +57,16 @@ class TestClusterStack(unittest.TestCase):
             vcn_name += test_id
             subnet_name += test_id
 
-        image_options = dict(display_name="Oracle-Linux-7.7-2020.03.23-0")
+        # Sort order in ascending to ensure that complex images
+        # such as GPU powered shapes are not selected.
+        # These are typically not supported by the cluster
+        image_options = dict(
+            operating_system="Oracle Linux",
+            operating_system_version="7.8",
+            limit="1",
+            sort_order="ASC",
+        )
+
         node_options = dict(
             availability_domain="lfcb:EU-FRANKFURT-1-AD-1",
             name=node_name,
@@ -168,7 +177,6 @@ class TestClusterStack(unittest.TestCase):
             cluster_details["create_cluster"],
             cluster_details["create_node_pool"],
         )
-
         self.assertTrue(valid_cluster_stack(self.cluster_stack))
 
         _cluster_stack = get_cluster_stack(

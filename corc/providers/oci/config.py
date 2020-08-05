@@ -15,7 +15,7 @@ valid_cluster_node_config = {
     "availability_domain": str,
     "size": int,
     "node_shape": str,
-    "image": str,
+    "image": (str, dict),
 }
 
 default_cluster_node_config = {
@@ -24,7 +24,7 @@ default_cluster_node_config = {
     "availability_domain": "",
     "size": 1,
     "node_shape": "VM.Standard2.1",
-    "image": "Oracle-Linux-7.7-2020.03.23-0",
+    "image": "Oracle-Linux-7.8-2020.04.17-0",
 }
 
 

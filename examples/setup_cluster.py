@@ -8,12 +8,23 @@ def prepare_options():
         name="XNOVOTECH",
     )
     cluster_options = dict(name="Test XNOVOTECH Cluster",)
+
+    # Sort order in ascending to ensure that complex images
+    # such as GPU powered shapes are not selected.
+    # These are typically not supported by the cluster
+    image_options = dict(
+        operating_system="Oracle Linux",
+        operating_system_version="7.8",
+        limit="1",
+        sort_order="ASC",
+    )
+
     node_options = dict(
         availability_domain="Xfze:eu-amsterdam-1-AD-1",
         name="test_xnovotech_cluster",
         size=1,
         node_shape="VM.Standard1.1",
-        node_image_name="Oracle-Linux-7.7",
+        image=image_options,
     )
 
     vcn_options = dict(
