@@ -4,7 +4,6 @@ from oci.core import (
     VirtualNetworkClient,
     VirtualNetworkClientCompositeOperations,
 )
-from oci.core.models import CreateSubnetDetails
 from oci.container_engine import (
     ContainerEngineClient,
     ContainerEngineClientCompositeOperations,
@@ -36,17 +35,15 @@ from corc.util import (
     parse_yaml,
     validate_dict_fields,
     validate_dict_values,
-    prepare_cls_kwargs,
 )
 from corc.kubernetes.config import save_kube_config, load_kube_config
 from corc.orchestrator import Orchestrator
 from corc.providers.oci.network import (
     new_vcn_stack,
-    get_vcn_stack,
     valid_vcn_stack,
-    get_vcn_by_name,
     delete_vcn_stack,
     refresh_vcn_stack,
+    update_vcn_stack,
 )
 
 
@@ -402,30 +399,11 @@ class OCIClusterOrchestrator(Orchestrator):
         self._is_ready = False
 
     def _get_vcn_stack(self):
-        if "id" in self.options["vcn"] and self.options["vcn"]["id"]:
-            return get_vcn_stack(
-                self.network_client,
-                self.options["profile"]["compartment_id"],
-                self.options["vcn"]["id"],
-            )
-
-        stack = {}
-        if (
-            "display_name" in self.options["vcn"]
-            and self.options["vcn"]["display_name"]
-        ):
-            vcn = get_vcn_by_name(
-                self.network_client,
-                self.options["profile"]["compartment_id"],
-                self.options["vcn"]["display_name"],
-            )
-            if vcn:
-                stack = get_vcn_stack(
-                    self.network_client,
-                    self.options["profile"]["compartment_id"],
-                    vcn.id,
-                )
-        return stack
+        return refresh_vcn_stack(
+            self.network_client,
+            self.options["profile"]["compartment_id"],
+            self.options["vcn"]["display_name"],
+        )
 
     def _new_vcn_stack(self):
         stack = new_vcn_stack(
@@ -436,18 +414,13 @@ class OCIClusterOrchestrator(Orchestrator):
         )
         return stack
 
-    def _refresh_vcn_stack(self, vcn_stack):
-        # vcn_kwargs = prepare_cls_kwargs(CreateVcnDetails, **self.options["vcn"])
-        subnet_kwargs = prepare_cls_kwargs(
-            CreateSubnetDetails, **self.options["subnet"]
-        )
-        stack = refresh_vcn_stack(
+    def _update_vcn_stack(self):
+        return update_vcn_stack(
             self.network_client,
             self.options["profile"]["compartment_id"],
             vcn_kwargs=self.options["vcn"],
-            subnet_kwargs=subnet_kwargs,
+            subnet_kwargs=self.options["subnet"],
         )
-        return stack
 
     def setup(self):
         # Ensure we have a VCN stack ready
@@ -458,7 +431,7 @@ class OCIClusterOrchestrator(Orchestrator):
         if valid_vcn_stack(vcn_stack):
             self.vcn_stack = vcn_stack
         else:
-            self.vcn_stack = self._refresh_vcn_stack(vcn_stack)
+            self.vcn_stack = self._update_vcn_stack()
 
         if not valid_vcn_stack(self.vcn_stack):
             raise RuntimeError(

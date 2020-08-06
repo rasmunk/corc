@@ -8,9 +8,6 @@ from corc.config import (
     save_config,
     remove_config,
 )
-
-from corc.providers.defaults import EC2, INSTANCE
-from corc.providers.types import get_orchestrator
 from corc.providers.oci.config import generate_oci_config
 from corc.providers.oci.instance import OCIInstanceOrchestrator
 
@@ -126,6 +123,7 @@ class TestInstanceOrchestrator(unittest.TestCase):
         # Update configuration
         new_subnet = dict(
             display_name=self.options["subnet"]["display_name"],
+            dns_label="workers",
             freeform_tags=dict(Hello="World"),
         )
 
@@ -137,8 +135,10 @@ class TestInstanceOrchestrator(unittest.TestCase):
         new_orchestrator.setup()
         self.assertTrue(new_orchestrator.is_ready())
 
-        new_orchestrator.tear_down()
-        self.assertFalse(new_orchestrator.is_ready())
+        vcn_stack = new_orchestrator._get_vcn_stack()
+        subnet_id, subnet = vcn_stack["subnets"].popitem()
+        self.assertTrue(hasattr(subnet, "freeform_tags"))
+        self.assertEqual(getattr(subnet, "freeform_tags"), new_subnet["freeform_tags"])
 
     def test_teardown_instance(self):
         self.assertFalse(self.orchestrator.is_ready())

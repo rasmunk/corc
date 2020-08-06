@@ -157,22 +157,22 @@ class TestVCNStack(unittest.TestCase):
         )
 
         self.assertTrue(valid_vcn_stack(self.vcn_stack))
-        refresh_stack = {"id": self.vcn_stack["id"]}
+        vcn_id_stack = {"id": self.vcn_stack["id"]}
 
         refreshed_vcn = refresh_vcn_stack(
             self.network_client,
             self.options["profile"]["compartment_id"],
-            vcn_kwargs=refresh_stack,
+            vcn_kwargs=vcn_id_stack,
         )
         self.assertTrue(valid_vcn_stack(refreshed_vcn))
         self.assertTrue(equal_vcn_stack(self.vcn_stack, refreshed_vcn))
 
-        refresh_stack = {"display_name": self.vcn_stack["vcn"].display_name}
+        vcn_name_stack = {"display_name": self.vcn_stack["vcn"].display_name}
 
         refreshed_vcn = refresh_vcn_stack(
             self.network_client,
             self.options["profile"]["compartment_id"],
-            vcn_kwargs=refresh_stack,
+            vcn_kwargs=vcn_name_stack,
         )
         self.assertTrue(valid_vcn_stack(refreshed_vcn))
         self.assertTrue(equal_vcn_stack(self.vcn_stack, refreshed_vcn))

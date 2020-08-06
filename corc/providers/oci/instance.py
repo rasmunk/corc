@@ -15,6 +15,7 @@ from oci.core.models import (
     CreateVnicDetails,
     Instance,
     CreateSubnetDetails,
+    CreateVcnDetails,
 )
 from corc.orchestrator import Orchestrator
 from corc.util import open_port
@@ -34,15 +35,13 @@ from corc.providers.oci.helpers import (
     prepare_details,
 )
 from corc.providers.oci.network import (
-    get_vcn_by_name,
     new_vcn_stack,
     valid_vcn_stack,
-    get_vcn_stack,
     get_subnet_by_name,
     delete_vcn_stack,
-    refresh_vcn_stack,
     create_subnet,
     update_vcn_stack,
+    refresh_vcn_stack,
 )
 
 
@@ -234,17 +233,11 @@ class OCIInstanceOrchestrator(Orchestrator):
         self.vcn_stack = None
 
     def _get_vcn_stack(self):
-        stack = {}
-        vcn = get_vcn_by_name(
+        return refresh_vcn_stack(
             self.network_client,
             self.options["profile"]["compartment_id"],
-            self.options["vcn"]["display_name"],
+            vcn_kwargs=self.options["vcn"]["display_name"],
         )
-        if vcn:
-            stack = get_vcn_stack(
-                self.network_client, self.options["profile"]["compartment_id"], vcn.id
-            )
-        return stack
 
     def _new_vcn_stack(self):
         stack = new_vcn_stack(
@@ -263,36 +256,12 @@ class OCIInstanceOrchestrator(Orchestrator):
             subnet_kwargs=self.options["subnet"],
         )
 
-    def _refresh_vcn_stack(self, vcn_stack):
-        stack = refresh_vcn_stack(
-            self.network_client,
-            self.options["profile"]["compartment_id"],
-            vcn_kwargs=self.options["vcn"],
-            subnet_kwargs=self.options["subnet"],
-        )
-        return stack
-
-    def _update_vcn_stack(self):
-        stack = update_vcn_stack(
-            self.network_client,
-            self.options["profile"]["compartment_id"],
-            vcn_kwargs=self.options["vcn"],
-            subnet_kwargs=self.options["subnet"],
-        )
-        return stack
-
     def _valid_vcn_stack(self, vcn_stack):
         required_vcn = dict(
             display_name=self.options["vcn"]["display_name"],
             dns_label=self.options["vcn"]["dns_label"],
         )
-        required_subnets = [
-            dict(
-                display_name=self.options["subnet"]["display_name"],
-                dns_label=self.options["subnet"]["dns_label"],
-            )
-        ]
-
+        required_subnets = [self.options["subnet"]]
         return valid_vcn_stack(
             vcn_stack, required_vcn=required_vcn, required_subnets=required_subnets
         )
@@ -365,7 +334,7 @@ class OCIInstanceOrchestrator(Orchestrator):
             subnet = create_subnet(
                 self.network_client, create_subnet_details, self.vcn_stack["id"]
             )
-            self.vcn_stack = self._refresh_vcn_stack(vcn_stack)
+            self.vcn_stack = self._update_vcn_stack()
 
         if not subnet:
             raise RuntimeError(
@@ -622,7 +591,6 @@ class OCIInstanceOrchestrator(Orchestrator):
     def validate_options(cls, options):
         if not isinstance(options, dict):
             raise ValueError("options is not a dictionary")
-
         expected_profile_keys = [
             "compartment_id",
             "name",
@@ -638,10 +606,20 @@ class OCIInstanceOrchestrator(Orchestrator):
         optional_instance_keys = ["display_name"]
 
         expected_vcn_keys = ["dns_label", "display_name"]
-        optional_vcn_keys = ["id", "cidr_block"]
+        optional_vcn_keys = [
+            k
+            for k, v in CreateVcnDetails().attribute_map.items()
+            if k not in expected_vcn_keys
+        ]
+        optional_vcn_keys.append("id")
 
         expected_subnet_keys = ["dns_label", "display_name"]
-        optional_subnet_keys = ["id", "cidr_block"]
+        optional_subnet_keys = [
+            k
+            for k, v in CreateSubnetDetails().attribute_map.items()
+            if k not in expected_subnet_keys
+        ]
+        optional_subnet_keys.append("id")
 
         expected_groups = {
             "profile": expected_profile_keys,
