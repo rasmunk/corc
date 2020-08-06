@@ -402,7 +402,7 @@ class OCIClusterOrchestrator(Orchestrator):
         return refresh_vcn_stack(
             self.network_client,
             self.options["profile"]["compartment_id"],
-            self.options["vcn"]["display_name"],
+            vcn_kwargs=self.options["vcn"],
         )
 
     def _new_vcn_stack(self):

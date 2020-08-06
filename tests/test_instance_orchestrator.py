@@ -136,6 +136,7 @@ class TestInstanceOrchestrator(unittest.TestCase):
         self.assertTrue(new_orchestrator.is_ready())
 
         vcn_stack = new_orchestrator._get_vcn_stack()
+        self.assertIn("subnets", vcn_stack)
         subnet_id, subnet = vcn_stack["subnets"].popitem()
         self.assertTrue(hasattr(subnet, "freeform_tags"))
         self.assertEqual(getattr(subnet, "freeform_tags"), new_subnet["freeform_tags"])
