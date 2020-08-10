@@ -1,4 +1,3 @@
-import oci
 from oci.core import VirtualNetworkClient, VirtualNetworkClientCompositeOperations
 from oci.core.models import (
     CreateVcnDetails,
@@ -7,7 +6,7 @@ from oci.core.models import (
     UpdateInternetGatewayDetails,
 )
 from oci.core.models import RouteTable, CreateRouteTableDetails, UpdateRouteTableDetails
-from oci.core.models import InternetGateway
+from oci.core.models import InternetGateway, CreateInternetGatewayDetails
 from oci.core.models import SecurityList
 from oci.core.models import DhcpOptions
 from oci.core.models import LocalPeeringGateway
@@ -65,7 +64,7 @@ def new_vcn_stack(
     stack["id"] = vcn.id
     stack["vcn"] = vcn
 
-    create_ig_details = oci.core.models.CreateInternetGatewayDetails(
+    create_ig_details = CreateInternetGatewayDetails(
         compartment_id=compartment_id, is_enabled=True, vcn_id=vcn.id
     )
     gateway = create(
@@ -193,6 +192,13 @@ def update_vcn_stack(
                     "Failed to update Internet Gateway: {}".format(existing_ig.id)
                 )
             stack["internet_gateways"][updated_ie.id] = updated_ie
+        else:
+            create_ie_details = prepare_details(
+                CreateInternetGatewayDetails, **gateway_kwargs
+            )
+            ie = create_internet_gateway(network_client, create_ie_details)
+            if ie:
+                stack["internet_gateways"][ie.id] = ie
     if subnet_kwargs:
         existing_subnet = None
         if "id" in subnet_kwargs and subnet_kwargs["id"]:
@@ -218,6 +224,13 @@ def update_vcn_stack(
                     "Failed to update Subnet: {}".format(existing_subnet.id)
                 )
             stack["subnets"][updated_subnet.id] = updated_subnet
+        else:
+            create_subnet_details = prepare_details(
+                CreateSubnetDetails, **subnet_kwargs
+            )
+            subnet = create_subnet(network_client, create_subnet_details,)
+            if subnet:
+                stack["subnets"][subnet.id] = subnet
     return stack
 
 
@@ -332,6 +345,23 @@ def get_vcn_by_name(network_client, compartment_id, display_name, **kwargs):
     for vcn in vcns:
         if vcn.display_name == display_name:
             return vcn
+
+
+def create_vcn(network_client, create_vcn_details, wait_for_states=None, **kwargs):
+    if not wait_for_states:
+        wait_for_states = [Vcn.LIFECYCLE_STATE_AVAILABLE]
+
+    vcn = create(
+        network_client,
+        "create_vcn",
+        create_vcn_details,
+        wait_for_states=wait_for_states,
+        **kwargs
+    )
+
+    if not vcn:
+        return None
+    return vcn
 
 
 def delete_vcn_stack(network_client, compartment_id, vcn_id=None, vcn=None):
@@ -518,6 +548,24 @@ def delete_compartment_vcns(network_client, compartment_id, **kwargs):
         deleted = stack_was_deleted(removed_stack)
         removed_vcns.append(deleted)
     return removed_vcns
+
+
+def create_internet_gateway(
+    network_client, create_internet_gateway_details, wait_for_states=None, **kwargs
+):
+    if not wait_for_states:
+        wait_for_states = [InternetGateway.LIFECYCLE_STATE_AVAILABLE]
+
+    internet_gateway = create(
+        network_client,
+        "create_internet_gateway",
+        create_internet_gateway_details,
+        wait_for_states=wait_for_states,
+        **kwargs
+    )
+    if not internet_gateway:
+        return None
+    return internet_gateway
 
 
 def create_subnet(

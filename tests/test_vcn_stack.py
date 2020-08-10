@@ -219,6 +219,35 @@ class TestVCNStack(unittest.TestCase):
         )
         self.assertTrue(stack_was_deleted(deleted_stack))
 
+    def test_vcn_stack_update_base_vcn(self):
+        # Create detault ie and subnets
+        vcn_stack = new_vcn_stack(
+            self.network_client,
+            self.options["profile"]["compartment_id"],
+            vcn_kwargs=self.options["vcn"])
+
+        self.assertTrue(valid_vcn_stack(vcn_stack))
+        subnet_id, subnet = vcn_stack["subnets"].popitem()
+
+        # Apply updates to the subnets
+        subnet_options = {}
+        subnet_options["display_name"] = self.options["subnet"]["display_name"]
+        subnet_options["id"] = subnet_id
+        required_subnets = [subnet_options]
+        self.assertFalse(valid_vcn_stack(vcn_stack, required_subnets=required_subnets))
+
+        updated_vcn_stack = update_vcn_stack(
+            self.network_client,
+            self.options["profile"]["compartment_id"],
+            vcn_kwargs=self.options["vcn"],
+            subnet_kwargs=subnet_options,
+        )
+
+        self.assertTrue(valid_vcn_stack(updated_vcn_stack))
+        self.assertTrue(
+            valid_vcn_stack(updated_vcn_stack, required_subnets=required_subnets)
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,4 +1,7 @@
 oci-cli==2.12.2
+idna==2.6
+pyOpenSSL==18.0.0
+six==1.14.0
 ansible==2.9.10
 apache-libcloud
 kubernetes
