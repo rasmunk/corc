@@ -16,6 +16,8 @@ from oci.core.models import (
     Instance,
     CreateSubnetDetails,
     CreateVcnDetails,
+    CreateInternetGatewayDetails,
+    CreateRouteTableDetails,
 )
 from corc.orchestrator import Orchestrator
 from corc.util import open_port
@@ -35,13 +37,13 @@ from corc.providers.oci.helpers import (
     prepare_details,
 )
 from corc.providers.oci.network import (
+    ensure_vcn_stack,
     new_vcn_stack,
     valid_vcn_stack,
-    get_subnet_by_name,
     delete_vcn_stack,
     create_subnet,
-    update_vcn_stack,
     refresh_vcn_stack,
+    get_subnet_in_vcn_stack,
 )
 
 
@@ -244,26 +246,38 @@ class OCIInstanceOrchestrator(Orchestrator):
             self.network_client,
             self.options["profile"]["compartment_id"],
             vcn_kwargs=self.options["vcn"],
+            gateway_kwargs=self.options["internet_gateway"],
+            route_table_kwargs=self.options["route_table"],
             subnet_kwargs=self.options["subnet"],
         )
         return stack
 
-    def _update_vcn_stack(self):
-        return update_vcn_stack(
+    def _ensure_vcn_stack(self):
+        ensured = ensure_vcn_stack(
             self.network_client,
             self.options["profile"]["compartment_id"],
             vcn_kwargs=self.options["vcn"],
+            gateway_kwargs=self.options["internet_gateway"],
+            route_table_kwargs=self.options["route_table"],
             subnet_kwargs=self.options["subnet"],
         )
+        if not ensured:
+            print("FAiled tok ensure the VCN stack")
+        return self._get_vcn_stack()
 
     def _valid_vcn_stack(self, vcn_stack):
         required_vcn = dict(
             display_name=self.options["vcn"]["display_name"],
             dns_label=self.options["vcn"]["dns_label"],
         )
+        required_igs = [self.options["internet_gateway"]]
         required_subnets = [self.options["subnet"]]
+
         return valid_vcn_stack(
-            vcn_stack, required_vcn=required_vcn, required_subnets=required_subnets
+            vcn_stack,
+            required_vcn=required_vcn,
+            required_igs=required_igs,
+            required_subnets=required_subnets,
         )
 
     def endpoint(self, select=None):
@@ -306,7 +320,7 @@ class OCIInstanceOrchestrator(Orchestrator):
             vcn_stack = self._new_vcn_stack()
 
         if not self._valid_vcn_stack(vcn_stack):
-            vcn_stack = self._update_vcn_stack()
+            vcn_stack = self._ensure_vcn_stack()
 
         if not self._valid_vcn_stack(vcn_stack):
             raise RuntimeError(
@@ -315,12 +329,7 @@ class OCIInstanceOrchestrator(Orchestrator):
         self.vcn_stack = vcn_stack
 
         # Find the selected subnet in the VCN
-        subnet = get_subnet_by_name(
-            self.network_client,
-            options["profile"]["compartment_id"],
-            self.vcn_stack["id"],
-            options["subnet"]["display_name"],
-        )
+        subnet = get_subnet_in_vcn_stack(self.vcn_stack, options["subnet"])
 
         if not subnet:
             # Create new subnet and attach to the vcn_stack
@@ -328,13 +337,13 @@ class OCIInstanceOrchestrator(Orchestrator):
                 CreateSubnetDetails,
                 compartment_id=options["profile"]["compartment_id"],
                 vcn_id=self.vcn_stack["id"],
-                route_table_id=self.vcn_stack["vcn"]["route_table"],
+                route_table_id=self.vcn_stack["vcn"].default_route_table_id,
                 **self.options["subnet"],
             )
             subnet = create_subnet(
                 self.network_client, create_subnet_details, self.vcn_stack["id"]
             )
-            self.vcn_stack = self._update_vcn_stack()
+            self.vcn_stack = self._ensure_vcn_stack()
 
         if not subnet:
             raise RuntimeError(
@@ -470,9 +479,16 @@ class OCIInstanceOrchestrator(Orchestrator):
 
         if "vcn" in oci_vcn:
             vcn = oci_vcn["vcn"]
-            options["subnet"] = vcn.pop("subnet")
-            options["vcn"] = vcn
+            if "subnet" in vcn:
+                options["subnet"] = vcn.pop("subnet")
 
+            if "route_table" in vcn:
+                options["route_table"] = vcn.pop("route_table")
+
+            if "internet_gateway" in vcn:
+                options["internet_gateway"] = vcn.pop("internet_gateway")
+
+            options["vcn"] = vcn
         return options
 
     @classmethod
@@ -621,15 +637,37 @@ class OCIInstanceOrchestrator(Orchestrator):
         ]
         optional_subnet_keys.append("id")
 
+        expected_route_table_keys = ["route_rules"]
+        optional_route_table_keys = [
+            k
+            for k, v in CreateRouteTableDetails().attribute_map.items()
+            if k not in expected_route_table_keys
+        ]
+        optional_route_table_keys.append("id")
+        # optional_route_rule_keys = [k for k, v in RouteRule().attribute_map.items()]
+
+        expected_gateway_keys = ["is_enabled"]
+        optional_gateway_keys = [
+            k
+            for k, v in CreateInternetGatewayDetails().attribute_map.items()
+            if k not in expected_gateway_keys
+        ]
+        optional_gateway_keys.append("id")
+
         expected_groups = {
             "profile": expected_profile_keys,
             "instance": expected_instance_keys
             + optional_instance_metadata_keys
             + optional_instance_keys,
             "vcn": expected_vcn_keys + optional_vcn_keys,
+            "route_table": expected_route_table_keys + optional_route_table_keys,
+            # "route_rule": optional_route_rule_keys,
+            "internet_gateway": expected_gateway_keys + optional_gateway_keys,
             "subnet": expected_subnet_keys + optional_subnet_keys,
         }
 
+        # TODO, flatten the dict before the validation
+        # -> avoid recursion for nested structures
         for group, keys in expected_groups.items():
             if group not in options:
                 raise KeyError("Missing group: {}".format(group))

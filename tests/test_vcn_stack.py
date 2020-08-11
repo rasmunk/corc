@@ -5,12 +5,14 @@ from corc.providers.oci.helpers import new_client, get, list_entities, stack_was
 from corc.providers.oci.network import (
     new_vcn_stack,
     delete_vcn_stack,
+    ensure_vcn_stack,
     valid_vcn_stack,
     get_vcn_stack,
     get_vcn_by_name,
     equal_vcn_stack,
     refresh_vcn_stack,
     update_vcn_stack,
+    get_subnet_in_vcn_stack,
 )
 
 
@@ -37,6 +39,7 @@ class TestVCNStack(unittest.TestCase):
 
         test_name = "Test_VCN"
         vcn_name = test_name + "_Network"
+        internet_gateway_name = test_name + "_Internet_Gateway"
         subnet_name = test_name + "_Subnet"
 
         # Add unique test postfix
@@ -45,7 +48,21 @@ class TestVCNStack(unittest.TestCase):
         )
         if test_id:
             vcn_name += test_id
+            internet_gateway_name += test_id
             subnet_name += test_id
+
+        internet_gateway_options = dict(
+            display_name=internet_gateway_name, is_enabled=True
+        )
+        route_table_options = dict(
+            route_rules=[
+                dict(
+                    cidr_block=None,
+                    destination="0.0.0.0/0",
+                    destination_type="CIDR_BLOCK",
+                )
+            ]
+        )
 
         self.vcn_options = dict(
             cidr_block="10.0.0.0/16", display_name=vcn_name, dns_label="ku",
@@ -56,6 +73,8 @@ class TestVCNStack(unittest.TestCase):
         self.options = dict(
             profile=self.oci_profile_options,
             vcn=self.vcn_options,
+            internet_gateway=internet_gateway_options,
+            route_table=route_table_options,
             subnet=self.subnet_options,
         )
 
@@ -86,6 +105,8 @@ class TestVCNStack(unittest.TestCase):
             self.network_client,
             self.options["profile"]["compartment_id"],
             vcn_kwargs=self.options["vcn"],
+            gateway_kwargs=self.options["internet_gateway"],
+            route_table_kwargs=self.options["route_table"],
             subnet_kwargs=self.options["subnet"],
         )
 
@@ -126,6 +147,8 @@ class TestVCNStack(unittest.TestCase):
             self.network_client,
             self.options["profile"]["compartment_id"],
             vcn_kwargs=self.options["vcn"],
+            gateway_kwargs=self.options["internet_gateway"],
+            route_table_kwargs=self.options["route_table"],
             subnet_kwargs=self.options["subnet"],
         )
 
@@ -153,6 +176,8 @@ class TestVCNStack(unittest.TestCase):
             self.network_client,
             self.options["profile"]["compartment_id"],
             vcn_kwargs=self.options["vcn"],
+            gateway_kwargs=self.options["internet_gateway"],
+            route_table_kwargs=self.options["route_table"],
             subnet_kwargs=self.options["subnet"],
         )
 
@@ -182,6 +207,8 @@ class TestVCNStack(unittest.TestCase):
             self.network_client,
             self.options["profile"]["compartment_id"],
             vcn_kwargs=self.options["vcn"],
+            gateway_kwargs=self.options["internet_gateway"],
+            route_table_kwargs=self.options["route_table"],
             subnet_kwargs=self.options["subnet"],
         )
 
@@ -224,7 +251,10 @@ class TestVCNStack(unittest.TestCase):
         vcn_stack = new_vcn_stack(
             self.network_client,
             self.options["profile"]["compartment_id"],
-            vcn_kwargs=self.options["vcn"])
+            vcn_kwargs=self.options["vcn"],
+            gateway_kwargs=self.options["internet_gateway"],
+            route_table_kwargs=self.options["route_table"],
+        )
 
         self.assertTrue(valid_vcn_stack(vcn_stack))
         subnet_id, subnet = vcn_stack["subnets"].popitem()
@@ -234,12 +264,15 @@ class TestVCNStack(unittest.TestCase):
         subnet_options["display_name"] = self.options["subnet"]["display_name"]
         subnet_options["id"] = subnet_id
         required_subnets = [subnet_options]
+
         self.assertFalse(valid_vcn_stack(vcn_stack, required_subnets=required_subnets))
 
         updated_vcn_stack = update_vcn_stack(
             self.network_client,
             self.options["profile"]["compartment_id"],
             vcn_kwargs=self.options["vcn"],
+            gateway_kwargs=self.options["internet_gateway"],
+            route_table_kwargs=self.options["route_table"],
             subnet_kwargs=subnet_options,
         )
 
@@ -247,6 +280,48 @@ class TestVCNStack(unittest.TestCase):
         self.assertTrue(
             valid_vcn_stack(updated_vcn_stack, required_subnets=required_subnets)
         )
+
+    def test_vcn_stack_ensure(self):
+        # Create detault ie and subnets
+        vcn_stack = new_vcn_stack(
+            self.network_client,
+            self.options["profile"]["compartment_id"],
+            vcn_kwargs=self.options["vcn"],
+            gateway_kwargs=self.options["internet_gateway"],
+            route_table_kwargs=self.options["route_table"],
+        )
+
+        self.assertTrue(valid_vcn_stack(vcn_stack))
+
+        subnet_kwargs = dict(
+            cidr_block="10.0.20.0/24",
+            display_name="Ensure Subnet",
+            dns_label="workers2",
+        )
+
+        # Get the created Internet Gateway id
+        ensured = ensure_vcn_stack(
+            self.network_client,
+            self.options["profile"]["compartment_id"],
+            vcn_kwargs=self.options["vcn"],
+            gateway_kwargs=self.options["internet_gateway"],
+            route_table_kwargs=self.options["route_table"],
+            subnet_kwargs=subnet_kwargs,
+        )
+        self.assertTrue(ensured)
+
+        refreshed_vcn_stack = refresh_vcn_stack(
+            self.network_client,
+            self.options["profile"]["compartment_id"],
+            vcn_kwargs=self.options["vcn"],
+        )
+
+        new_subnet = get_subnet_in_vcn_stack(
+            refreshed_vcn_stack, subnet_kwargs=subnet_kwargs
+        )
+        self.assertEqual(new_subnet.cidr_block, subnet_kwargs["cidr_block"])
+        self.assertEqual(new_subnet.display_name, subnet_kwargs["display_name"])
+        self.assertEqual(new_subnet.dns_label, subnet_kwargs["dns_label"])
 
 
 if __name__ == "__main__":

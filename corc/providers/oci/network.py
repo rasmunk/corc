@@ -5,7 +5,12 @@ from oci.core.models import (
     UpdateVcnDetails,
     UpdateInternetGatewayDetails,
 )
-from oci.core.models import RouteTable, CreateRouteTableDetails, UpdateRouteTableDetails
+from oci.core.models import (
+    RouteTable,
+    CreateRouteTableDetails,
+    UpdateRouteTableDetails,
+    RouteRule,
+)
 from oci.core.models import InternetGateway, CreateInternetGatewayDetails
 from oci.core.models import SecurityList
 from oci.core.models import DhcpOptions
@@ -13,6 +18,7 @@ from oci.core.models import LocalPeeringGateway
 from oci.core.models import NatGateway
 from oci.core.models import ServiceGateway
 from oci.core.models import Subnet, CreateSubnetDetails, UpdateSubnetDetails
+from oci.retry import DEFAULT_RETRY_STRATEGY
 from corc.cli.args import get_arguments, OCI, VCN
 from corc.helpers import (
     is_in,
@@ -22,7 +28,6 @@ from corc.helpers import (
 from corc.providers.oci.helpers import (
     new_client,
     prepare_details,
-    prepare_route_rule,
     list_entities,
     get,
     create,
@@ -33,16 +38,24 @@ from corc.providers.oci.helpers import (
 
 
 def new_vcn_stack(
-    network_client, compartment_id, vcn_kwargs=None, subnet_kwargs=None,
+    network_client,
+    compartment_id,
+    vcn_kwargs=None,
+    gateway_kwargs=None,
+    route_table_kwargs=None,
+    subnet_kwargs=None,
 ):
     if not vcn_kwargs:
         vcn_kwargs = {}
 
     if "cidr_block" not in vcn_kwargs:
-        vcn_kwargs.update(dict(cidr_block="10.0.0.0/16"))
+        vcn_kwargs.update({"cidr_block": "10.0.0.0/16"})
 
-    if "id" in vcn_kwargs:
-        vcn_kwargs.pop("id")
+    if not gateway_kwargs:
+        gateway_kwargs = {}
+
+    if not route_table_kwargs:
+        route_table_kwargs = {}
 
     if not subnet_kwargs:
         subnet_kwargs = {}
@@ -51,28 +64,25 @@ def new_vcn_stack(
         subnet_kwargs.update(dict(cidr_block="10.0.1.0/24"))
 
     stack = dict(id=None, vcn=None, internet_gateways={}, subnets={})
-    create_vcn_details = CreateVcnDetails(compartment_id=compartment_id, **vcn_kwargs)
-    vcn = create(
-        network_client,
-        "create_vcn",
-        wait_for_states=[Vcn.LIFECYCLE_STATE_AVAILABLE],
-        create_vcn_details=create_vcn_details,
+
+    create_vcn_details = prepare_details(
+        CreateVcnDetails, compartment_id=compartment_id, **vcn_kwargs
     )
+    vcn = create_vcn(network_client, create_vcn_details)
     if not vcn:
         raise RuntimeError("Failed to create a vcn with details: {}".format(vcn_kwargs))
 
     stack["id"] = vcn.id
     stack["vcn"] = vcn
 
-    create_ig_details = CreateInternetGatewayDetails(
-        compartment_id=compartment_id, is_enabled=True, vcn_id=vcn.id
+    create_ig_details = prepare_details(
+        CreateInternetGatewayDetails,
+        compartment_id=compartment_id,
+        vcn_id=vcn.id,
+        **gateway_kwargs,
     )
-    gateway = create(
-        network_client,
-        "create_internet_gateway",
-        wait_for_states=[InternetGateway.LIFECYCLE_STATE_AVAILABLE],
-        create_internet_gateway_details=create_ig_details,
-    )
+
+    gateway = create_internet_gateway(network_client, create_ig_details)
     if not gateway:
         raise RuntimeError(
             "Failed to create internet gateway with details: {}".format(
@@ -81,28 +91,27 @@ def new_vcn_stack(
         )
 
     stack["internet_gateways"][gateway.id] = gateway
+
     # Setup the route table
-    route_rule = prepare_route_rule(
-        gateway.id,
-        cidr_block=None,
-        destination="0.0.0.0/0",
-        destination_type="CIDR_BLOCK",
-    )
-
     route_rules = []
-    if route_rule:
-        route_rules.append(route_rule)
+    if "route_rules" in route_table_kwargs:
+        for route_rule in route_table_kwargs["route_rules"]:
+            route_rule_details = prepare_details(
+                RouteRule, network_entity_id=gateway.id, **route_rule
+            )
+            if route_rule_details:
+                route_rules.append(route_rule_details)
+        route_table_kwargs.pop("route_rules")
 
-    create_rt_details = CreateRouteTableDetails(
-        compartment_id=compartment_id, route_rules=route_rules, vcn_id=vcn.id
-    )
-    route_table = create(
-        network_client,
-        "create_route_table",
-        wait_for_states=[RouteTable.LIFECYCLE_STATE_AVAILABLE],
-        create_route_table_details=create_rt_details,
+    create_rt_details = prepare_details(
+        CreateRouteTableDetails,
+        compartment_id=compartment_id,
+        vcn_id=vcn.id,
+        route_rules=route_rules,
+        **route_table_kwargs,
     )
 
+    route_table = create_route_table(network_client, create_rt_details)
     if not route_table:
         raise RuntimeError(
             "Failed to create route table with details: {}".format(create_rt_details)
@@ -114,7 +123,7 @@ def new_vcn_stack(
         compartment_id=compartment_id,
         vcn_id=vcn.id,
         route_table_id=route_table.id,
-        **subnet_kwargs
+        **subnet_kwargs,
     )
 
     subnet = create_subnet(network_client, create_subnet_details)
@@ -128,6 +137,7 @@ def update_vcn_stack(
     compartment_id,
     vcn_kwargs=None,
     gateway_kwargs=None,
+    route_table_kwargs=None,
     subnet_kwargs=None,
 ):
 
@@ -136,6 +146,9 @@ def update_vcn_stack(
 
     if not gateway_kwargs:
         gateway_kwargs = {}
+
+    if not route_table_kwargs:
+        route_table_kwargs = {}
 
     if not subnet_kwargs:
         subnet_kwargs = {}
@@ -153,15 +166,15 @@ def update_vcn_stack(
             network_client,
             compartment_id,
             vcn_kwargs=vcn_kwargs,
+            gateway_kwargs=gateway_kwargs,
+            route_table_kwargs=route_table_kwargs,
             subnet_kwargs=subnet_kwargs,
         )
 
     stack = get_vcn_stack(network_client, compartment_id, vcn.id)
     if vcn_kwargs:
         update_vcn_details = prepare_details(UpdateVcnDetails, **vcn_kwargs)
-        updated_vcn = update(
-            network_client, "update_vcn", vcn.id, update_vcn_details=update_vcn_details
-        )
+        updated_vcn = update(network_client, "update_vcn", vcn.id, update_vcn_details)
         if not updated_vcn:
             raise RuntimeError("Failed to update VCN: {}".format(vcn.id))
         stack["vcn"] = updated_vcn
@@ -185,7 +198,7 @@ def update_vcn_stack(
                 network_client,
                 "update_internet_gateway",
                 existing_ig.id,
-                update_internet_gateway_details=update_ie_details,
+                update_ie_details,
             )
             if not updated_ie:
                 raise RuntimeError(
@@ -217,7 +230,7 @@ def update_vcn_stack(
                 network_client,
                 "update_subnet",
                 existing_subnet.id,
-                update_subnet_details=update_subnet_details,
+                update_subnet_details,
             )
             if not updated_subnet:
                 raise RuntimeError(
@@ -232,6 +245,91 @@ def update_vcn_stack(
             if subnet:
                 stack["subnets"][subnet.id] = subnet
     return stack
+
+
+def ensure_vcn_stack(
+    network_client,
+    compartment_id,
+    vcn_kwargs=None,
+    gateway_kwargs=None,
+    route_table_kwargs=None,
+    subnet_kwargs=None,
+):
+
+    if not vcn_kwargs:
+        vcn_kwargs = {}
+
+    if not gateway_kwargs:
+        gateway_kwargs = {}
+
+    if not route_table_kwargs:
+        route_table_kwargs = {}
+
+    if not subnet_kwargs:
+        subnet_kwargs = {}
+
+    vcn = None
+    if "id" in vcn_kwargs and vcn_kwargs["id"]:
+        vcn = get(network_client, "get_vcn", vcn_kwargs["id"])
+    elif "display_name" in vcn_kwargs and vcn_kwargs["display_name"]:
+        vcn = get_vcn_by_name(
+            network_client, compartment_id, vcn_kwargs["display_name"]
+        )
+
+    if not vcn:
+        return new_vcn_stack(
+            network_client,
+            compartment_id,
+            vcn_kwargs=vcn_kwargs,
+            gateway_kwargs=gateway_kwargs,
+            route_table_kwargs=route_table_kwargs,
+            subnet_kwargs=subnet_kwargs,
+        )
+
+    stack = get_vcn_stack(network_client, compartment_id, vcn.id)
+    # Validate whether the rest of the stack is a match
+    # if not, add new elements to the stack
+    if gateway_kwargs:
+        gateway_matches = []
+        for gateway_id, gateway in stack["internet_gateways"].items():
+            match = True
+            for k, v in gateway_kwargs.items():
+                if hasattr(gateway, k) and getattr(gateway, k) != v:
+                    match = False
+            gateway_matches.append(match)
+
+        if True not in gateway_matches:
+            create_ig_details = prepare_details(
+                CreateInternetGatewayDetails,
+                compartment_id=compartment_id,
+                is_enabled=True,
+                vcn_id=vcn.id,
+                **gateway_kwargs,
+            )
+
+            gateway = create_internet_gateway(network_client, create_ig_details)
+            if not gateway:
+                raise RuntimeError(
+                    "Failed to create internet gateway with details: {}".format(
+                        create_ig_details
+                    )
+                )
+
+    if subnet_kwargs:
+        subnet = get_subnet_in_vcn_stack(stack, subnet_kwargs)
+        if not subnet:
+            # Add subnet that reflects subnet_kwargs to the stack
+            subnet = create_subnet_stack(
+                network_client,
+                compartment_id,
+                stack["vcn"],
+                gateway_kwargs=gateway_kwargs,
+                route_table_kwargs=route_table_kwargs,
+                subnet_kwargs=subnet_kwargs,
+            )
+            if not subnet:
+                return False
+    return True
 
 
 def refresh_vcn_stack(network_client, compartment_id, vcn_kwargs=None):
@@ -336,7 +434,6 @@ def equal_vcn_stack(vcn_stack, other_vcn_stack):
     for subnet_id, subnet in vcn_stack["subnets"].items():
         if subnet_id not in other_vcn_stack["subnets"]:
             return False
-
     return True
 
 
@@ -356,7 +453,7 @@ def create_vcn(network_client, create_vcn_details, wait_for_states=None, **kwarg
         "create_vcn",
         create_vcn_details,
         wait_for_states=wait_for_states,
-        **kwargs
+        **kwargs,
     )
 
     if not vcn:
@@ -393,6 +490,7 @@ def delete_vcn_stack(network_client, compartment_id, vcn_id=None, vcn=None):
                 "delete_subnet",
                 subnet.id,
                 wait_for_states=[Subnet.LIFECYCLE_STATE_TERMINATED],
+                retry_strategy=DEFAULT_RETRY_STRATEGY,
             )
             remove_stack["subnets"][subnet.id] = deleted
 
@@ -415,8 +513,9 @@ def delete_vcn_stack(network_client, compartment_id, vcn_id=None, vcn=None):
                     network_client,
                     "update_route_table",
                     route.id,
+                    update_details,
                     wait_for_states=[RouteTable.LIFECYCLE_STATE_AVAILABLE],
-                    update_route_table_details=update_details,
+                    retry_strategy=DEFAULT_RETRY_STRATEGY,
                 )
 
             # Delete all non default routes
@@ -427,6 +526,7 @@ def delete_vcn_stack(network_client, compartment_id, vcn_id=None, vcn=None):
                         "delete_route_table",
                         route.id,
                         wait_for_states=[RouteTable.LIFECYCLE_STATE_TERMINATED],
+                        retry_strategy=DEFAULT_RETRY_STRATEGY,
                     )
                     remove_stack["route_tables"].append(deleted)
 
@@ -445,6 +545,7 @@ def delete_vcn_stack(network_client, compartment_id, vcn_id=None, vcn=None):
                 "delete_internet_gateway",
                 gateway.id,
                 wait_for_states=[InternetGateway.LIFECYCLE_STATE_TERMINATED],
+                retry_strategy=DEFAULT_RETRY_STRATEGY,
             )
             remove_stack["internet_gateways"][gateway.id] = deleted
 
@@ -465,6 +566,7 @@ def delete_vcn_stack(network_client, compartment_id, vcn_id=None, vcn=None):
                     "delete_security_list",
                     security.id,
                     wait_for_states=[SecurityList.LIFECYCLE_STATE_TERMINATED],
+                    retry_strategy=DEFAULT_RETRY_STRATEGY,
                 )
                 remove_stack["security_lists"].append(deleted)
 
@@ -485,6 +587,7 @@ def delete_vcn_stack(network_client, compartment_id, vcn_id=None, vcn=None):
                     "delete_dhcp_options",
                     dhcp_option.id,
                     wait_for_states=[DhcpOptions.LIFECYCLE_STATE_TERMINATED],
+                    retry_strategy=DEFAULT_RETRY_STRATEGY,
                 )
                 remove_stack["dhcp_options"].append(deleted)
 
@@ -498,6 +601,7 @@ def delete_vcn_stack(network_client, compartment_id, vcn_id=None, vcn=None):
                 "delete_local_peering_gateway",
                 local_peering_gateway.id,
                 wait_for_states=[LocalPeeringGateway.LIFECYCLE_STATE_TERMINATED],
+                retry_strategy=DEFAULT_RETRY_STRATEGY,
             )
             remove_stack["local_peering_gateways"].append(deleted)
 
@@ -511,6 +615,7 @@ def delete_vcn_stack(network_client, compartment_id, vcn_id=None, vcn=None):
                 "delete_nat_gateway",
                 gateway.id,
                 wait_for_states=[NatGateway.LIFECYCLE_STATE_TERMINATED],
+                retry_strategy=DEFAULT_RETRY_STRATEGY,
             )
             remove_stack["nat_gateways"].append(deleted)
 
@@ -524,6 +629,7 @@ def delete_vcn_stack(network_client, compartment_id, vcn_id=None, vcn=None):
                 "delete_service_gateway",
                 service_gateway.id,
                 wait_for_states=[ServiceGateway.LIFECYCLE_STATE_TERMINATED],
+                retry_strategy=DEFAULT_RETRY_STRATEGY,
             )
             remove_stack["service_gateways"].append(deleted)
 
@@ -534,6 +640,7 @@ def delete_vcn_stack(network_client, compartment_id, vcn_id=None, vcn=None):
             "delete_vcn",
             vcn.id,
             wait_for_states=[Vcn.LIFECYCLE_STATE_TERMINATED],
+            retry_strategy=DEFAULT_RETRY_STRATEGY,
         )
         remove_stack["id"] = vcn.id
         remove_stack["vcn"] = deleted
@@ -550,6 +657,35 @@ def delete_compartment_vcns(network_client, compartment_id, **kwargs):
     return removed_vcns
 
 
+def create_route_table(
+    network_client, create_route_table_details, wait_for_states=None, **kwargs
+):
+    if not wait_for_states:
+        wait_for_states = [RouteTable.LIFECYCLE_STATE_AVAILABLE]
+
+    route_table = create(
+        network_client,
+        "create_route_table",
+        create_route_table_details,
+        wait_for_states=[RouteTable.LIFECYCLE_STATE_AVAILABLE],
+        **kwargs,
+    )
+    if not route_table:
+        return None
+    return route_table
+
+
+def get_route_table_by_name(
+    network_client, compartment_id, vcn_id, display_name, **kwargs
+):
+    route_tables = list_entities(
+        network_client, "list_route_tables", compartment_id, vcn_id=vcn_id, **kwargs
+    )
+    for route_table in route_tables:
+        if route_table.display_name == display_name:
+            return route_table
+
+
 def create_internet_gateway(
     network_client, create_internet_gateway_details, wait_for_states=None, **kwargs
 ):
@@ -561,11 +697,26 @@ def create_internet_gateway(
         "create_internet_gateway",
         create_internet_gateway_details,
         wait_for_states=wait_for_states,
-        **kwargs
+        **kwargs,
     )
     if not internet_gateway:
         return None
     return internet_gateway
+
+
+def get_internet_gateway_by_name(
+    network_client, compartment_id, vcn_id, display_name, **kwargs
+):
+    internet_gateways = list_entities(
+        network_client,
+        "list_internet_gateways",
+        compartment_id,
+        vcn_id=vcn_id,
+        **kwargs,
+    )
+    for internet_gateway in internet_gateways:
+        if internet_gateway.display_name == display_name:
+            return internet_gateway
 
 
 def create_subnet(
@@ -579,7 +730,7 @@ def create_subnet(
         "create_subnet",
         create_subnet_details,
         wait_for_states=wait_for_states,
-        **kwargs
+        **kwargs,
     )
     if not subnet:
         return None
@@ -593,6 +744,142 @@ def get_subnet_by_name(network_client, compartment_id, vcn_id, display_name, **k
     for subnet in subnets:
         if subnet.display_name == display_name:
             return subnet
+
+
+def get_subnet_in_vcn_stack(vcn_stack, subnet_kwargs=None):
+    if not isinstance(vcn_stack, dict):
+        return None
+
+    if not subnet_kwargs:
+        subnet_kwargs = {}
+
+    if "subnets" not in vcn_stack:
+        return None
+
+    matches = []
+    for subnet_id, subnet in vcn_stack["subnets"].items():
+        match = True
+        for k, v in subnet_kwargs.items():
+            if not hasattr(subnet, k):
+                match = False
+            if hasattr(subnet, k) and getattr(subnet, k) != v:
+                match = False
+
+        if match:
+            matches.append(subnet)
+
+    if matches:
+        return matches[0]
+    return None
+
+
+def create_subnet_stack(
+    network_client,
+    compartment_id,
+    vcn,
+    gateway_kwargs=None,
+    route_table_kwargs=None,
+    subnet_kwargs=None,
+    use_default_route_table=False,
+):
+
+    if not gateway_kwargs:
+        gateway_kwargs = {}
+
+    if not subnet_kwargs:
+        subnet_kwargs = {}
+
+    if not route_table_kwargs:
+        route_table_kwargs = {}
+
+    route_table = None
+
+    # use_default_route -> use the default route table
+    if use_default_route_table:
+        route_table = get_route_table_by_name(
+            network_client, compartment_id, vcn.id, "DEFAULT"
+        )
+    else:
+        if "id" in route_table_kwargs and route_table_kwargs["id"]:
+            route_table = get(
+                network_client, "get_route_table", route_table_kwargs["id"]
+            )
+        elif (
+            "display_name" in route_table_kwargs and route_table_kwargs["display_name"]
+        ):
+            route_table = get_route_table_by_name(
+                network_client,
+                compartment_id,
+                vcn.id,
+                route_table_kwargs["display_name"],
+            )
+
+        if not route_table:
+            # Create new
+            route_rules = []
+
+            gateway = None
+            if "id" in gateway_kwargs and gateway_kwargs["id"]:
+                gateway = get(
+                    network_client, "get_internet_gateway", gateway_kwargs["id"]
+                )
+            elif "display_name" in gateway_kwargs and gateway_kwargs["display_name"]:
+                gateway = get_internet_gateway_by_name(
+                    network_client,
+                    compartment_id,
+                    vcn.id,
+                    gateway_kwargs["display_name"],
+                )
+
+            if not gateway:
+                # Each VCN can maximum have 1 IG
+                create_ig_details = prepare_details(
+                    CreateInternetGatewayDetails,
+                    compartment_id=compartment_id,
+                    is_enabled=True,
+                    vcn_id=vcn.id,
+                    **gateway_kwargs,
+                )
+
+                gateway = create_internet_gateway(network_client, create_ig_details)
+                if not gateway:
+                    # TODO, log error
+                    return None
+
+            route_rules = []
+            if "route_rules" in route_table_kwargs:
+                for route_rule in route_table_kwargs["route_rules"]:
+                    route_rule_details = prepare_details(
+                        RouteRule, network_entity_id=gateway.id, **route_rule
+                    )
+                    if route_rule_details:
+                        route_rules.append(route_rule_details)
+                route_table_kwargs.pop("route_rules")
+
+            create_rt_details = prepare_details(
+                CreateRouteTableDetails,
+                compartment_id=compartment_id,
+                vcn_id=vcn.id,
+                route_rules=route_rules,
+                **route_table_kwargs,
+            )
+
+            route_table = create_route_table(network_client, create_rt_details)
+
+    if not route_table:
+        # TODO, log error
+        return None
+
+    # Create subnet
+    create_subnet_details = prepare_details(
+        CreateSubnetDetails,
+        compartment_id=compartment_id,
+        vcn_id=vcn.id,
+        route_table_id=route_table.id,
+        **subnet_kwargs,
+    )
+
+    return create_subnet(network_client, create_subnet_details)
 
 
 if __name__ == "__main__":

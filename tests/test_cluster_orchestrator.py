@@ -33,6 +33,7 @@ class TestClusterOrchestrator(unittest.TestCase):
         cluster_name = test_name
         node_name = test_name + "_Node"
         vcn_name = test_name + "_Network"
+        internet_gateway_name = test_name + "_Internet_Gateway"
         subnet_name = test_name + "_Subnet"
 
         # Add unique test postfix
@@ -43,7 +44,21 @@ class TestClusterOrchestrator(unittest.TestCase):
             cluster_name += test_id
             node_name += test_id
             vcn_name += test_id
+            internet_gateway_name += test_id
             subnet_name += test_id
+
+        internet_gateway_options = dict(
+            display_name=internet_gateway_name, is_enabled=True
+        )
+        route_table_options = dict(
+            route_rules=[
+                dict(
+                    cidr_block=None,
+                    destination="0.0.0.0/0",
+                    destination_type="CIDR_BLOCK",
+                )
+            ]
+        )
 
         # Sort order in ascending to ensure that complex images
         # such as GPU powered shapes are not selected.
@@ -77,6 +92,8 @@ class TestClusterOrchestrator(unittest.TestCase):
             profile=oci_profile_options,
             cluster=cluster_options,
             vcn=vcn_options,
+            internet_gateway=internet_gateway_options,
+            route_table=route_table_options,
             subnet=subnet_options,
         )
 

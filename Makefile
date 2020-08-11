@@ -7,3 +7,4 @@ clean:
 	rm -fr dist/
 	rm -fr build/
 	rm -fr corc.egg-info/
+	rm -fr .pytest_cache

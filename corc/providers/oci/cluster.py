@@ -190,7 +190,7 @@ def create_cluster(container_engine_client, create_cluster_details, create_kwarg
     created_response = create(
         container_engine_client,
         "create_cluster",
-        create_cluster_details=create_cluster_details,
+        create_cluster_details,
         **create_kwargs,
     )
 
@@ -247,12 +247,12 @@ def create_node_pool(container_engine_client, create_node_pool_details):
     created_response = create(
         container_engine_client,
         "create_node_pool",
+        create_node_pool_details,
         wait_for_states=[
             WorkRequest.STATUS_SUCCEEDED,
             WorkRequest.OPERATION_TYPE_NODEPOOL_CREATE,
             WorkRequest.STATUS_FAILED,
         ],
-        create_node_pool_details=create_node_pool_details,
     )
     if not created_response:
         return None

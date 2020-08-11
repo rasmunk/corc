@@ -8,6 +8,7 @@ from corc.config import (
     save_config,
     remove_config,
 )
+from corc.providers.oci.network import get_subnet_in_vcn_stack
 from corc.providers.oci.config import generate_oci_config
 from corc.providers.oci.instance import OCIInstanceOrchestrator
 
@@ -33,6 +34,7 @@ class TestInstanceOrchestrator(unittest.TestCase):
         test_name = "Test_Instance_Orch"
         node_name = test_name + "_Node"
         vcn_name = test_name + "_Network"
+        internet_gateway_name = test_name + "_Internet_Gateway"
         subnet_name = test_name + "_Subnet"
 
         # Add unique test postfix
@@ -42,6 +44,7 @@ class TestInstanceOrchestrator(unittest.TestCase):
         if test_id:
             node_name += test_id
             vcn_name += test_id
+            internet_gateway_name += test_id
             subnet_name += test_id
 
         instance_options = dict(
@@ -52,13 +55,30 @@ class TestInstanceOrchestrator(unittest.TestCase):
             display_name=node_name,
         )
 
-        vcn_options = dict(display_name=vcn_name, dns_label="ku",)
-        subnet_options = dict(display_name=subnet_name, dns_label="workers")
+        internet_gateway_options = dict(
+            display_name=internet_gateway_name, is_enabled=True
+        )
+        route_table_options = dict(
+            route_rules=[
+                dict(
+                    cidr_block=None,
+                    destination="0.0.0.0/0",
+                    destination_type="CIDR_BLOCK",
+                )
+            ]
+        )
+
+        vcn_options = dict(display_name=vcn_name, dns_label="ku")
+        subnet_options = dict(
+            cidr_block="10.0.1.0/24", display_name=subnet_name, dns_label="workers"
+        )
 
         self.options = dict(
             profile=oci_profile_options,
             instance=instance_options,
             vcn=vcn_options,
+            internet_gateway=internet_gateway_options,
+            route_table=route_table_options,
             subnet=subnet_options,
         )
 
@@ -119,11 +139,12 @@ class TestInstanceOrchestrator(unittest.TestCase):
         # Setup first configuration
         self.orchestrator.setup()
         self.assertTrue(self.orchestrator.is_ready())
-
+        # Extract the existing gateway and pass it on
         # Update configuration
         new_subnet = dict(
+            cidr_block="10.0.2.0/24",
             display_name=self.options["subnet"]["display_name"],
-            dns_label="workers",
+            dns_label="workers2",
             freeform_tags=dict(Hello="World"),
         )
 
@@ -137,7 +158,9 @@ class TestInstanceOrchestrator(unittest.TestCase):
 
         vcn_stack = new_orchestrator._get_vcn_stack()
         self.assertIn("subnets", vcn_stack)
-        subnet_id, subnet = vcn_stack["subnets"].popitem()
+
+        subnet = get_subnet_in_vcn_stack(vcn_stack, subnet_kwargs=new_subnet)
+        self.assertIsNotNone(subnet)
         self.assertTrue(hasattr(subnet, "freeform_tags"))
         self.assertEqual(getattr(subnet, "freeform_tags"), new_subnet["freeform_tags"])
 
