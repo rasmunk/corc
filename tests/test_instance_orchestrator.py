@@ -56,7 +56,7 @@ class TestInstanceOrchestrator(unittest.TestCase):
         )
 
         internet_gateway_options = dict(
-            display_name=internet_gateway_name, is_enabled=True
+            id="", display_name=internet_gateway_name, is_enabled=True
         )
         route_table_options = dict(
             route_rules=[
@@ -159,7 +159,11 @@ class TestInstanceOrchestrator(unittest.TestCase):
         vcn_stack = new_orchestrator._get_vcn_stack()
         self.assertIn("subnets", vcn_stack)
 
-        subnet = get_subnet_in_vcn_stack(vcn_stack, subnet_kwargs=new_subnet)
+        subnet = get_subnet_in_vcn_stack(
+            vcn_stack,
+            subnet_kwargs=new_subnet,
+            optional_value_kwargs=["id", "display_name"],
+        )
         self.assertIsNotNone(subnet)
         self.assertTrue(hasattr(subnet, "freeform_tags"))
         self.assertEqual(getattr(subnet, "freeform_tags"), new_subnet["freeform_tags"])
@@ -178,7 +182,7 @@ class TestInstanceOrchestrator(unittest.TestCase):
 #         compute_options = dict(name=node_name)
 #         # (access_key_id)
 #         ec2_args = ("",)
-#         ec2_kwargs = {"secret": "zuIITqE/BXUjLVOn78bj8TkFJiWyRd0shSp0jPH8"}
+#         ec2_kwargs = {"secret": ""}
 
 #         self.options = dict(compute=compute_options)
 #         EC2Orchestrator, options = get_orchestrator(INSTANCE, EC2)

@@ -317,7 +317,9 @@ class TestVCNStack(unittest.TestCase):
         )
 
         new_subnet = get_subnet_in_vcn_stack(
-            refreshed_vcn_stack, subnet_kwargs=subnet_kwargs
+            refreshed_vcn_stack,
+            subnet_kwargs=subnet_kwargs,
+            optional_value_kwargs=["id", "display_name"],
         )
         self.assertEqual(new_subnet.cidr_block, subnet_kwargs["cidr_block"])
         self.assertEqual(new_subnet.display_name, subnet_kwargs["display_name"])

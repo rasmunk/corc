@@ -78,8 +78,7 @@ class TestClusterStack(unittest.TestCase):
         )
 
         internet_gateway_options = dict(
-            display_name=internet_gateway_name,
-            is_enabled=True
+            display_name=internet_gateway_name, is_enabled=True
         )
         route_table_options = dict(
             route_rules=[

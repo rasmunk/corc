@@ -44,3 +44,21 @@ def find_in_dict(a_values, dict_of_structs):
         if is_in(a_values, struct):
             return struct
     return None
+
+
+def unset_check(value):
+    if isinstance(value, str) and value == "":
+        return True
+    if isinstance(value, (bytes, bytearray)) and value == bytearray():
+        return True
+    if isinstance(value, list) and value == []:
+        return True
+    if isinstance(value, set) and value == set():
+        return True
+    if isinstance(value, tuple) and value == tuple():
+        return True
+    if isinstance(value, dict) and value == {}:
+        return True
+    if value is None:
+        return True
+    return False

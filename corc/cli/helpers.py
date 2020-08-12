@@ -4,7 +4,6 @@ import flatten_dict
 from corc.cli.args import extract_arguments
 from corc.cli.providers.helpers import select_provider
 from corc.config import (
-    load_config,
     load_from_config,
     corc_config_groups,
     gen_config_prefix,
@@ -122,7 +121,6 @@ def prepare_kwargs_configurations(args, argument_groups, strip_group_prefix=True
 
 def load_missing_action_kwargs(kwargs_configurations):
     flat_action_kwargs = {}
-    config = load_config()
     for kwargs in kwargs_configurations:
         for group, args in kwargs.items():
             # Set group prefixes
@@ -150,7 +148,7 @@ def load_missing_action_kwargs(kwargs_configurations):
             config_prefix = find_value_in_dict(args, key="config_prefix")
             # Update with missing arguments from config
             flat_action_kwargs[kwargs_path].update(
-                load_from_config(missing_dict, prefix=config_prefix, config=config,)
+                load_from_config(missing_dict, prefix=config_prefix)
             )
     return flatten_dict.unflatten(flat_action_kwargs)
 

@@ -7,17 +7,6 @@ def _get_client_func(client, func):
     return getattr(client, func)
 
 
-def _list(client, list_method_name, *args, **kwargs):
-    if is_composite_client(client):
-        func = _get_client_func(client.client, list_method_name)
-    else:
-        func = _get_client_func(client, list_method_name)
-    items = perform_action(func, *args, **kwargs)
-    if items:
-        return items
-    return []
-
-
 def _perform_client_func_action(client, func_name, *args, **kwargs):
     if is_composite_client(client):
         func = _get_client_func(client.client, func_name)
@@ -68,7 +57,14 @@ def is_base_client(client):
 
 
 def list_entities(client, list_method, *args, **kwargs):
-    return _list(client, list_method, *args, **kwargs)
+    if is_composite_client(client):
+        func = _get_client_func(client.client, list_method)
+    else:
+        func = _get_client_func(client, list_method)
+    items = perform_action(func, *args, **kwargs)
+    if items:
+        return items
+    return []
 
 
 def delete(client, delete_method, *args, wait_for_states=None, **kwargs):

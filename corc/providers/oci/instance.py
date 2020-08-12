@@ -262,16 +262,34 @@ class OCIInstanceOrchestrator(Orchestrator):
             subnet_kwargs=self.options["subnet"],
         )
         if not ensured:
-            print("FAiled tok ensure the VCN stack")
+            print("Failed to ensure the VCN stack")
         return self._get_vcn_stack()
 
     def _valid_vcn_stack(self, vcn_stack):
-        required_vcn = dict(
-            display_name=self.options["vcn"]["display_name"],
-            dns_label=self.options["vcn"]["dns_label"],
-        )
-        required_igs = [self.options["internet_gateway"]]
-        required_subnets = [self.options["subnet"]]
+        # If id or display_name is not set, don't require them
+        required_vcn = {
+            k: v
+            for k, v in self.options["vcn"].items()
+            if (k != "id" and k != "display_name")
+            or (v and k == "id" or k == "display_name")
+        }
+
+        required_igs = [
+            {
+                k: v
+                for k, v in self.options["internet_gateway"].items()
+                if (k != "id" and k != "display_name")
+                or (v and k == "id" or k == "display_name")
+            }
+        ]
+        required_subnets = [
+            {
+                k: v
+                for k, v in self.options["subnet"].items()
+                if (k != "id" and k != "display_name")
+                or (v and k == "id" or k == "display_name")
+            }
+        ]
 
         return valid_vcn_stack(
             vcn_stack,
@@ -329,7 +347,11 @@ class OCIInstanceOrchestrator(Orchestrator):
         self.vcn_stack = vcn_stack
 
         # Find the selected subnet in the VCN
-        subnet = get_subnet_in_vcn_stack(self.vcn_stack, options["subnet"])
+        subnet = get_subnet_in_vcn_stack(
+            self.vcn_stack,
+            subnet_kwargs=options["subnet"],
+            optional_value_kwargs=["id", "display_name"],
+        )
 
         if not subnet:
             # Create new subnet and attach to the vcn_stack
