@@ -185,7 +185,7 @@ class TestInstanceOrchestrator(unittest.TestCase):
 #         ec2_kwargs = {"secret": ""}
 
 #         self.options = dict(compute=compute_options)
-#         EC2Orchestrator, options = get_orchestrator(INSTANCE, EC2)
+#         EC2Orchestrator, options = get_orchestrator(VIRTUAL_MACHINE, EC2)
 #         options["driver"]["args"] = ec2_args
 #         options["driver"]["kwargs"] = ec2_kwargs
 #         self.options.update(options)

@@ -5,7 +5,7 @@ OCI = "oci"
 ECS = "ecs"
 KUBERNETES = "kubernetes"
 
-INSTANCE = "instance"
+VIRTUAL_MACHINE = "virtual_machine"
 CONTAINER_CLUSTER = "container_cluster"
 
 CONTAINER = "container"

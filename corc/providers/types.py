@@ -4,7 +4,7 @@ from corc.providers.defaults import (
     CONTAINER_CLUSTER,
     EC2,
     ECS,
-    INSTANCE,
+    VIRTUAL_MACHINE,
     KUBERNETES,
     OCI,
 )
@@ -26,7 +26,7 @@ ORCHESTRATORS = {
             "options": {"driver": {"provider": ContainerProvider.KUBERNETES}},
         },
     },
-    INSTANCE: {
+    VIRTUAL_MACHINE: {
         OCI: {"klass": OCIInstanceOrchestrator},
         EC2: {
             "klass": ApacheInstanceOrchestrator,
@@ -36,8 +36,8 @@ ORCHESTRATORS = {
 }
 
 
-def get_orchestrator(orchestrator, provider):
-    orchestrator_definition = ORCHESTRATORS[orchestrator][provider]
+def get_orchestrator(resource_type, provider):
+    orchestrator_definition = ORCHESTRATORS[resource_type][provider]
     klass = orchestrator_definition.get("klass", None)
     options = {}
     try:

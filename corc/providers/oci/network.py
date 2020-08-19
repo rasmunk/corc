@@ -438,6 +438,7 @@ def get_vcn_by_name(network_client, compartment_id, display_name, **kwargs):
     for vcn in vcns:
         if vcn.display_name == display_name:
             return vcn
+    return None
 
 
 def create_vcn(network_client, create_vcn_details, wait_for_states=None, **kwargs):
