@@ -36,8 +36,8 @@ from corc.storage.s3 import (
     upload_to_s3,
     upload_directory_to_s3,
 )
-from corc.kubernetes.nodes import NodeManager
-from corc.kubernetes.scheduler import KubenetesScheduler
+from corc.schedulers.kubernetes.nodes import NodeManager
+from corc.schedulers.kubernetes.scheduler import KubenetesScheduler
 from corc.providers.oci.cluster import get_cluster_by_name, refresh_kube_config
 from corc.providers.oci.helpers import new_client
 from corc.providers.oci.config import valid_profile_config, valid_cluster_config

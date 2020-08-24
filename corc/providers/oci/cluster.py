@@ -36,7 +36,7 @@ from corc.util import (
     validate_dict_fields,
     validate_dict_values,
 )
-from corc.kubernetes.config import save_kube_config, load_kube_config
+from corc.schedulers.kubernetes.config import save_kube_config, load_kube_config
 from corc.orchestrator import Orchestrator
 from corc.providers.oci.network import (
     new_vcn_stack,
@@ -409,6 +409,7 @@ class OCIClusterOrchestrator(Orchestrator):
         stack = new_vcn_stack(
             self.network_client,
             self.options["profile"]["compartment_id"],
+            gateway_kwargs=self.options["gateway"],
             vcn_kwargs=self.options["vcn"],
             subnet_kwargs=self.options["subnet"],
         )
@@ -511,11 +512,18 @@ class OCIClusterOrchestrator(Orchestrator):
     def tear_down(self):
         if not self.cluster_stack:
             # refresh
-            self.cluster_stack = get_cluster_by_name(
+            cluster = get_cluster_by_name(
                 self.container_engine_client,
                 self.options["profile"]["compartment_id"],
                 self.options["cluster"]["name"],
             )
+
+            if cluster:
+                self.cluster_stack = get_cluster_stack(
+                    self.container_engine_client,
+                    self.options["profile"]["compartment_id"],
+                    cluster.id,
+                )
 
         if self.cluster_stack:
             cluster = self.cluster_stack["cluster"]

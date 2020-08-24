@@ -1,13 +1,13 @@
 from kubernetes import client
 from kubernetes.client.models import V1DeleteOptions
 from corc.scheduler import Scheduler
-from corc.kubernetes.config import load_kube_config
-from corc.kubernetes.crud import request
-from corc.kubernetes.job import (
+from corc.schedulers.kubernetes.config import load_kube_config
+from corc.schedulers.kubernetes.crud import request
+from corc.schedulers.kubernetes.job import (
     create_job,
     prepare_job,
 )
-from corc.kubernetes.storage import (
+from corc.schedulers.kubernetes.storage import (
     prepare_volume,
     prepare_secret,
     create_secret,
