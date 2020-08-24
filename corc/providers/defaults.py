@@ -1,4 +1,5 @@
 AWS = "aws"
+DOCKER = "docker"
 EC2 = "ec2"
 DOCKER = "docker"
 OCI = "oci"

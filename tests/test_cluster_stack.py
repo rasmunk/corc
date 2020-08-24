@@ -157,7 +157,7 @@ class TestClusterStack(unittest.TestCase):
             self.network_client,
             self.options["profile"]["compartment_id"],
             vcn_kwargs=self.options["vcn"],
-            gateway_kwargs=self.options["internet_gateway"],
+            internet_gateway_kwargs=self.options["internet_gateway"],
             route_table_kwargs=self.options["route_table"],
             subnet_kwargs=self.options["subnet"],
         )

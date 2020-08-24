@@ -92,7 +92,7 @@ class TestClusterOrchestrator(unittest.TestCase):
             profile=oci_profile_options,
             cluster=cluster_options,
             vcn=vcn_options,
-            gateway=internet_gateway_options,
+            internet_gateway=internet_gateway_options,
             route_table=route_table_options,
             subnet=subnet_options,
         )

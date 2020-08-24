@@ -15,7 +15,7 @@ from oci.container_engine.models import (
     CreateNodePoolNodeConfigDetails,
     NodeSourceViaImageDetails,
 )
-
+from oci.core.models import CreateSubnetDetails
 from corc.providers.oci.helpers import (
     new_client,
     create,
@@ -23,6 +23,7 @@ from corc.providers.oci.helpers import (
     get,
     list_entities,
     get_kubernetes_version,
+    prepare_details,
 )
 from corc.providers.oci.config import (
     valid_profile_config,
@@ -39,9 +40,12 @@ from corc.util import (
 from corc.schedulers.kubernetes.config import save_kube_config, load_kube_config
 from corc.orchestrator import Orchestrator
 from corc.providers.oci.network import (
+    create_subnet,
+    delete_vcn_stack,
+    ensure_vcn_stack,
+    get_subnet_in_vcn_stack,
     new_vcn_stack,
     valid_vcn_stack,
-    delete_vcn_stack,
     refresh_vcn_stack,
     update_vcn_stack,
 )
@@ -409,11 +413,24 @@ class OCIClusterOrchestrator(Orchestrator):
         stack = new_vcn_stack(
             self.network_client,
             self.options["profile"]["compartment_id"],
-            gateway_kwargs=self.options["gateway"],
+            internet_gateway_kwargs=self.options["internet_gateway"],
             vcn_kwargs=self.options["vcn"],
             subnet_kwargs=self.options["subnet"],
         )
         return stack
+
+    def _ensure_vcn_stack(self):
+        ensured = ensure_vcn_stack(
+            self.network_client,
+            self.options["profile"]["compartment_id"],
+            vcn_kwargs=self.options["vcn"],
+            internet_gateway_kwargs=self.options["internet_gateway"],
+            route_table_kwargs=self.options["route_table"],
+            subnet_kwargs=self.options["subnet"],
+        )
+        if not ensured:
+            print("Failed to ensure the VCN stack")
+        return self._get_vcn_stack()
 
     def _update_vcn_stack(self):
         return update_vcn_stack(
@@ -423,20 +440,79 @@ class OCIClusterOrchestrator(Orchestrator):
             subnet_kwargs=self.options["subnet"],
         )
 
+    def _valid_vcn_stack(self, vcn_stack):
+        # If id or display_name is not set, don't require them
+        required_vcn = {
+            k: v
+            for k, v in self.options["vcn"].items()
+            if (k != "id" and k != "display_name")
+            or (v and k == "id" or k == "display_name")
+        }
+
+        required_igs = [
+            {
+                k: v
+                for k, v in self.options["internet_gateway"].items()
+                if (k != "id" and k != "display_name")
+                or (v and k == "id" or k == "display_name")
+            }
+        ]
+        required_subnets = [
+            {
+                k: v
+                for k, v in self.options["subnet"].items()
+                if (k != "id" and k != "display_name")
+                or (v and k == "id" or k == "display_name")
+            }
+        ]
+        return valid_vcn_stack(
+            vcn_stack,
+            required_vcn=required_vcn,
+            required_igs=required_igs,
+            required_subnets=required_subnets,
+        )
+
     def setup(self):
         # Ensure we have a VCN stack ready
         vcn_stack = self._get_vcn_stack()
         if not vcn_stack:
             vcn_stack = self._new_vcn_stack()
 
-        if valid_vcn_stack(vcn_stack):
-            self.vcn_stack = vcn_stack
-        else:
-            self.vcn_stack = self._update_vcn_stack()
+        if not self._valid_vcn_stack(vcn_stack):
+            vcn_stack = self._ensure_vcn_stack()
 
-        if not valid_vcn_stack(self.vcn_stack):
+        if not self._valid_vcn_stack(vcn_stack):
             raise RuntimeError(
-                "Failed to fix the broken VCN stack: {}".format(vcn_stack)
+                "A valid VCN stack could not be found: {}".format(vcn_stack)
+            )
+        self.vcn_stack = vcn_stack
+
+        # Find the selected subnet in the VCN
+        subnet = get_subnet_in_vcn_stack(
+            self.vcn_stack,
+            subnet_kwargs=self.options["subnet"],
+            optional_value_kwargs=["id", "display_name"],
+        )
+
+        if not subnet:
+            # Create new subnet and attach to the vcn_stack
+            create_subnet_details = prepare_details(
+                CreateSubnetDetails,
+                compartment_id=self.options["profile"]["compartment_id"],
+                vcn_id=self.vcn_stack["id"],
+                route_table_id=self.vcn_stack["vcn"].default_route_table_id,
+                **self.options["subnet"],
+            )
+            subnet = create_subnet(
+                self.network_client, create_subnet_details, self.vcn_stack["id"]
+            )
+            self.vcn_stack = self._ensure_vcn_stack()
+
+        if not subnet:
+            raise RuntimeError(
+                "Failed to find a subnet with the name: {} in vcn: {}".format(
+                    self.options["subnet"]["display_name"], self.vcn_stack["vcn"].id
+                )
             )
 
         # Available images
@@ -462,7 +538,6 @@ class OCIClusterOrchestrator(Orchestrator):
             )
 
         image = available_images[0]
-
         cluster_details = gen_cluster_stack_details(
             self.vcn_stack["id"], self.vcn_stack["subnets"], image, **self.options,
         )

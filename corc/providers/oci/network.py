@@ -37,7 +37,7 @@ def new_vcn_stack(
     network_client,
     compartment_id,
     vcn_kwargs=None,
-    gateway_kwargs=None,
+    internet_gateway_kwargs=None,
     route_table_kwargs=None,
     subnet_kwargs=None,
 ):
@@ -47,8 +47,8 @@ def new_vcn_stack(
     if "cidr_block" not in vcn_kwargs:
         vcn_kwargs.update({"cidr_block": "10.0.0.0/16"})
 
-    if not gateway_kwargs:
-        gateway_kwargs = {}
+    if not internet_gateway_kwargs:
+        internet_gateway_kwargs = {}
 
     if not route_table_kwargs:
         route_table_kwargs = {}
@@ -75,7 +75,7 @@ def new_vcn_stack(
         CreateInternetGatewayDetails,
         compartment_id=compartment_id,
         vcn_id=vcn.id,
-        **gateway_kwargs,
+        **internet_gateway_kwargs,
     )
 
     gateway = create_internet_gateway(network_client, create_ig_details)
@@ -132,7 +132,7 @@ def update_vcn_stack(
     network_client,
     compartment_id,
     vcn_kwargs=None,
-    gateway_kwargs=None,
+    internet_gateway_kwargs=None,
     route_table_kwargs=None,
     subnet_kwargs=None,
 ):
@@ -140,8 +140,8 @@ def update_vcn_stack(
     if not vcn_kwargs:
         vcn_kwargs = {}
 
-    if not gateway_kwargs:
-        gateway_kwargs = {}
+    if not internet_gateway_kwargs:
+        internet_gateway_kwargs = {}
 
     if not route_table_kwargs:
         route_table_kwargs = {}
@@ -162,7 +162,7 @@ def update_vcn_stack(
             network_client,
             compartment_id,
             vcn_kwargs=vcn_kwargs,
-            gateway_kwargs=gateway_kwargs,
+            internet_gateway_kwargs=internet_gateway_kwargs,
             route_table_kwargs=route_table_kwargs,
             subnet_kwargs=subnet_kwargs,
         )
@@ -175,20 +175,20 @@ def update_vcn_stack(
             raise RuntimeError("Failed to update VCN: {}".format(vcn.id))
         stack["vcn"] = updated_vcn
 
-    if gateway_kwargs:
+    if internet_gateway_kwargs:
         existing_ig = None
-        if "id" in gateway_kwargs and gateway_kwargs["id"]:
+        if "id" in internet_gateway_kwargs and internet_gateway_kwargs["id"]:
             existing_ig = find_in_dict(
-                {"id": gateway_kwargs["id"]}, stack["internet_gateways"]
+                {"id": internet_gateway_kwargs["id"]}, stack["internet_gateways"]
             )
-        elif "display_name" in gateway_kwargs:
+        elif "display_name" in internet_gateway_kwargs:
             existing_ig = find_in_dict(
-                {"display_name": gateway_kwargs["display_name"]},
+                {"display_name": internet_gateway_kwargs["display_name"]},
                 stack["internet_gateways"],
             )
         if existing_ig:
             update_ie_details = prepare_details(
-                UpdateInternetGatewayDetails, **gateway_kwargs
+                UpdateInternetGatewayDetails, **internet_gateway_kwargs
             )
             updated_ie = update(
                 network_client,
@@ -203,7 +203,7 @@ def update_vcn_stack(
             stack["internet_gateways"][updated_ie.id] = updated_ie
         else:
             create_ie_details = prepare_details(
-                CreateInternetGatewayDetails, **gateway_kwargs
+                CreateInternetGatewayDetails, **internet_gateway_kwargs
             )
             ie = create_internet_gateway(network_client, create_ie_details)
             if ie:
@@ -247,7 +247,7 @@ def ensure_vcn_stack(
     network_client,
     compartment_id,
     vcn_kwargs=None,
-    gateway_kwargs=None,
+    internet_gateway_kwargs=None,
     route_table_kwargs=None,
     subnet_kwargs=None,
 ):
@@ -255,8 +255,8 @@ def ensure_vcn_stack(
     if not vcn_kwargs:
         vcn_kwargs = {}
 
-    if not gateway_kwargs:
-        gateway_kwargs = {}
+    if not internet_gateway_kwargs:
+        internet_gateway_kwargs = {}
 
     if not route_table_kwargs:
         route_table_kwargs = {}
@@ -277,7 +277,7 @@ def ensure_vcn_stack(
             network_client,
             compartment_id,
             vcn_kwargs=vcn_kwargs,
-            gateway_kwargs=gateway_kwargs,
+            internet_gateway_kwargs=internet_gateway_kwargs,
             route_table_kwargs=route_table_kwargs,
             subnet_kwargs=subnet_kwargs,
         )
@@ -285,10 +285,10 @@ def ensure_vcn_stack(
     stack = get_vcn_stack(network_client, compartment_id, vcn.id)
     # Validate whether the rest of the stack is a match
     # if not, add new elements to the stack
-    if gateway_kwargs:
+    if internet_gateway_kwargs:
         gateway = get_internet_gateway_in_vcn_stack(
             stack,
-            gateway_kwargs=gateway_kwargs,
+            internet_gateway_kwargs=internet_gateway_kwargs,
             optional_value_kwargs=["id", "display_name"],
         )
         if not gateway:
@@ -296,7 +296,7 @@ def ensure_vcn_stack(
                 CreateInternetGatewayDetails,
                 compartment_id=compartment_id,
                 vcn_id=vcn.id,
-                **gateway_kwargs,
+                **internet_gateway_kwargs,
             )
 
             gateway = create_internet_gateway(network_client, create_ig_details)
@@ -319,7 +319,7 @@ def ensure_vcn_stack(
                 network_client,
                 compartment_id,
                 stack["vcn"],
-                gateway_kwargs=gateway_kwargs,
+                internet_gateway_kwargs=internet_gateway_kwargs,
                 route_table_kwargs=route_table_kwargs,
                 subnet_kwargs=subnet_kwargs,
             )
@@ -717,13 +717,13 @@ def get_internet_gateway_by_name(
 
 
 def get_internet_gateway_in_vcn_stack(
-    vcn_stack, gateway_kwargs=None, optional_value_kwargs=None
+    vcn_stack, internet_gateway_kwargs=None, optional_value_kwargs=None
 ):
     if not isinstance(vcn_stack, dict):
         return None
 
-    if not gateway_kwargs:
-        gateway_kwargs = {}
+    if not internet_gateway_kwargs:
+        internet_gateway_kwargs = {}
 
     if "internet_gateways" not in vcn_stack:
         return None
@@ -734,7 +734,7 @@ def get_internet_gateway_in_vcn_stack(
     matches = []
     for gateway_id, gateway in vcn_stack["internet_gateways"].items():
         match = True
-        for k, v in gateway_kwargs.items():
+        for k, v in internet_gateway_kwargs.items():
             if k in optional_value_kwargs and unset_check(v):
                 continue
             if not hasattr(gateway, k):
@@ -811,14 +811,14 @@ def create_subnet_stack(
     network_client,
     compartment_id,
     vcn,
-    gateway_kwargs=None,
+    internet_gateway_kwargs=None,
     route_table_kwargs=None,
     subnet_kwargs=None,
     use_default_route_table=False,
 ):
 
-    if not gateway_kwargs:
-        gateway_kwargs = {}
+    if not internet_gateway_kwargs:
+        internet_gateway_kwargs = {}
 
     if not subnet_kwargs:
         subnet_kwargs = {}
@@ -853,16 +853,21 @@ def create_subnet_stack(
             route_rules = []
 
             gateway = None
-            if "id" in gateway_kwargs and gateway_kwargs["id"]:
+            if "id" in internet_gateway_kwargs and internet_gateway_kwargs["id"]:
                 gateway = get(
-                    network_client, "get_internet_gateway", gateway_kwargs["id"]
+                    network_client,
+                    "get_internet_gateway",
+                    internet_gateway_kwargs["id"],
                 )
-            elif "display_name" in gateway_kwargs and gateway_kwargs["display_name"]:
+            elif (
+                "display_name" in internet_gateway_kwargs
+                and internet_gateway_kwargs["display_name"]
+            ):
                 gateway = get_internet_gateway_by_name(
                     network_client,
                     compartment_id,
                     vcn.id,
-                    gateway_kwargs["display_name"],
+                    internet_gateway_kwargs["display_name"],
                 )
 
             if not gateway:
@@ -871,7 +876,7 @@ def create_subnet_stack(
                     CreateInternetGatewayDetails,
                     compartment_id=compartment_id,
                     vcn_id=vcn.id,
-                    **gateway_kwargs,
+                    **internet_gateway_kwargs,
                 )
 
                 gateway = create_internet_gateway(network_client, create_ig_details)
