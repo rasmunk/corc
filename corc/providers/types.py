@@ -1,9 +1,11 @@
 from libcloud.compute.types import Provider as ComputeProvider
 from libcloud.container.types import Provider as ContainerProvider
 from corc.providers.defaults import (
+    BARE_METAL,
     CONTAINER_CLUSTER,
     EC2,
     ECS,
+    LOCAL,
     VIRTUAL_MACHINE,
     KUBERNETES,
     OCI,
@@ -12,6 +14,7 @@ from corc.providers.oci.instance import OCIInstanceOrchestrator
 from corc.providers.oci.cluster import OCIClusterOrchestrator
 from corc.providers.apache.cluster import ApacheClusterOrchestrator
 from corc.providers.apache.instance import ApacheInstanceOrchestrator
+from corc.providers.dummy import LocalOrchestrator
 
 # Define orchestrators for the various cloud backends
 ORCHESTRATORS = {
@@ -33,6 +36,7 @@ ORCHESTRATORS = {
             "options": {"driver": {"provider": ComputeProvider.EC2}},
         },
     },
+    BARE_METAL: {LOCAL: {"klass": LocalOrchestrator},},
 }
 
 
