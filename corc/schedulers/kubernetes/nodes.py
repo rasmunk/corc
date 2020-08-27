@@ -1,5 +1,5 @@
 from kubernetes import client
-from corc.kubernetes.config import load_kube_config
+from corc.schedulers.kubernetes.config import load_kube_config
 
 ROUND_ROBIN = "ROUND_ROBIN"
 

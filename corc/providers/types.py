@@ -3,12 +3,13 @@ from libcloud.container.types import Provider as ContainerProvider
 from corc.providers.defaults import (
     BARE_METAL,
     CONTAINER_CLUSTER,
+    DOCKER,
     EC2,
     ECS,
     LOCAL,
-    VIRTUAL_MACHINE,
     KUBERNETES,
     OCI,
+    VIRTUAL_MACHINE,
 )
 from corc.providers.oci.instance import OCIInstanceOrchestrator
 from corc.providers.oci.cluster import OCIClusterOrchestrator
@@ -27,6 +28,10 @@ ORCHESTRATORS = {
         KUBERNETES: {
             "klass": ApacheClusterOrchestrator,
             "options": {"driver": {"provider": ContainerProvider.KUBERNETES}},
+        },
+        DOCKER: {
+            "klass": ApacheClusterOrchestrator,
+            "options": {"driver": {"provider": ContainerProvider.DOCKER}},
         },
     },
     VIRTUAL_MACHINE: {
