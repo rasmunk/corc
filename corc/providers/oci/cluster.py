@@ -526,14 +526,14 @@ class OCIClusterOrchestrator(Orchestrator):
         if not available_images:
             raise ValueError(
                 "No valid image could be found with options: {}".format(
-                    self.options["image"]
+                    self.options["cluster"]["node"]["image"]
                 )
             )
 
         if len(available_images) > 1:
             raise ValueError(
                 "More than 1 image was found with options: {}".format(
-                    self.options["image"]
+                    self.options["cluster"]["node"]["image"]
                 )
             )
 
