@@ -6,8 +6,9 @@ from corc.defaults import (
     COMPUTE,
     VCN,
     VCN_SUBNET,
-    VCN_INTERNET_GATEWAY,
-    VCN_ROUTE_TABLE,
+    VCN_INTERNETGATEWAY,
+    VCN_ROUTETABLE,
+    VCN_ROUTETABLE_ROUTERULES,
     PROFILE,
 )
 
@@ -92,14 +93,14 @@ valid_internet_gateway_config = {
 
 default_route_rule_config = {
     "id": "",
-    "cidr_block": None,
+    "cidr_block": "",
     "destination": "0.0.0.0/0",
     "destination_type": "CIDR_BLOCK",
 }
 
 valid_route_rule_config = {
     "id": str,
-    "cidr_block": (str, None),
+    "cidr_block": str,
     "destination": str,
     "destination_type": str,
 }
@@ -107,13 +108,13 @@ valid_route_rule_config = {
 default_route_table_config = {
     "id": "",
     "display_name": "default_route_table",
-    "route_rules": [default_route_rule_config],
+    "routerules": default_route_rule_config,
 }
 
 valid_route_table_config = {
     "id": str,
     "display_name": str,
-    "route_rules": list,
+    "routerules": dict,
 }
 
 default_vcn_config = {
@@ -122,8 +123,8 @@ default_vcn_config = {
     "display_name": "VCN Network",
     "cidr_block": "10.0.0.0/16",
     "subnet": default_subnet_config,
-    "internet_gateway": default_internet_gateway_config,
-    "route_table": default_route_table_config,
+    "internetgateway": default_internet_gateway_config,
+    "routetable": default_route_table_config,
 }
 
 valid_vcn_config = {
@@ -132,8 +133,8 @@ valid_vcn_config = {
     "display_name": str,
     "cidr_block": str,
     "subnet": dict,
-    "internet_gateway": dict,
-    "route_table": dict,
+    "internetgateway": dict,
+    "routetable": dict,
 }
 
 default_profile_config = {"name": "DEFAULT", "compartment_id": ""}
@@ -163,8 +164,9 @@ oci_config_groups = {
     COMPUTE: valid_instance_config,
     VCN: valid_vcn_config,
     VCN_SUBNET: valid_subnet_config,
-    VCN_INTERNET_GATEWAY: valid_internet_gateway_config,
-    VCN_ROUTE_TABLE: valid_route_table_config,
+    VCN_INTERNETGATEWAY: valid_internet_gateway_config,
+    VCN_ROUTETABLE: valid_route_table_config,
+    VCN_ROUTETABLE_ROUTERULES: valid_route_rule_config,
     PROFILE: valid_profile_config,
 }
 

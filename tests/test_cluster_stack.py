@@ -38,7 +38,6 @@ class TestClusterStack(unittest.TestCase):
             prefix=gen_config_provider_prefix(prefix),
             throw=True,
         )
-
         oci_profile_options = {"compartment_id": oci_compartment_id, "name": oci_name}
 
         test_name = "Test_Cluster"
@@ -125,8 +124,8 @@ class TestClusterStack(unittest.TestCase):
             profile=oci_profile_options,
             cluster=cluster_options,
             vcn=vcn_options,
-            internet_gateway=internet_gateway_options,
-            route_table=route_table_options,
+            internetgateway=internet_gateway_options,
+            routetable=route_table_options,
             subnet=subnet_options,
         )
 
@@ -157,8 +156,8 @@ class TestClusterStack(unittest.TestCase):
             self.network_client,
             self.options["profile"]["compartment_id"],
             vcn_kwargs=self.options["vcn"],
-            internet_gateway_kwargs=self.options["internet_gateway"],
-            route_table_kwargs=self.options["route_table"],
+            internet_gateway_kwargs=self.options["internetgateway"],
+            route_table_kwargs=self.options["routetable"],
             subnet_kwargs=self.options["subnet"],
         )
         self.assertTrue(valid_vcn_stack(self.vcn_stack))

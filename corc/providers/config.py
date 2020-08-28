@@ -11,6 +11,7 @@ def get_provider_profile(provider, config_path=None):
         {"profile": {}},
         prefix=gen_config_provider_prefix((provider,)),
         path=config_path,
+        allow_sub_keys=True,
     )
     if "profile" in profile:
         return profile["profile"]

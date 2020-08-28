@@ -324,7 +324,7 @@ def set_in_config(set_dict, prefix=None, path=None):
     return update_config(unflatten_dict, path=path)
 
 
-def load_from_config(find_dict, prefix=None, path=None):
+def load_from_config(find_dict, prefix=None, path=None, allow_sub_keys=False):
     if not prefix:
         prefix = tuple()
 
@@ -338,9 +338,17 @@ def load_from_config(find_dict, prefix=None, path=None):
     for find_key, _ in flat_find_dict.items():
         for flat_key, flat_value in flat_config.items():
             prefixed_key = prefix + find_key
-            intersection = tuple([v for v in prefixed_key if v in flat_key])
-            difference = tuple([v for v in flat_key if v not in prefixed_key])
-            if prefixed_key == intersection:
+            intersection = tuple(
+                [
+                    v
+                    for i, v in enumerate(prefixed_key)
+                    if i < len(flat_key) and v == flat_key[i]
+                ]
+            )
+            difference = tuple([v for v in flat_key if v not in intersection])
+            # HACK, Only append differences at the current depth of the config,
+            # e.g. don't allow subdict append
+            if prefixed_key == intersection and (allow_sub_keys or not difference):
                 sub_key = find_key + difference
                 found_config_values[sub_key] = flat_value
     return flatten_dict.unflatten(found_config_values)

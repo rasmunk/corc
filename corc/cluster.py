@@ -33,12 +33,20 @@ def start_cluster(provider_kwargs, cluster={}, vcn={}):
             cluster["node"]["node_shape"] = cluster["node"]["shape"]
             cluster["node"].pop("shape")
 
-        # (Adapt) Split VCN and subnet
-        subnet = vcn.pop("subnet")
+        # (Adapt) Split VCN, Internet Gateway, RouteTable, RouteRules and Subnet
+        subnet = vcn.pop("subnet", {})
+        internetgateway = vcn.pop("internetgateway", {})
+        routetable = vcn.pop("routetable", {})
 
         cluster_options = dict(
-            oci=provider_kwargs, cluster=cluster, vcn=vcn, subnet=subnet,
+            profile=provider_kwargs["profile"],
+            cluster=cluster,
+            vcn=vcn,
+            internetgateway=internetgateway,
+            routetable=routetable,
+            subnet=subnet,
         )
+
         OCIClusterOrchestrator.validate_options(cluster_options)
         orchestrator = OCIClusterOrchestrator(cluster_options)
         # TODO, poll if the cluster already exists

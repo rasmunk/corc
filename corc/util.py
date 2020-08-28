@@ -80,16 +80,28 @@ def validate_dict_fields(input_dict, valid_fields, verbose=False, throw=False):
                     "The key: {} is not allowed in: {}".format(key, valid_fields)
                 )
             return False
-        if not isinstance(value, (valid_fields[key],)):
+
+        valid_value_types = valid_fields[key]
+        if not isinstance(valid_value_types, (tuple, set)):
+            valid_value_types = (valid_value_types,)
+
+        valid = False
+        for valid_value_type in valid_value_types:
+            if valid_value_type is None and value is None:
+                valid = True
+            elif isinstance(value, valid_value_type):
+                valid = True
+
+        if not valid:
             if verbose:
                 print(
                     "variable: {}, value: {} is of incorrect type: {},"
-                    " should be: {}".format(key, value, type(value), valid_fields[key])
+                    " should be: {}".format(key, value, type(value), valid_value_types)
                 )
             if throw:
                 raise TypeError(
                     "{}: should be {} but was: {}".format(
-                        value, valid_fields[key], type(value)
+                        value, valid_value_types, type(value)
                     )
                 )
             return False

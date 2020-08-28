@@ -73,8 +73,8 @@ class TestVCNStack(unittest.TestCase):
         self.options = dict(
             profile=self.oci_profile_options,
             vcn=self.vcn_options,
-            internet_gateway=internet_gateway_options,
-            route_table=route_table_options,
+            internetgateway=internet_gateway_options,
+            routetable=route_table_options,
             subnet=self.subnet_options,
         )
 
@@ -105,8 +105,8 @@ class TestVCNStack(unittest.TestCase):
             self.network_client,
             self.options["profile"]["compartment_id"],
             vcn_kwargs=self.options["vcn"],
-            internet_gateway_kwargs=self.options["internet_gateway"],
-            route_table_kwargs=self.options["route_table"],
+            internet_gateway_kwargs=self.options["internetgateway"],
+            route_table_kwargs=self.options["routetable"],
             subnet_kwargs=self.options["subnet"],
         )
 
@@ -147,8 +147,8 @@ class TestVCNStack(unittest.TestCase):
             self.network_client,
             self.options["profile"]["compartment_id"],
             vcn_kwargs=self.options["vcn"],
-            internet_gateway_kwargs=self.options["internet_gateway"],
-            route_table_kwargs=self.options["route_table"],
+            internet_gateway_kwargs=self.options["internetgateway"],
+            route_table_kwargs=self.options["routetable"],
             subnet_kwargs=self.options["subnet"],
         )
 
@@ -176,8 +176,8 @@ class TestVCNStack(unittest.TestCase):
             self.network_client,
             self.options["profile"]["compartment_id"],
             vcn_kwargs=self.options["vcn"],
-            internet_gateway_kwargs=self.options["internet_gateway"],
-            route_table_kwargs=self.options["route_table"],
+            internet_gateway_kwargs=self.options["internetgateway"],
+            route_table_kwargs=self.options["routetable"],
             subnet_kwargs=self.options["subnet"],
         )
 
@@ -207,8 +207,8 @@ class TestVCNStack(unittest.TestCase):
             self.network_client,
             self.options["profile"]["compartment_id"],
             vcn_kwargs=self.options["vcn"],
-            internet_gateway_kwargs=self.options["internet_gateway"],
-            route_table_kwargs=self.options["route_table"],
+            internet_gateway_kwargs=self.options["internetgateway"],
+            route_table_kwargs=self.options["routetable"],
             subnet_kwargs=self.options["subnet"],
         )
 
@@ -252,8 +252,8 @@ class TestVCNStack(unittest.TestCase):
             self.network_client,
             self.options["profile"]["compartment_id"],
             vcn_kwargs=self.options["vcn"],
-            internet_gateway_kwargs=self.options["internet_gateway"],
-            route_table_kwargs=self.options["route_table"],
+            internet_gateway_kwargs=self.options["internetgateway"],
+            route_table_kwargs=self.options["routetable"],
         )
 
         self.assertTrue(valid_vcn_stack(vcn_stack))
@@ -271,8 +271,8 @@ class TestVCNStack(unittest.TestCase):
             self.network_client,
             self.options["profile"]["compartment_id"],
             vcn_kwargs=self.options["vcn"],
-            internet_gateway_kwargs=self.options["internet_gateway"],
-            route_table_kwargs=self.options["route_table"],
+            internet_gateway_kwargs=self.options["internetgateway"],
+            route_table_kwargs=self.options["routetable"],
             subnet_kwargs=subnet_options,
         )
 
@@ -287,8 +287,8 @@ class TestVCNStack(unittest.TestCase):
             self.network_client,
             self.options["profile"]["compartment_id"],
             vcn_kwargs=self.options["vcn"],
-            internet_gateway_kwargs=self.options["internet_gateway"],
-            route_table_kwargs=self.options["route_table"],
+            internet_gateway_kwargs=self.options["internetgateway"],
+            route_table_kwargs=self.options["routetable"],
         )
 
         self.assertTrue(valid_vcn_stack(vcn_stack))
@@ -304,8 +304,8 @@ class TestVCNStack(unittest.TestCase):
             self.network_client,
             self.options["profile"]["compartment_id"],
             vcn_kwargs=self.options["vcn"],
-            internet_gateway_kwargs=self.options["internet_gateway"],
-            route_table_kwargs=self.options["route_table"],
+            internet_gateway_kwargs=self.options["internetgateway"],
+            route_table_kwargs=self.options["routetable"],
             subnet_kwargs=subnet_kwargs,
         )
         self.assertTrue(ensured)

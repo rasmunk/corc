@@ -31,6 +31,9 @@ from corc.providers.oci.config import (
     valid_cluster_node_config,
     valid_vcn_config,
     valid_subnet_config,
+    valid_internet_gateway_config,
+    valid_route_rule_config,
+    valid_route_table_config,
 )
 from corc.util import (
     parse_yaml,
@@ -413,8 +416,9 @@ class OCIClusterOrchestrator(Orchestrator):
         stack = new_vcn_stack(
             self.network_client,
             self.options["profile"]["compartment_id"],
-            internet_gateway_kwargs=self.options["internet_gateway"],
+            internet_gateway_kwargs=self.options["internetgateway"],
             vcn_kwargs=self.options["vcn"],
+            route_table_kwargs=self.options["routetable"],
             subnet_kwargs=self.options["subnet"],
         )
         return stack
@@ -424,8 +428,8 @@ class OCIClusterOrchestrator(Orchestrator):
             self.network_client,
             self.options["profile"]["compartment_id"],
             vcn_kwargs=self.options["vcn"],
-            internet_gateway_kwargs=self.options["internet_gateway"],
-            route_table_kwargs=self.options["route_table"],
+            internet_gateway_kwargs=self.options["internetgateway"],
+            route_table_kwargs=self.options["routetable"],
             subnet_kwargs=self.options["subnet"],
         )
         if not ensured:
@@ -452,7 +456,7 @@ class OCIClusterOrchestrator(Orchestrator):
         required_igs = [
             {
                 k: v
-                for k, v in self.options["internet_gateway"].items()
+                for k, v in self.options["internetgateway"].items()
                 if (k != "id" and k != "display_name")
                 or (v and k == "id" or k == "display_name")
             }
@@ -471,6 +475,9 @@ class OCIClusterOrchestrator(Orchestrator):
             required_igs=required_igs,
             required_subnets=required_subnets,
         )
+
+    def poll(self):
+        self._is_reachable = True
 
     def setup(self):
         # Ensure we have a VCN stack ready
@@ -676,4 +683,43 @@ class OCIClusterOrchestrator(Orchestrator):
         )
         validate_dict_values(
             options["subnet"], required_subnet_fields, verbose=True, throw=True
+        )
+
+        required_internetgateway_fields = {"is_enabled": bool}
+        validate_dict_fields(
+            options["internetgateway"],
+            valid_internet_gateway_config,
+            verbose=True,
+            throw=True,
+        )
+        validate_dict_values(
+            options["internetgateway"],
+            required_internetgateway_fields,
+            verbose=True,
+            throw=True,
+        )
+
+        required_routetable_fields = {"routerules": dict}
+        validate_dict_fields(
+            options["routetable"], valid_route_table_config, verbose=True, throw=True
+        )
+        validate_dict_values(
+            options["routetable"], required_routetable_fields, verbose=True, throw=True
+        )
+
+        required_routerules_fields = {
+            "destination": str,
+            "destination_type": str,
+        }
+        validate_dict_fields(
+            options["routetable"]["routerules"],
+            valid_route_rule_config,
+            verbose=True,
+            throw=True,
+        )
+        validate_dict_values(
+            options["routetable"]["routerules"],
+            required_routerules_fields,
+            verbose=True,
+            throw=True,
         )

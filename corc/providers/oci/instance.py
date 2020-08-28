@@ -26,7 +26,6 @@ from corc.config import (
     load_from_env_or_config,
     gen_config_provider_prefix,
 )
-from corc.providers.config import get_provider_profile
 from corc.providers.oci.helpers import (
     create,
     delete,
@@ -246,8 +245,8 @@ class OCIInstanceOrchestrator(Orchestrator):
             self.network_client,
             self.options["profile"]["compartment_id"],
             vcn_kwargs=self.options["vcn"],
-            internet_gateway_kwargs=self.options["internet_gateway"],
-            route_table_kwargs=self.options["route_table"],
+            internet_gateway_kwargs=self.options["internetgateway"],
+            route_table_kwargs=self.options["routetable"],
             subnet_kwargs=self.options["subnet"],
         )
         return stack
@@ -257,8 +256,8 @@ class OCIInstanceOrchestrator(Orchestrator):
             self.network_client,
             self.options["profile"]["compartment_id"],
             vcn_kwargs=self.options["vcn"],
-            internet_gateway_kwargs=self.options["internet_gateway"],
-            route_table_kwargs=self.options["route_table"],
+            internet_gateway_kwargs=self.options["internetgateway"],
+            route_table_kwargs=self.options["routetable"],
             subnet_kwargs=self.options["subnet"],
         )
         if not ensured:
@@ -277,7 +276,7 @@ class OCIInstanceOrchestrator(Orchestrator):
         required_igs = [
             {
                 k: v
-                for k, v in self.options["internet_gateway"].items()
+                for k, v in self.options["internetgateway"].items()
                 if (k != "id" and k != "display_name")
                 or (v and k == "id" or k == "display_name")
             }
@@ -504,11 +503,11 @@ class OCIInstanceOrchestrator(Orchestrator):
             if "subnet" in vcn:
                 options["subnet"] = vcn.pop("subnet")
 
-            if "route_table" in vcn:
-                options["route_table"] = vcn.pop("route_table")
+            if "routetable" in vcn:
+                options["routetable"] = vcn.pop("routetable")
 
-            if "internet_gateway" in vcn:
-                options["internet_gateway"] = vcn.pop("internet_gateway")
+            if "internetgateway" in vcn:
+                options["internetgateway"] = vcn.pop("internetgateway")
 
             options["vcn"] = vcn
         return options
@@ -523,7 +522,7 @@ class OCIInstanceOrchestrator(Orchestrator):
         gpus=None,
     ):
         if not provider_profile:
-            provider_profile = get_provider_profile("profile")
+            provider_profile = {}
 
         if not provider_kwargs:
             provider_kwargs = {}
@@ -682,9 +681,9 @@ class OCIInstanceOrchestrator(Orchestrator):
             + optional_instance_metadata_keys
             + optional_instance_keys,
             "vcn": expected_vcn_keys + optional_vcn_keys,
-            "route_table": expected_route_table_keys + optional_route_table_keys,
+            "routetable": expected_route_table_keys + optional_route_table_keys,
             # "route_rule": optional_route_rule_keys,
-            "internet_gateway": expected_gateway_keys + optional_gateway_keys,
+            "internetgateway": expected_gateway_keys + optional_gateway_keys,
             "subnet": expected_subnet_keys + optional_subnet_keys,
         }
 

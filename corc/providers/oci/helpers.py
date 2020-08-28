@@ -150,9 +150,9 @@ def get_subnet_gateway_id(network_client, vcn_id, subnet_id, compartment_id):
 
         # Get the gateway of the first subnet
         subnet = existing_subnets[0]
-        route_table = network_client.get_route_table(subnet.route_table_id).data
+        routetable = network_client.get_route_table(subnet.route_table_id).data
         # Find the Internet Gateway id in the first route for now
-        route = route_table.route_rules[0]
+        route = routetable.route_rules[0]
     return route.network_entity_id
 
 

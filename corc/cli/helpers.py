@@ -147,9 +147,11 @@ def load_missing_action_kwargs(kwargs_configurations):
 
             config_prefix = find_value_in_dict(args, key="config_prefix")
             # Update with missing arguments from config
-            flat_action_kwargs[kwargs_path].update(
-                load_from_config(missing_dict, prefix=config_prefix)
-            )
+            # Ensure that loaded dicts are also flat so that we can check we don't
+            # set duplicate keys
+            # HACK, ensure that duplicate keys are not added to the flat_action_kwargs
+            loaded_from_config = load_from_config(missing_dict, prefix=config_prefix)
+            flat_action_kwargs[kwargs_path].update(loaded_from_config)
     return flatten_dict.unflatten(flat_action_kwargs)
 
 

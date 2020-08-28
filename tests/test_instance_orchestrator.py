@@ -77,8 +77,8 @@ class TestInstanceOrchestrator(unittest.TestCase):
             profile=oci_profile_options,
             instance=instance_options,
             vcn=vcn_options,
-            internet_gateway=internet_gateway_options,
-            route_table=route_table_options,
+            internetgateway=internet_gateway_options,
+            routetable=route_table_options,
             subnet=subnet_options,
         )
 

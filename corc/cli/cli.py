@@ -10,6 +10,9 @@ from corc.defaults import (
     JOB,
     JOB_META,
     VCN,
+    VCN_INTERNETGATEWAY,
+    VCN_ROUTETABLE,
+    VCN_ROUTETABLE_ROUTERULES,
     VCN_SUBNET,
 )
 from corc.cli.parsers.job.job import (
@@ -217,7 +220,15 @@ def cluster_cli(parser):
         module_name="cluster",
         func_name="start_cluster",
         provider_groups=[PROFILE],
-        argument_groups=[CLUSTER_NODE, CLUSTER, VCN_SUBNET, VCN],
+        argument_groups=[
+            CLUSTER_NODE,
+            CLUSTER,
+            VCN_INTERNETGATEWAY,
+            VCN_ROUTETABLE,
+            VCN_ROUTETABLE_ROUTERULES,
+            VCN_SUBNET,
+            VCN,
+        ],
     )
     stop_parser = cluster_commands.add_parser("stop")
     cluster_identity_group(stop_parser)

@@ -51,13 +51,7 @@ class TestClusterOrchestrator(unittest.TestCase):
             display_name=internet_gateway_name, is_enabled=True
         )
         route_table_options = dict(
-            route_rules=[
-                dict(
-                    cidr_block=None,
-                    destination="0.0.0.0/0",
-                    destination_type="CIDR_BLOCK",
-                )
-            ]
+            routerules=dict(destination="0.0.0.0/0", destination_type="CIDR_BLOCK",)
         )
 
         # Sort order in ascending to ensure that complex images
@@ -92,8 +86,8 @@ class TestClusterOrchestrator(unittest.TestCase):
             profile=oci_profile_options,
             cluster=cluster_options,
             vcn=vcn_options,
-            internet_gateway=internet_gateway_options,
-            route_table=route_table_options,
+            internetgateway=internet_gateway_options,
+            routetable=route_table_options,
             subnet=subnet_options,
         )
 

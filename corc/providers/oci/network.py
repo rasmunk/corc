@@ -107,8 +107,8 @@ def new_vcn_stack(
         **route_table_kwargs,
     )
 
-    route_table = create_route_table(network_client, create_rt_details)
-    if not route_table:
+    routetable = create_route_table(network_client, create_rt_details)
+    if not routetable:
         raise RuntimeError(
             "Failed to create route table with details: {}".format(create_rt_details)
         )
@@ -118,7 +118,7 @@ def new_vcn_stack(
         CreateSubnetDetails,
         compartment_id=compartment_id,
         vcn_id=vcn.id,
-        route_table_id=route_table.id,
+        route_table_id=routetable.id,
         **subnet_kwargs,
     )
 
@@ -660,16 +660,16 @@ def create_route_table(
     if not wait_for_states:
         wait_for_states = [RouteTable.LIFECYCLE_STATE_AVAILABLE]
 
-    route_table = create(
+    routetable = create(
         network_client,
         "create_route_table",
         create_route_table_details,
         wait_for_states=[RouteTable.LIFECYCLE_STATE_AVAILABLE],
         **kwargs,
     )
-    if not route_table:
+    if not routetable:
         return None
-    return route_table
+    return routetable
 
 
 def get_route_table_by_name(
@@ -678,9 +678,9 @@ def get_route_table_by_name(
     route_tables = list_entities(
         network_client, "list_route_tables", compartment_id, vcn_id=vcn_id, **kwargs
     )
-    for route_table in route_tables:
-        if route_table.display_name == display_name:
-            return route_table
+    for routetable in route_tables:
+        if routetable.display_name == display_name:
+            return routetable
 
 
 def create_internet_gateway(
@@ -689,16 +689,16 @@ def create_internet_gateway(
     if not wait_for_states:
         wait_for_states = [InternetGateway.LIFECYCLE_STATE_AVAILABLE]
 
-    internet_gateway = create(
+    internetgateway = create(
         network_client,
         "create_internet_gateway",
         create_internet_gateway_details,
         wait_for_states=wait_for_states,
         **kwargs,
     )
-    if not internet_gateway:
+    if not internetgateway:
         return None
-    return internet_gateway
+    return internetgateway
 
 
 def get_internet_gateway_by_name(
@@ -711,9 +711,9 @@ def get_internet_gateway_by_name(
         vcn_id=vcn_id,
         **kwargs,
     )
-    for internet_gateway in internet_gateways:
-        if internet_gateway.display_name == display_name:
-            return internet_gateway
+    for internetgateway in internet_gateways:
+        if internetgateway.display_name == display_name:
+            return internetgateway
 
 
 def get_internet_gateway_in_vcn_stack(
@@ -826,29 +826,29 @@ def create_subnet_stack(
     if not route_table_kwargs:
         route_table_kwargs = {}
 
-    route_table = None
+    routetable = None
 
     # use_default_route -> use the default route table
     if use_default_route_table:
-        route_table = get_route_table_by_name(
+        routetable = get_route_table_by_name(
             network_client, compartment_id, vcn.id, "DEFAULT"
         )
     else:
         if "id" in route_table_kwargs and route_table_kwargs["id"]:
-            route_table = get(
+            routetable = get(
                 network_client, "get_route_table", route_table_kwargs["id"]
             )
         elif (
             "display_name" in route_table_kwargs and route_table_kwargs["display_name"]
         ):
-            route_table = get_route_table_by_name(
+            routetable = get_route_table_by_name(
                 network_client,
                 compartment_id,
                 vcn.id,
                 route_table_kwargs["display_name"],
             )
 
-        if not route_table:
+        if not routetable:
             # Create new
             route_rules = []
 
@@ -902,9 +902,9 @@ def create_subnet_stack(
                 **route_table_kwargs,
             )
 
-            route_table = create_route_table(network_client, create_rt_details)
+            routetable = create_route_table(network_client, create_rt_details)
 
-    if not route_table:
+    if not routetable:
         # TODO, log error
         return None
 
@@ -913,7 +913,7 @@ def create_subnet_stack(
         CreateSubnetDetails,
         compartment_id=compartment_id,
         vcn_id=vcn.id,
-        route_table_id=route_table.id,
+        route_table_id=routetable.id,
         **subnet_kwargs,
     )
 

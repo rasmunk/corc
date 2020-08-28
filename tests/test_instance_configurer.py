@@ -86,13 +86,9 @@ class TestInstanceConfigurer(unittest.TestCase):
         )
 
         route_table_options = dict(
-            route_rules=[
-                dict(
-                    cidr_block=None,
-                    destination="0.0.0.0/0",
-                    destination_type="CIDR_BLOCK",
-                )
-            ]
+            route_rules=dict(
+                cidr_block="", destination="0.0.0.0/0", destination_type="CIDR_BLOCK",
+            )
         )
 
         vcn_options = dict(
@@ -105,8 +101,8 @@ class TestInstanceConfigurer(unittest.TestCase):
             instance=instance_options,
             instance_metadata=instance_metadata_options,
             vcn=vcn_options,
-            internet_gateway=internet_gateway_options,
-            route_table=route_table_options,
+            internetgateway=internet_gateway_options,
+            routetable=route_table_options,
             subnet=subnet_options,
         )
 
