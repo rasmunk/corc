@@ -663,7 +663,7 @@ class OCIInstanceOrchestrator(Orchestrator):
         ]
         optional_subnet_keys.append("id")
 
-        expected_route_table_keys = ["route_rules"]
+        expected_route_table_keys = ["routerules"]
         optional_route_table_keys = [
             k
             for k, v in CreateRouteTableDetails().attribute_map.items()
