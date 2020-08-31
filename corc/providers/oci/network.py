@@ -90,14 +90,14 @@ def new_vcn_stack(
 
     # Setup the route table
     route_rules = []
-    if "route_rules" in route_table_kwargs:
-        for route_rule in route_table_kwargs["route_rules"]:
+    if "routerules" in route_table_kwargs:
+        for route_rule in route_table_kwargs["routerules"]:
             route_rule_details = prepare_details(
                 RouteRule, network_entity_id=gateway.id, **route_rule
             )
             if route_rule_details:
                 route_rules.append(route_rule_details)
-        route_table_kwargs.pop("route_rules")
+        route_table_kwargs.pop("routerules")
 
     create_rt_details = prepare_details(
         CreateRouteTableDetails,
@@ -885,14 +885,14 @@ def create_subnet_stack(
                     return None
 
             route_rules = []
-            if "route_rules" in route_table_kwargs:
-                for route_rule in route_table_kwargs["route_rules"]:
+            if "routerules" in route_table_kwargs:
+                for route_rule in route_table_kwargs["routerules"]:
                     route_rule_details = prepare_details(
                         RouteRule, network_entity_id=gateway.id, **route_rule
                     )
                     if route_rule_details:
                         route_rules.append(route_rule_details)
-                route_table_kwargs.pop("route_rules")
+                route_table_kwargs.pop("routerules")
 
             create_rt_details = prepare_details(
                 CreateRouteTableDetails,
