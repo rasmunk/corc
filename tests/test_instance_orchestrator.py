@@ -28,7 +28,10 @@ class TestInstanceOrchestrator(unittest.TestCase):
             prefix=gen_config_provider_prefix(prefix),
             throw=True,
         )
-        oci_profile_options = dict(compartment_id=oci_compartment_id, name=oci_name,)
+        oci_profile_options = dict(
+            compartment_id=oci_compartment_id,
+            name=oci_name,
+        )
 
         test_name = "Test_Instance_Orch"
         node_name = test_name + "_Node"

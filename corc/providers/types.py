@@ -41,7 +41,9 @@ ORCHESTRATORS = {
             "options": {"driver": {"provider": ComputeProvider.EC2}},
         },
     },
-    BARE_METAL: {LOCAL: {"klass": LocalOrchestrator},},
+    BARE_METAL: {
+        LOCAL: {"klass": LocalOrchestrator},
+    },
 }
 
 

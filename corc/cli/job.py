@@ -41,7 +41,9 @@ def get_results(args):
 
     if oci_args:
         return api_get_results(
-            job_kwargs=job_args, staging_kwargs=staging_args, storage_kwargs=s3_args,
+            job_kwargs=job_args,
+            staging_kwargs=staging_args,
+            storage_kwargs=s3_args,
         )
 
 

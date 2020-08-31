@@ -670,7 +670,6 @@ class OCIInstanceOrchestrator(Orchestrator):
             if k not in expected_route_table_keys
         ]
         optional_route_table_keys.append("id")
-        # optional_route_rule_keys = [k for k, v in RouteRule().attribute_map.items()]
 
         expected_gateway_keys = ["is_enabled"]
         optional_gateway_keys = [

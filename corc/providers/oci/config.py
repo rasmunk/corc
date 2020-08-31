@@ -100,7 +100,7 @@ default_route_rule_config = {
 
 valid_route_rule_config = {
     "id": str,
-    "cidr_block": str,
+    "cidr_block": (str, None),
     "destination": str,
     "destination_type": str,
 }
@@ -114,7 +114,7 @@ default_route_table_config = {
 valid_route_table_config = {
     "id": str,
     "display_name": str,
-    "routerules": dict,
+    "routerules": list,
 }
 
 default_vcn_config = {
