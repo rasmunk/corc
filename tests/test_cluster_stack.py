@@ -80,7 +80,7 @@ class TestClusterStack(unittest.TestCase):
             display_name=internet_gateway_name, is_enabled=True
         )
         route_table_options = dict(
-            route_rules=[
+            routerules=[
                 dict(
                     cidr_block=None,
                     destination="0.0.0.0/0",
@@ -131,10 +131,11 @@ class TestClusterStack(unittest.TestCase):
 
     def tearDown(self):
         # Validate that the vcn stack is gone
-        deleted = delete_cluster_stack(
-            self.container_engine_client, self.cluster_stack["id"], delete_vcn=True
-        )
-        self.assertTrue(deleted)
+        if hasattr(self, "cluster_stack"):
+            deleted = delete_cluster_stack(
+                self.container_engine_client, self.cluster_stack["id"], delete_vcn=True
+            )
+            self.assertTrue(deleted)
 
         # Delete all vcn with display_name
         vcns = list_entities(

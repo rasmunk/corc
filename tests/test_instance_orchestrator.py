@@ -28,7 +28,6 @@ class TestInstanceOrchestrator(unittest.TestCase):
             prefix=gen_config_provider_prefix(prefix),
             throw=True,
         )
-
         oci_profile_options = dict(compartment_id=oci_compartment_id, name=oci_name,)
 
         test_name = "Test_Instance_Orch"
@@ -59,7 +58,7 @@ class TestInstanceOrchestrator(unittest.TestCase):
             display_name=internet_gateway_name, is_enabled=True
         )
         route_table_options = dict(
-            route_rules=[
+            routerules=[
                 dict(
                     cidr_block=None,
                     destination="0.0.0.0/0",

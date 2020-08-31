@@ -55,7 +55,7 @@ class TestVCNStack(unittest.TestCase):
             display_name=internet_gateway_name, is_enabled=True
         )
         route_table_options = dict(
-            route_rules=[
+            routerules=[
                 dict(
                     cidr_block=None,
                     destination="0.0.0.0/0",

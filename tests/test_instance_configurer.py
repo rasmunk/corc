@@ -86,8 +86,10 @@ class TestInstanceConfigurer(unittest.TestCase):
         )
 
         route_table_options = dict(
-            route_rules=dict(
-                cidr_block="", destination="0.0.0.0/0", destination_type="CIDR_BLOCK",
+            routerules=dict(
+                cidr_block=None,
+                destination="0.0.0.0/0",
+                destination_type="CIDR_BLOCK",
             )
         )
 
