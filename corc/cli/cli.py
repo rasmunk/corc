@@ -12,7 +12,6 @@ from corc.defaults import (
     VCN,
     VCN_INTERNETGATEWAY,
     VCN_ROUTETABLE,
-    VCN_ROUTETABLE_ROUTERULES,
     VCN_SUBNET,
 )
 from corc.cli.parsers.job.job import (
@@ -225,7 +224,6 @@ def cluster_cli(parser):
             CLUSTER,
             VCN_INTERNETGATEWAY,
             VCN_ROUTETABLE,
-            VCN_ROUTETABLE_ROUTERULES,
             VCN_SUBNET,
             VCN,
         ],

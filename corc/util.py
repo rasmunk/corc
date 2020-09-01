@@ -86,11 +86,18 @@ def validate_dict_fields(input_dict, valid_fields, verbose=False, throw=False):
             valid_value_types = (valid_value_types,)
 
         valid = False
-        for valid_value_type in valid_value_types:
-            if valid_value_type is None and value is None:
+        if None in valid_value_types:
+            if value is None:
                 valid = True
-            elif isinstance(value, valid_value_type):
-                valid = True
+            else:
+                # Remove None from valid_value_types
+                valid_value_types = tuple(
+                    [v for v in valid_value_types if v is not None]
+                )
+        else:
+            for valid_value_type in valid_value_types:
+                if isinstance(value, valid_value_types):
+                    valid = True
 
         if not valid:
             if verbose:

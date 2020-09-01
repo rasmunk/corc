@@ -702,7 +702,7 @@ class OCIClusterOrchestrator(Orchestrator):
             throw=True,
         )
 
-        required_route_table_fields = {"routerules": dict}
+        required_route_table_fields = {"routerules": list}
         validate_dict_fields(
             options["routetable"], valid_route_table_config, verbose=True, throw=True
         )
@@ -716,7 +716,6 @@ class OCIClusterOrchestrator(Orchestrator):
         }
 
         # Check each routerule
-
         if isinstance(options["routetable"]["routerules"], list):
             for route_rule in options["routetable"]["routerules"]:
                 validate_dict_fields(
