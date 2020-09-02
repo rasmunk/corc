@@ -91,10 +91,10 @@ jobs:
     python3: '3.6'
     script: &4
     - travis_wait pytest -s -v tests/test_container_orchestrator.py
-    - stage: container_orchestrator_tests
+  - stage: container_orchestrator_tests
     python: '3.7'
     script: *4
-    - stage: container_orchestrator_tests
+  - stage: container_orchestrator_tests
     python: '3.8'
     script: *4
   - stage: deploy
