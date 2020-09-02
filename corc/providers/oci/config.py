@@ -93,14 +93,14 @@ valid_internet_gateway_config = {
 
 default_route_rule_config = {
     "id": "",
-    "cidr_block": "",
+    "cidr_block": None,
     "destination": "0.0.0.0/0",
     "destination_type": "CIDR_BLOCK",
 }
 
 valid_route_rule_config = {
     "id": str,
-    "cidr_block": str,
+    "cidr_block": (str, None),
     "destination": str,
     "destination_type": str,
 }
@@ -108,13 +108,13 @@ valid_route_rule_config = {
 default_route_table_config = {
     "id": "",
     "display_name": "default_route_table",
-    "routerules": default_route_rule_config,
+    "routerules": [default_route_rule_config],
 }
 
 valid_route_table_config = {
     "id": str,
     "display_name": str,
-    "routerules": dict,
+    "routerules": list,
 }
 
 default_vcn_config = {

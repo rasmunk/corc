@@ -482,16 +482,21 @@ class OCIInstanceOrchestrator(Orchestrator):
             {"profile": {}},
             prefix=gen_config_provider_prefix(provider_prefix),
             path=path,
+            allow_sub_keys=True,
         )
 
         oci_instance = load_from_config(
             {"instance": {}},
             prefix=gen_config_provider_prefix(provider_prefix),
             path=path,
+            allow_sub_keys=True,
         )
 
         oci_vcn = load_from_config(
-            {"vcn": {}}, prefix=gen_config_provider_prefix(provider_prefix), path=path
+            {"vcn": {}},
+            prefix=gen_config_provider_prefix(provider_prefix),
+            path=path,
+            allow_sub_keys=True,
         )
 
         if "profile" in oci_profile:
@@ -660,14 +665,13 @@ class OCIInstanceOrchestrator(Orchestrator):
         ]
         optional_subnet_keys.append("id")
 
-        expected_route_table_keys = ["route_rules"]
+        expected_route_table_keys = ["routerules"]
         optional_route_table_keys = [
             k
             for k, v in CreateRouteTableDetails().attribute_map.items()
             if k not in expected_route_table_keys
         ]
         optional_route_table_keys.append("id")
-        # optional_route_rule_keys = [k for k, v in RouteRule().attribute_map.items()]
 
         expected_gateway_keys = ["is_enabled"]
         optional_gateway_keys = [

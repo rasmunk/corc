@@ -80,7 +80,7 @@ class TestClusterStack(unittest.TestCase):
             display_name=internet_gateway_name, is_enabled=True
         )
         route_table_options = dict(
-            route_rules=[
+            routerules=[
                 dict(
                     cidr_block=None,
                     destination="0.0.0.0/0",
@@ -90,7 +90,9 @@ class TestClusterStack(unittest.TestCase):
         )
 
         vcn_options = dict(
-            cidr_block="10.0.0.0/16", display_name=vcn_name, dns_label="ku",
+            cidr_block="10.0.0.0/16",
+            display_name=vcn_name,
+            dns_label="ku",
         )
         subnet_options = dict(
             cidr_block="10.0.2.0/24", display_name=subnet_name, dns_label="workers"
@@ -131,10 +133,11 @@ class TestClusterStack(unittest.TestCase):
 
     def tearDown(self):
         # Validate that the vcn stack is gone
-        deleted = delete_cluster_stack(
-            self.container_engine_client, self.cluster_stack["id"], delete_vcn=True
-        )
-        self.assertTrue(deleted)
+        if hasattr(self, "cluster_stack"):
+            deleted = delete_cluster_stack(
+                self.container_engine_client, self.cluster_stack["id"], delete_vcn=True
+            )
+            self.assertTrue(deleted)
 
         # Delete all vcn with display_name
         vcns = list_entities(
@@ -146,7 +149,9 @@ class TestClusterStack(unittest.TestCase):
 
         for vcn in vcns:
             deleted = delete_vcn_stack(
-                self.network_client, self.options["profile"]["compartment_id"], vcn=vcn,
+                self.network_client,
+                self.options["profile"]["compartment_id"],
+                vcn=vcn,
             )
             self.assertTrue(deleted)
 

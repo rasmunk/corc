@@ -546,7 +546,10 @@ class OCIClusterOrchestrator(Orchestrator):
 
         image = available_images[0]
         cluster_details = gen_cluster_stack_details(
-            self.vcn_stack["id"], self.vcn_stack["subnets"], image, **self.options,
+            self.vcn_stack["id"],
+            self.vcn_stack["subnets"],
+            image,
+            **self.options,
         )
 
         cluster = get_cluster_by_name(
@@ -699,27 +702,44 @@ class OCIClusterOrchestrator(Orchestrator):
             throw=True,
         )
 
-        required_routetable_fields = {"routerules": dict}
+        required_route_table_fields = {"routerules": list}
         validate_dict_fields(
             options["routetable"], valid_route_table_config, verbose=True, throw=True
         )
         validate_dict_values(
-            options["routetable"], required_routetable_fields, verbose=True, throw=True
+            options["routetable"], required_route_table_fields, verbose=True, throw=True
         )
 
         required_routerules_fields = {
             "destination": str,
             "destination_type": str,
         }
-        validate_dict_fields(
-            options["routetable"]["routerules"],
-            valid_route_rule_config,
-            verbose=True,
-            throw=True,
-        )
-        validate_dict_values(
-            options["routetable"]["routerules"],
-            required_routerules_fields,
-            verbose=True,
-            throw=True,
-        )
+
+        # Check each routerule
+        if isinstance(options["routetable"]["routerules"], list):
+            for route_rule in options["routetable"]["routerules"]:
+                validate_dict_fields(
+                    route_rule,
+                    valid_route_rule_config,
+                    verbose=True,
+                    throw=True,
+                )
+                validate_dict_values(
+                    route_rule,
+                    required_routerules_fields,
+                    verbose=True,
+                    throw=True,
+                )
+        else:
+            validate_dict_fields(
+                options["routetable"]["routerules"],
+                valid_route_rule_config,
+                verbose=True,
+                throw=True,
+            )
+            validate_dict_values(
+                options["routetable"]["routerules"],
+                required_routerules_fields,
+                verbose=True,
+                throw=True,
+            )

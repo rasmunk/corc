@@ -13,7 +13,6 @@ from corc.providers.oci.cluster import OCIClusterOrchestrator
 class TestClusterOrchestrator(unittest.TestCase):
     def setUp(self):
         # Load compartment_id from the env
-        # Load compartment_id from the env
         prefix = ("oci",)
         oci_compartment_id = load_from_env_or_config(
             {"profile": {"compartment_id": {}}},
@@ -51,7 +50,13 @@ class TestClusterOrchestrator(unittest.TestCase):
             display_name=internet_gateway_name, is_enabled=True
         )
         route_table_options = dict(
-            routerules=dict(destination="0.0.0.0/0", destination_type="CIDR_BLOCK",)
+            routerules=[
+                dict(
+                    cidr_block=None,
+                    destination="0.0.0.0/0",
+                    destination_type="CIDR_BLOCK",
+                )
+            ]
         )
 
         # Sort order in ascending to ensure that complex images
@@ -75,7 +80,9 @@ class TestClusterOrchestrator(unittest.TestCase):
         cluster_options = dict(name=cluster_name, node=node_options)
 
         vcn_options = dict(
-            cidr_block="10.0.0.0/16", display_name=vcn_name, dns_label="ku",
+            cidr_block="10.0.0.0/16",
+            display_name=vcn_name,
+            dns_label="ku",
         )
 
         subnet_options = dict(

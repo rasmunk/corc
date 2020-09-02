@@ -55,7 +55,7 @@ class TestVCNStack(unittest.TestCase):
             display_name=internet_gateway_name, is_enabled=True
         )
         route_table_options = dict(
-            route_rules=[
+            routerules=[
                 dict(
                     cidr_block=None,
                     destination="0.0.0.0/0",
@@ -65,7 +65,9 @@ class TestVCNStack(unittest.TestCase):
         )
 
         self.vcn_options = dict(
-            cidr_block="10.0.0.0/16", display_name=vcn_name, dns_label="ku",
+            cidr_block="10.0.0.0/16",
+            display_name=vcn_name,
+            dns_label="ku",
         )
 
         self.subnet_options = dict(display_name=subnet_name, dns_label="workers")
@@ -95,7 +97,9 @@ class TestVCNStack(unittest.TestCase):
 
         for vcn in vcns:
             deleted_stack = delete_vcn_stack(
-                self.network_client, self.options["profile"]["compartment_id"], vcn=vcn,
+                self.network_client,
+                self.options["profile"]["compartment_id"],
+                vcn=vcn,
             )
             self.assertTrue(stack_was_deleted(deleted_stack))
 

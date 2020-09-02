@@ -90,14 +90,14 @@ def new_vcn_stack(
 
     # Setup the route table
     route_rules = []
-    if "route_rules" in route_table_kwargs:
-        for route_rule in route_table_kwargs["route_rules"]:
+    if "routerules" in route_table_kwargs:
+        for route_rule in route_table_kwargs["routerules"]:
             route_rule_details = prepare_details(
                 RouteRule, network_entity_id=gateway.id, **route_rule
             )
             if route_rule_details:
                 route_rules.append(route_rule_details)
-        route_table_kwargs.pop("route_rules")
+        route_table_kwargs.pop("routerules")
 
     create_rt_details = prepare_details(
         CreateRouteTableDetails,
@@ -237,7 +237,10 @@ def update_vcn_stack(
             create_subnet_details = prepare_details(
                 CreateSubnetDetails, **subnet_kwargs
             )
-            subnet = create_subnet(network_client, create_subnet_details,)
+            subnet = create_subnet(
+                network_client,
+                create_subnet_details,
+            )
             if subnet:
                 stack["subnets"][subnet.id] = subnet
     return stack
@@ -391,7 +394,10 @@ def get_vcn_stack(network_client, compartment_id, vcn_id):
     gateways = {
         gateway.id: gateway
         for gateway in list_entities(
-            network_client, "list_internet_gateways", compartment_id, vcn_id=vcn.id,
+            network_client,
+            "list_internet_gateways",
+            compartment_id,
+            vcn_id=vcn.id,
         )
     }
     subnets = {
@@ -885,14 +891,14 @@ def create_subnet_stack(
                     return None
 
             route_rules = []
-            if "route_rules" in route_table_kwargs:
-                for route_rule in route_table_kwargs["route_rules"]:
+            if "routerules" in route_table_kwargs:
+                for route_rule in route_table_kwargs["routerules"]:
                     route_rule_details = prepare_details(
                         RouteRule, network_entity_id=gateway.id, **route_rule
                     )
                     if route_rule_details:
                         route_rules.append(route_rule_details)
-                route_table_kwargs.pop("route_rules")
+                route_table_kwargs.pop("routerules")
 
             create_rt_details = prepare_details(
                 CreateRouteTableDetails,
