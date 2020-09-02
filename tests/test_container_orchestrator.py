@@ -26,6 +26,11 @@ class TestLocalContainerOrchestrator(unittest.TestCase):
     def tearDown(self):
         self.orchestrator.tear_down()
         self.assertFalse(self.orchestrator.is_ready())
+
+        resource_id, resource = self.orchestrator.get_resource()
+        self.assertIsNone(resource_id)
+        self.assertIsNone(resource)
+
         self.orchestrator = None
         self.options = None
 
@@ -33,10 +38,18 @@ class TestLocalContainerOrchestrator(unittest.TestCase):
         self.orchestrator.setup()
         self.assertTrue(self.orchestrator.is_ready())
 
+        resource_id, resource = self.orchestrator.get_resource()
+        self.assertIsNotNone(resource_id)
+        self.assertIsNotNone(resource)
+
     def test_teardown(self):
         self.assertFalse(self.orchestrator.is_ready())
         self.orchestrator.tear_down()
         self.assertFalse(self.orchestrator.is_ready())
+
+        resource_id, resource = self.orchestrator.get_resource()
+        self.assertIsNone(resource_id)
+        self.assertIsNone(resource)
 
 
 # class TestClusterOrchestratorECS(unittest.TestCase):

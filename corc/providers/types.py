@@ -20,11 +20,17 @@ from corc.providers.apache.instance import ApacheInstanceOrchestrator
 from corc.providers.dummy import LocalOrchestrator
 
 # Define orchestrators for the various cloud backends
+# HACK, for now use the non SSL port to connect to DOCKER locally
 ORCHESTRATORS = {
     CONTAINER: {
         LOCAL: {
             "klass": ApacheContainerOrchestrator,
-            "options": {"driver": {"provider": ContainerProvider.DOCKER}},
+            "options": {
+                "driver": {
+                    "provider": ContainerProvider.DOCKER,
+                    "kwargs": {"port": "2345"},
+                },
+            },
         }
     },
     CONTAINER_CLUSTER: {
@@ -49,9 +55,7 @@ ORCHESTRATORS = {
             "options": {"driver": {"provider": ComputeProvider.EC2}},
         },
     },
-    BARE_METAL: {
-        LOCAL: {"klass": LocalOrchestrator},
-    },
+    BARE_METAL: {LOCAL: {"klass": LocalOrchestrator},},
 }
 
 

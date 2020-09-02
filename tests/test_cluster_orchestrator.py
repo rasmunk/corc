@@ -80,9 +80,7 @@ class TestClusterOrchestrator(unittest.TestCase):
         cluster_options = dict(name=cluster_name, node=node_options)
 
         vcn_options = dict(
-            cidr_block="10.0.0.0/16",
-            display_name=vcn_name,
-            dns_label="ku",
+            cidr_block="10.0.0.0/16", display_name=vcn_name, dns_label="ku",
         )
 
         subnet_options = dict(

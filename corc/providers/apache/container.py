@@ -74,10 +74,16 @@ class ApacheContainerOrchestrator(Orchestrator):
     def endpoint(self, select=None):
         return self.client.host
 
+    def get_resource(self):
+        return self.resource_id, self.container
+
     def poll(self):
         raise NotImplementedError
 
-    def setup(self):
+    def setup(self, resource_config=None):
+        if not resource_config:
+            resource_config = {}
+
         # Ensure the image is there
         container_name = self.options["container"]["name"]
         image = install_image(self.client, self.options["container"]["image"]["name"])
@@ -99,11 +105,11 @@ class ApacheContainerOrchestrator(Orchestrator):
         )
 
         if valid_container(container):
-            self.container = container
+            self.resource_id, self.container = container.id, container
         else:
             raise ValueError("The new container: {} is not valid".format(container))
 
-        if self.container:
+        if self.container and self.resource_id:
             self._is_ready = True
 
     def tear_down(self):
@@ -117,14 +123,19 @@ class ApacheContainerOrchestrator(Orchestrator):
             self.client.stop_container(self.container)
             deleted = self.client.destroy_container(self.container)
             if deleted:
-                self.container = None
+                self.resource_id, self.container = None, None
         else:
-            self.container = None
+            self.resource_id, self.container = None, None
 
         if self.container:
             self._is_ready = True
         else:
             self._is_ready = False
+
+    @classmethod
+    def make_resource_config(cls, **kwargs):
+        resource_config = {}
+        return resource_config
 
     @classmethod
     def validate_options(cls, options):

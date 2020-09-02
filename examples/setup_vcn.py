@@ -20,11 +20,7 @@ def prepare_options():
         cidr_block="10.0.1.0/24", display_name="workers", dns_label="workers"
     )
 
-    options = dict(
-        profile=oci_profile_options,
-        vcn=vcn_options,
-        subnet=subnet_options,
-    )
+    options = dict(profile=oci_profile_options, vcn=vcn_options, subnet=subnet_options,)
     return options
 
 

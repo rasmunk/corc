@@ -25,10 +25,7 @@ class TestInstanceConfigurer(unittest.TestCase):
             prefix=gen_config_provider_prefix(prefix),
             throw=True,
         )
-        oci_profile_options = dict(
-            compartment_id=oci_compartment_id,
-            name=oci_name,
-        )
+        oci_profile_options = dict(compartment_id=oci_compartment_id, name=oci_name,)
 
         test_name = "Test_Instance_Conf"
         node_name = test_name + "_Node"
@@ -99,9 +96,7 @@ class TestInstanceConfigurer(unittest.TestCase):
         )
 
         vcn_options = dict(
-            cidr_block="10.0.0.0/16",
-            display_name=vcn_name,
-            dns_label="ku",
+            cidr_block="10.0.0.0/16", display_name=vcn_name, dns_label="ku",
         )
         subnet_options = dict(display_name=subnet_name, dns_label="workers")
 

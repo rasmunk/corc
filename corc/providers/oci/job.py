@@ -157,10 +157,7 @@ def run(provider_kwargs, cluster={}, job={}, storage={}):
 
     if "output_path" in job:
         jobio_args.extend(
-            [
-                "--execute-output-path",
-                job["output_path"],
-            ]
+            ["--execute-output-path", job["output_path"],]
         )
 
     if "capture" in job and job["capture"]:
@@ -472,10 +469,7 @@ def get_results(job={}, storage={}):
     # S3 storage
     # Look for s3 credentials and config files
     s3_config = load_s3_config(
-        s3["config_file"],
-        s3["credentials_file"],
-        storage["endpoint"],
-        name=s3["name"],
+        s3["config_file"], s3["credentials_file"], storage["endpoint"], name=s3["name"],
     )
 
     # Download results from s3
@@ -536,10 +530,7 @@ def delete_results(job={}, storage={}):
     # S3 storage
     # Look for s3 credentials and config files
     s3_config = load_s3_config(
-        s3["config_file"],
-        s3["credentials_file"],
-        storage["endpoint"],
-        name=s3["name"],
+        s3["config_file"], s3["credentials_file"], storage["endpoint"], name=s3["name"],
     )
 
     # Download results from s3
@@ -597,10 +588,7 @@ def list_results(job={}, storage={}):
     # S3 storage
     # Look for s3 credentials and config files
     s3_config = load_s3_config(
-        s3["config_file"],
-        s3["credentials_file"],
-        storage["endpoint"],
-        name=s3["name"],
+        s3["config_file"], s3["credentials_file"], storage["endpoint"], name=s3["name"],
     )
 
     s3_resource = stage_s3_resource(**s3_config)
