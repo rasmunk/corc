@@ -471,6 +471,8 @@ class OCIInstanceOrchestrator(Orchestrator):
         if target_endpoint:
             if open_port(target_endpoint, self.port):
                 self._is_reachable = True
+                return
+        self._is_reachable = False
 
     @classmethod
     def load_config_options(cls, provider="oci", path=None):

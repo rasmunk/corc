@@ -3,6 +3,7 @@ from libcloud.container.types import Provider as ContainerProvider
 from corc.providers.defaults import (
     BARE_METAL,
     CONTAINER_CLUSTER,
+    CONTAINER,
     DOCKER,
     EC2,
     ECS,
@@ -14,11 +15,18 @@ from corc.providers.defaults import (
 from corc.providers.oci.instance import OCIInstanceOrchestrator
 from corc.providers.oci.cluster import OCIClusterOrchestrator
 from corc.providers.apache.cluster import ApacheClusterOrchestrator
+from corc.providers.apache.container import ApacheContainerOrchestrator
 from corc.providers.apache.instance import ApacheInstanceOrchestrator
 from corc.providers.dummy import LocalOrchestrator
 
 # Define orchestrators for the various cloud backends
 ORCHESTRATORS = {
+    CONTAINER: {
+        LOCAL: {
+            "klass": ApacheContainerOrchestrator,
+            "options": {"driver": {"provider": ContainerProvider.DOCKER}},
+        }
+    },
     CONTAINER_CLUSTER: {
         OCI: {"klass": OCIClusterOrchestrator},
         ECS: {
