@@ -20,7 +20,11 @@ default_configurer_config = {}
 default_configurers_config = {ANSIBLE: default_configurer_config}
 
 valid_configurer_config = {
-    ANSIBLE: {"root_path": str, "playbook_path": str, "inventory_path": str,}
+    ANSIBLE: {
+        "root_path": str,
+        "playbook_path": str,
+        "inventory_path": str,
+    }
 }
 
 default_job_meta_config = {
@@ -109,7 +113,10 @@ default_corc_config = {
         "job": default_job_config,
         "storage": default_storage_config,
         "configurers": {ANSIBLE: default_configurer_config},
-        "providers": {AWS_LOWER: {}, OCI_LOWER: {},},
+        "providers": {
+            AWS_LOWER: {},
+            OCI_LOWER: {},
+        },
     }
 }
 

@@ -3,7 +3,7 @@ from corc.providers.oci.cluster import (
     list_clusters as oci_list_clusters,
     delete_cluster_stack as oci_delete_cluster_stack,
     get_cluster_by_name as oci_get_cluster_by_name,
-    get_cluster_stack as oci_get_cluster_stack
+    get_cluster_stack as oci_get_cluster_stack,
 )
 from corc.providers.oci.cluster import (
     OCIClusterOrchestrator,
@@ -25,7 +25,7 @@ def list_clusters(provider_kwargs):
             cluster_stack = oci_get_cluster_stack(
                 container_engine_client,
                 provider_kwargs["profile"]["compartment_id"],
-                cluster.id
+                cluster.id,
             )
             response["clusters"].append(to_dict(cluster_stack))
         return True, response
@@ -105,5 +105,29 @@ def update_cluster(provier_kwargs):
     raise NotImplementedError
 
 
-def get_cluster(args):
-    raise NotImplementedError
+def get_cluster(provider_kwargs, cluster={}):
+    response = {}
+    if provider_kwargs:
+        if not cluster["id"] and not cluster["name"]:
+            response["msg"] = "Either the id or name of the cluster must be provided"
+            return False, response
+        container_engine_client = new_cluster_engine_client(
+            name=provider_kwargs["profile"]["name"]
+        )
+        if cluster["id"]:
+            cluster_id = cluster["id"]
+        else:
+            cluster_object = oci_get_cluster_by_name(
+                container_engine_client,
+                provider_kwargs["profile"]["compartment_id"],
+                cluster["name"],
+            )
+            cluster_id = cluster_object.id
+        cluster_stack = oci_get_cluster_stack(
+            container_engine_client,
+            provider_kwargs["profile"]["compartment_id"],
+            cluster_id,
+        )
+        response["cluster"] = to_dict(cluster_stack)
+        return True, response
+    return False, response

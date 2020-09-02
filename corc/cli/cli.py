@@ -239,6 +239,17 @@ def cluster_cli(parser):
         argument_groups=[CLUSTER],
     )
 
+    get_parser = cluster_commands.add_parser("get")
+    cluster_identity_group(get_parser)
+    get_parser.set_defaults(
+        func=cli_exec,
+        module_path="corc.cluster",
+        module_name="cluster",
+        func_name="get_cluster",
+        provider_groups=[PROFILE],
+        argument_groups=[CLUSTER],
+    )
+
     list_parser = cluster_commands.add_parser("list")
     list_parser.set_defaults(
         func=cli_exec,

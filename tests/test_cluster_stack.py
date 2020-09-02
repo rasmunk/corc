@@ -90,7 +90,9 @@ class TestClusterStack(unittest.TestCase):
         )
 
         vcn_options = dict(
-            cidr_block="10.0.0.0/16", display_name=vcn_name, dns_label="ku",
+            cidr_block="10.0.0.0/16",
+            display_name=vcn_name,
+            dns_label="ku",
         )
         subnet_options = dict(
             cidr_block="10.0.2.0/24", display_name=subnet_name, dns_label="workers"
@@ -147,7 +149,9 @@ class TestClusterStack(unittest.TestCase):
 
         for vcn in vcns:
             deleted = delete_vcn_stack(
-                self.network_client, self.options["profile"]["compartment_id"], vcn=vcn,
+                self.network_client,
+                self.options["profile"]["compartment_id"],
+                vcn=vcn,
             )
             self.assertTrue(deleted)
 

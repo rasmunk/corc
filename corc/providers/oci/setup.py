@@ -98,8 +98,10 @@ if __name__ == "__main__":
             availability_domain=node_args.availability_domain, subnet_id=subnet.id
         )
 
-        node_config_detail = oci.container_engine.models.CreateNodePoolNodeConfigDetails(
-            size=node_args.size, placement_configs=[node_pool_placement_config]
+        node_config_detail = (
+            oci.container_engine.models.CreateNodePoolNodeConfigDetails(
+                size=node_args.size, placement_configs=[node_pool_placement_config]
+            )
         )
 
         # Associate
