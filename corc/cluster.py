@@ -3,6 +3,7 @@ from corc.providers.oci.cluster import (
     list_clusters as oci_list_clusters,
     delete_cluster_stack as oci_delete_cluster_stack,
     get_cluster_by_name as oci_get_cluster_by_name,
+    get_cluster_stack as oci_get_cluster_stack
 )
 from corc.providers.oci.cluster import (
     OCIClusterOrchestrator,
@@ -19,7 +20,14 @@ def list_clusters(provider_kwargs):
         clusters = oci_list_clusters(
             container_engine_client, provider_kwargs["profile"]["compartment_id"]
         )
-        response["clusters"] = to_dict(clusters)
+        response["clusters"] = []
+        for cluster in clusters:
+            cluster_stack = oci_get_cluster_stack(
+                container_engine_client,
+                provider_kwargs["profile"]["compartment_id"],
+                cluster.id
+            )
+            response["clusters"].append(to_dict(cluster_stack))
         return True, response
     return False, response
 
