@@ -46,7 +46,6 @@ from corc.cli.parsers.storage.storage import (
 from corc.cli.parsers.storage.s3 import add_s3_group, s3_config_group, s3_extra
 from corc.cli.parsers.providers.aws import add_aws_group
 from corc.cli.parsers.providers.oci import add_oci_group
-from corc.cluster import update_cluster
 from corc.cli.helpers import cli_exec
 from corc.util import eprint
 
