@@ -96,7 +96,7 @@ def validate_dict_fields(input_dict, valid_fields, verbose=False, throw=False):
                 )
         else:
             for valid_value_type in valid_value_types:
-                if isinstance(value, valid_value_types):
+                if isinstance(value, valid_value_type):
                     valid = True
 
         if not valid:

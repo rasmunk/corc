@@ -70,6 +70,7 @@ def refresh_kube_config(cluster_id, name="DEFAULT"):
     )
     # Try to load the existing
     # Create or refresh the kubernetes config
+
     kube_config = create(container_engine_client, "create_kubeconfig", cluster_id)
     if kube_config and hasattr(kube_config, "text"):
         config_dict = parse_yaml(kube_config.text)
