@@ -138,8 +138,14 @@ def run(provider_kwargs, cluster={}, job={}, storage={}):
         return False, response
 
     node_manager = NodeManager()
-    node_manager.discover()
+    if not node_manager.discover():
+        response["msg"] = "Failed to discover any nodes to schedule jobs on"
+        return False, response
+
     node = node_manager.select()
+    if not node:
+        response["msg"] = "Failed to select a node to schedule on"
+        return False, response
 
     # Ensure we have the newest config
     scheduler = KubenetesScheduler()

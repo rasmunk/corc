@@ -27,7 +27,10 @@ from corc.cli.parsers.cluster.cluster import (
     valid_cluster_group,
 )
 from corc.cli.parsers.config.config import add_config_group
-from corc.cli.parsers.instance.instance import add_instance_group
+from corc.cli.parsers.instance.instance import (
+    start_instance_group,
+    instance_identity_group,
+)
 from corc.cli.parsers.job.job import select_job_group
 from corc.cli.parsers.network.vcn import (
     vcn_identity_group,
@@ -259,15 +262,15 @@ def cluster_cli(parser):
         provider_groups=[PROFILE],
     )
 
-    update_parser = cluster_commands.add_parser("update")
-    cluster_identity_group(update_parser)
-    update_parser.set_defaults(func=update_cluster)
+    # update_parser = cluster_commands.add_parser("update")
+    # cluster_identity_group(update_parser)
+    # update_parser.set_defaults(func=update_cluster)
 
 
 def instance_cli(parser):
     instance_commands = parser.add_subparsers(title="COMMAND")
     start_parser = instance_commands.add_parser("start")
-    add_instance_group(start_parser)
+    start_instance_group(start_parser)
     vcn_identity_group(start_parser)
     vcn_config_group(start_parser)
     start_parser.set_defaults(
@@ -283,6 +286,37 @@ def instance_cli(parser):
             VCN_SUBNET,
             VCN,
         ],
+    )
+
+    stop_parser = instance_commands.add_parser("stop")
+    instance_identity_group(stop_parser)
+    stop_parser.set_defaults(
+        func=cli_exec,
+        module_path="corc.instance",
+        module_name="instance",
+        func_name="stop_instance",
+        provider_groups=[PROFILE],
+        argument_groups=[INSTANCE],
+    )
+
+    get_parser = instance_commands.add_parser("get")
+    instance_identity_group(get_parser)
+    get_parser.set_defaults(
+        func=cli_exec,
+        module_path="corc.instance",
+        module_name="instance",
+        func_name="get_instance",
+        provider_groups=[PROFILE],
+        argument_groups=[INSTANCE],
+    )
+
+    list_parser = instance_commands.add_parser("list")
+    list_parser.set_defaults(
+        func=cli_exec,
+        module_path="corc.instance",
+        module_name="instance",
+        func_name="list_instances",
+        provider_groups=[PROFILE],
     )
 
 

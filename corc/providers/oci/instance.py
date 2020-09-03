@@ -46,6 +46,14 @@ from corc.providers.oci.network import (
 )
 
 
+def new_compute_client(**kwargs):
+    return new_client(
+        ComputeClient,
+        composite_class=ComputeClientCompositeOperations,
+        **kwargs,
+    )
+
+
 def valid_instance(instance):
     if not isinstance(instance, Instance):
         return False
@@ -70,24 +78,34 @@ def create_instance(
     return instance
 
 
-def terminate_instance(compute_client, instance_id, **kwargs):
-    return delete(compute_client, "terminate_instance", instance_id, **kwargs)
-
-
-def get_instance_by_name(compute_client, compartment_id, display_name, kwargs=None):
+def list_instances(compute_client, compartment_id, kwargs=None):
     if not kwargs:
         kwargs = {}
 
     if "lifecycle_state" not in kwargs:
         kwargs.update(dict(lifecycle_state=Instance.LIFECYCLE_STATE_RUNNING))
 
-    instances = list_entities(
-        compute_client,
-        "list_instances",
-        compartment_id,
-        display_name=display_name,
-        **kwargs,
+    return list_entities(
+        compute_client, "list_instances", compartment_id=compartment_id, **kwargs
     )
+
+
+def delete_instance(compute_client, instance_id, **kwargs):
+    return delete(compute_client, "terminate_instance", instance_id, **kwargs)
+
+
+def get_instance(compute_client, compartment_id, instance_id, kwargs=None):
+    if not kwargs:
+        kwargs = {}
+    return get(compute_client, "get_instance", instance_id, **kwargs)
+
+
+def get_instance_by_name(compute_client, compartment_id, display_name, kwargs=None):
+    if not kwargs:
+        kwargs = {}
+
+    kwargs.update(dict(display_name=display_name))
+    instances = list_instances(compute_client, compartment_id, kwargs=kwargs)
     if instances:
         return instances[0]
     return None
@@ -433,7 +451,7 @@ class OCIInstanceOrchestrator(Orchestrator):
         if self.instance:
             # Await that it is terminated
             # Must be done before we can remove the vcn
-            deleted = terminate_instance(
+            deleted = delete_instance(
                 self.compute_client,
                 self.instance.id,
                 wait_for_states=[Instance.LIFECYCLE_STATE_TERMINATED],
@@ -478,21 +496,16 @@ class OCIInstanceOrchestrator(Orchestrator):
             {"profile": {}},
             prefix=gen_config_provider_prefix(provider_prefix),
             path=path,
-            allow_sub_keys=True,
         )
 
         oci_instance = load_from_config(
             {"instance": {}},
             prefix=gen_config_provider_prefix(provider_prefix),
             path=path,
-            allow_sub_keys=True,
         )
 
         oci_vcn = load_from_config(
-            {"vcn": {}},
-            prefix=gen_config_provider_prefix(provider_prefix),
-            path=path,
-            allow_sub_keys=True,
+            {"vcn": {}}, prefix=gen_config_provider_prefix(provider_prefix), path=path
         )
 
         if "profile" in oci_profile:
@@ -661,13 +674,14 @@ class OCIInstanceOrchestrator(Orchestrator):
         ]
         optional_subnet_keys.append("id")
 
-        expected_route_table_keys = ["routerules"]
+        expected_route_table_keys = ["route_rules"]
         optional_route_table_keys = [
             k
             for k, v in CreateRouteTableDetails().attribute_map.items()
             if k not in expected_route_table_keys
         ]
         optional_route_table_keys.append("id")
+        # optional_route_rule_keys = [k for k, v in RouteRule().attribute_map.items()]
 
         expected_gateway_keys = ["is_enabled"]
         optional_gateway_keys = [

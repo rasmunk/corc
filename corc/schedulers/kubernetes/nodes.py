@@ -20,7 +20,11 @@ class NodeManager:
         self.last_selected_index = 0
 
     def discover(self, **kwargs):
-        self.nodes = list_nodes(self.client, **kwargs).items
+        nodes_response = list_nodes(self.client, **kwargs)
+        if nodes_response.items:
+            self.nodes = nodes_response.items
+            return True
+        return False
 
     def _select_round_robin(self):
         if not self.nodes:

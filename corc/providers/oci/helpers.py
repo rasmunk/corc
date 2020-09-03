@@ -73,16 +73,17 @@ def delete(client, delete_method, *args, wait_for_states=None, **kwargs):
 
     action_kwargs = {}
     if is_composite_client(client):
-        action_kwargs["operation_kwargs"] = kwargs
         # Convert to the matching composite action
         pos_delete_method = "{}_and_wait_for_state".format(delete_method)
         if hasattr(client, pos_delete_method):
             delete_method = pos_delete_method
+            action_kwargs["operation_kwargs"] = kwargs
             action_kwargs["wait_for_states"] = wait_for_states
         else:
             # Fall back to the regular client since the
             # composite client dosen't have the method
             client = client.client
+            action_kwargs = kwargs
     else:
         action_kwargs = kwargs
 
@@ -96,16 +97,17 @@ def create(client, create_method, *args, wait_for_states=None, **kwargs):
 
     action_kwargs = {}
     if is_composite_client(client):
-        action_kwargs["operation_kwargs"] = kwargs
         # Convert to the matching composite action
         pos_create_method = "{}_and_wait_for_state".format(create_method)
         if hasattr(client, pos_create_method):
             create_method = pos_create_method
+            action_kwargs["operation_kwargs"] = kwargs
             action_kwargs["wait_for_states"] = wait_for_states
         else:
             # Fall back to the regular client since the
             # composite client dosen't have the method
             client = client.client
+            action_kwargs = kwargs
     else:
         action_kwargs = kwargs
 
@@ -119,16 +121,17 @@ def update(client, update_method, *args, wait_for_states=None, **kwargs):
 
     action_kwargs = {}
     if is_composite_client(client):
-        action_kwargs["operation_kwargs"] = kwargs
         # Convert to the matching composite action
         pos_update_method = "{}_and_wait_for_state".format(update_method)
         if hasattr(client, pos_update_method):
             update_method = pos_update_method
+            action_kwargs["operation_kwargs"] = kwargs
             action_kwargs["wait_for_states"] = wait_for_states
         else:
             # Fall back to the regular client since the
             # composite client dosen't have the method
             client = client.client
+            action_kwargs = kwargs
     else:
         action_kwargs = kwargs
 
@@ -212,13 +215,12 @@ def stack_was_deleted(stack):
 def perform_action(action, *args, **kwargs):
     try:
         result = action(*args, **kwargs)
-        if hasattr(result, "data"):
+        if hasattr(result, "data") and result.data is not None:
             return result.data
     # TODO, check for regular errors as well
     except (CompositeOperationError, ServiceError) as err:
         print("Failed to perform action: {}, err: {}".format(action, err))
         if hasattr(err, "cause"):
             print("Failed cause: {}".format(err.cause))
-
         return False
     return True
