@@ -5,10 +5,11 @@ from corc.defaults import PACKAGE_NAME, AWS_LOWER, OCI_LOWER, PROFILE
 from corc.defaults import (
     CLUSTER,
     CLUSTER_NODE,
-    STORAGE,
-    STORAGE_S3,
+    INSTANCE,
     JOB,
     JOB_META,
+    STORAGE,
+    STORAGE_S3,
     VCN,
     VCN_INTERNETGATEWAY,
     VCN_ROUTETABLE,
@@ -26,7 +27,7 @@ from corc.cli.parsers.cluster.cluster import (
     valid_cluster_group,
 )
 from corc.cli.parsers.config.config import add_config_group
-from corc.cli.parsers.instance.instance import add_compute_group
+from corc.cli.parsers.instance.instance import add_instance_group
 from corc.cli.parsers.job.job import select_job_group
 from corc.cli.parsers.network.vcn import (
     vcn_identity_group,
@@ -43,7 +44,6 @@ from corc.cli.parsers.storage.s3 import add_s3_group, s3_config_group, s3_extra
 from corc.cli.parsers.providers.aws import add_aws_group
 from corc.cli.parsers.providers.oci import add_oci_group
 from corc.cluster import update_cluster
-from corc.instance import launch_instance
 from corc.cli.helpers import cli_exec
 from corc.util import eprint
 
@@ -266,11 +266,24 @@ def cluster_cli(parser):
 
 def instance_cli(parser):
     instance_commands = parser.add_subparsers(title="COMMAND")
-    launch_parser = instance_commands.add_parser("launch")
-    add_compute_group(launch_parser)
-    vcn_identity_group(launch_parser)
-    vcn_config_group(launch_parser)
-    launch_parser.set_defaults(func=launch_instance)
+    start_parser = instance_commands.add_parser("start")
+    add_instance_group(start_parser)
+    vcn_identity_group(start_parser)
+    vcn_config_group(start_parser)
+    start_parser.set_defaults(
+        func=cli_exec,
+        module_path="corc.instance",
+        module_name="instance",
+        func_name="start_instance",
+        provider_groups=[PROFILE],
+        argument_groups=[
+            INSTANCE,
+            VCN_INTERNETGATEWAY,
+            VCN_ROUTETABLE,
+            VCN_SUBNET,
+            VCN,
+        ],
+    )
 
 
 def orchestration_cli(parser):

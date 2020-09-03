@@ -3,7 +3,7 @@ from corc.config import recursive_check_config
 from corc.defaults import (
     CLUSTER,
     CLUSTER_NODE,
-    COMPUTE,
+    INSTANCE,
     VCN,
     VCN_SUBNET,
     VCN_INTERNETGATEWAY,
@@ -161,7 +161,7 @@ valid_full_oci_config = {
 oci_config_groups = {
     CLUSTER: valid_cluster_config,
     CLUSTER_NODE: valid_cluster_node_config,
-    COMPUTE: valid_instance_config,
+    INSTANCE: valid_instance_config,
     VCN: valid_vcn_config,
     VCN_SUBNET: valid_subnet_config,
     VCN_INTERNETGATEWAY: valid_internet_gateway_config,

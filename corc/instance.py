@@ -1,23 +1,34 @@
-from corc.defaults import (
-    OCI,
-    SUBNET,
-    COMPUTE,
-    VCN,
-)
-from corc.cli.args import extract_arguments
-from corc.providers.oci.instance import launch_instance as oci_launch_instance
+from corc.providers.oci.instance import OCIInstanceOrchestrator
 
 
-def launch_instance(args):
-    oci_args = vars(extract_arguments(args, [OCI]))
-    compute_args = vars(extract_arguments(args, [COMPUTE]))
-    subnet_args = vars(extract_arguments(args, [SUBNET]))
-    vcn_args = vars(extract_arguments(args, [VCN]))
+def start_instance(provider_kwargs, instance={}, vcn={}):
+    response = {}
+    if provider_kwargs:
 
-    if oci_args:
-        return oci_launch_instance(
-            compute_kwargs=compute_args,
-            oci_kwargs=oci_args,
-            subnet_kwargs=subnet_args,
-            vcn_kwargs=vcn_args,
+        internetgateway = vcn.pop("internetgateway", {})
+        routetable = vcn.pop("routetable", {})
+        subnet = vcn.pop("subnet", {})
+
+        instance_options = dict(
+            profile=provider_kwargs["profile"],
+            instance=instance,
+            vcn=vcn,
+            internetgateway=internetgateway,
+            routetable=routetable,
+            subnet=subnet
         )
+        OCIInstanceOrchestrator.validate_options(instance_options)
+        orchestrator = OCIInstanceOrchestrator(instance_options)
+
+        orchestrator.setup()
+        orchestrator.poll()
+        if not orchestrator.is_ready():
+            response["msg"] = "The instance is not ready"
+            return False, response
+
+        if not orchestrator.is_reachable():
+            response["msg"] = "The instance is ready but not reachable"
+            return False, response
+
+        return True, response
+    return False, response

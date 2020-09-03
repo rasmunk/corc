@@ -4,7 +4,7 @@ from corc.defaults import (
     ANSIBLE,
     CLUSTER,
     CONFIG,
-    COMPUTE,
+    INSTANCE,
     JOB,
     OCI,
     STORAGE,
@@ -14,7 +14,7 @@ from corc.defaults import (
 from corc.cli.configurer.ansible import valid_ansible_group
 from corc.cli.parsers.cluster.cluster import valid_cluster_group
 from corc.cli.parsers.config.config import valid_config_group
-from corc.cli.parsers.instance.instance import valid_compute_group
+from corc.cli.parsers.instance.instance import valid_instance_group
 from corc.cli.parsers.job.job import valid_job_group
 from corc.cli.parsers.network.vcn import valid_vcn_group
 from corc.cli.parsers.providers.oci import valid_oci_group
@@ -33,7 +33,7 @@ def _get_arguments(arguments, startswith=""):
 argument_groups = {
     ANSIBLE: valid_ansible_group,
     CLUSTER: valid_cluster_group,
-    COMPUTE: valid_compute_group,
+    INSTANCE: valid_instance_group,
     CONFIG: valid_config_group,
     JOB: valid_job_group,
     OCI: valid_oci_group,
