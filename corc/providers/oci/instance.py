@@ -496,21 +496,21 @@ class OCIInstanceOrchestrator(Orchestrator):
             {"profile": {}},
             prefix=gen_config_provider_prefix(provider_prefix),
             path=path,
-            allow_sub_keys=True
+            allow_sub_keys=True,
         )
 
         oci_instance = load_from_config(
             {"instance": {}},
             prefix=gen_config_provider_prefix(provider_prefix),
             path=path,
-            allow_sub_keys=True
+            allow_sub_keys=True,
         )
 
         oci_vcn = load_from_config(
             {"vcn": {}},
             prefix=gen_config_provider_prefix(provider_prefix),
             path=path,
-            allow_sub_keys=True
+            allow_sub_keys=True,
         )
 
         if "profile" in oci_profile:
