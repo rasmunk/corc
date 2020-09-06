@@ -8,7 +8,11 @@ from corc.config import (
 from corc.providers.oci.config import generate_oci_config, valid_oci_config
 
 
-def init_config(provider_kwargs, cluster={}, vcn={}):
+def init_config(provider_kwargs, cluster={}, vcn={}, config={}):
+    path = None
+    if "path" in config:
+        path = config["path"]
+
     oci_config_dict = {"oci": {"cluster": cluster}}
     oci_config_dict["oci"].update(provider_kwargs)
 
@@ -20,25 +24,25 @@ def init_config(provider_kwargs, cluster={}, vcn={}):
         return False, response
 
     # If no config exists -> create it
-    config = {}
-    if not config_exists():
-        config = generate_default_config()
-        save_config(config)
+    _config = {}
+    if not config_exists(path=path):
+        _config = generate_default_config()
+        save_config(_config, path=path)
     else:
-        config = load_config()
+        _config = load_config(path=path)
 
-    if not config_exists():
+    if not config_exists(path=path):
         response["msg"] = "Failed to find a config"
         return False, response
 
     # Update with user arguments
-    config["corc"]["providers"].update(oci_config)
+    _config["corc"]["providers"].update(oci_config)
 
-    if not save_config(config):
+    if not save_config(_config, path=path):
         response["msg"] = "Failed to save new config"
         return False, response
 
-    if not valid_config(config, verbose=True):
+    if not valid_config(_config, verbose=True):
         response["msg"] = "The generated config is invalid"
         return False, response
 

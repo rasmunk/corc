@@ -41,6 +41,16 @@ jobs:
   - stage: config_tests
     python: '3.8'
     script: *2
+  - stage: cli_tests
+    python: '3.6'
+    script: &3
+    - travis_wait pytest -s -v tests/test_cli.py
+  - stage: cli_tests
+    python: '3.7'
+    script: *3
+  - stage: cli_tests
+    python: '3.8'
+    script: *3
   - stage: cluster_tests
     python: '3.6'
     script:
@@ -57,7 +67,7 @@ jobs:
     script: travis_wait pytest -s -v tests/test_instance_orchestrator.py
   - stage: instance_configurer_tests
     python: '3.6'
-    before_script: &3
+    before_script: &4
     - mkdir $TRAVIS_BUILD_DIR/.ssh/
     - ssh-keygen -t rsa -b 4096 -N "" -f $TRAVIS_BUILD_DIR/.ssh/oci_id_rsa
     env:
@@ -66,14 +76,14 @@ jobs:
     script: travis_wait pytest -s -v tests/test_instance_configurer.py
   - stage: instance_configurer_tests
     python: '3.7'
-    before_script: *3
+    before_script: *4
     env:
     - OCI_INSTANCE_SSH_KEY=$TRAVIS_BUILD_DIR/.ssh/oci_id_rsa
     - ANSIBLE_HOST_KEY_CHECKING=False
     script: travis_wait pytest -s -v tests/test_instance_configurer.py
   - stage: instance_configurer_tests
     python: '3.8'
-    before_script: *3
+    before_script: *4
     env:
     - OCI_INSTANCE_SSH_KEY=$TRAVIS_BUILD_DIR/.ssh/oci_id_rsa
     - ANSIBLE_HOST_KEY_CHECKING=False
@@ -99,9 +109,9 @@ jobs:
   #   script: *4
   - stage: deploy
     python: '3.6'
-    script: &4
+    script: &5
     - python setup.py sdist bdist_wheel
-    deploy: &5
+    deploy: &6
       skip_cleanup: true
       skip_existing: true
       distributions: sdist bdist_wheel
@@ -114,12 +124,12 @@ jobs:
         branch: master
   - stage: deploy
     python: '3.7'
-    script: *4
-    deploy: *5
+    script: *5
+    deploy: *6
   - stage: deploy
     python: '3.8'
-    script: *4
-    deploy: *5
+    script: *5
+    deploy: *6
 env:
   global:
   - OCI_CONFIG_DIR="$TRAVIS_BUILD_DIR/.oci"

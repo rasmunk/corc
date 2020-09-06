@@ -1,7 +1,7 @@
 from argparse import Namespace
 import copy
 import flatten_dict
-from corc.cli.args import extract_arguments
+from corc.cli.args import extract_arguments, wrap_extract_arguments
 from corc.cli.providers.helpers import select_provider
 from corc.config import (
     load_from_config,
@@ -19,14 +19,20 @@ def cli_exec(args):
     module_path = args.module_path
     module_name = args.module_name
     func_name = args.func_name
-    if hasattr(args, "argument_groups"):
-        argument_groups = args.argument_groups
-    else:
-        argument_groups = []
     if hasattr(args, "provider_groups"):
         provider_groups = args.provider_groups
     else:
         provider_groups = []
+
+    if hasattr(args, "argument_groups"):
+        argument_groups = args.argument_groups
+    else:
+        argument_groups = []
+
+    if hasattr(args, "skip_config_groups"):
+        skip_config_groups = args.skip_config_groups
+    else:
+        skip_config_groups = []
 
     provider, provider_kwargs = prepare_provider_kwargs(args, namespace_wrap=True)
     if provider:
@@ -41,19 +47,27 @@ def cli_exec(args):
     if not func:
         return False
 
-    # Extract kwargs from args
+    # Extract config kwargs from args
     kwargs_configuration = prepare_kwargs_configurations(args, argument_groups)
     # Load config and fill in missing values
     action_kwargs = load_missing_action_kwargs(kwargs_configuration)
 
+    # Extract none config kwargs from args
+    extra_action_kwargs = prepare_none_config_kwargs(args, skip_config_groups)
+
     if provider and provider_kwargs:
-        return func(provider_kwargs, **action_kwargs)
-    return func(**action_kwargs)
+        return func(provider_kwargs, **action_kwargs, **extra_action_kwargs)
+    return func(**action_kwargs, **extra_action_kwargs)
 
 
 def import_from_module(module_path, module_name, func_name):
     module = __import__(module_path, fromlist=[module_name])
     return getattr(module, func_name)
+
+
+def prepare_none_config_kwargs(args, skip_config_groups_groups):
+    kwargs = wrap_extract_arguments(args, skip_config_groups_groups)
+    return kwargs
 
 
 def prepare_provider_kwargs(args, namespace_wrap=False):
@@ -68,6 +82,7 @@ def prepare_provider_kwargs(args, namespace_wrap=False):
 
 
 def prepare_kwargs_configurations(args, argument_groups, strip_group_prefix=True):
+    """ Used to load missing arguments from the configuration file """
     # Try to find all available args
     kwargs_configurations = []
     for group in argument_groups:
@@ -111,7 +126,10 @@ def prepare_kwargs_configurations(args, argument_groups, strip_group_prefix=True
             flat_group_kwargs_config[prefix_action_config] = valid_action_config
             flat_group_kwargs_config[prefix_config_prefix] = config_prefix
 
-        if flat_group_kwargs_config[prefix_action_config]:
+        if (
+            prefix_action_config in flat_group_kwargs_config
+            and flat_group_kwargs_config[prefix_action_config]
+        ):
             unflat_group_group_kwargs_config = flatten_dict.unflatten(
                 flat_group_kwargs_config
             )

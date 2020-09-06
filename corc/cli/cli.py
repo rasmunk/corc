@@ -5,6 +5,7 @@ from corc.defaults import PACKAGE_NAME, AWS_LOWER, OCI_LOWER, PROFILE
 from corc.defaults import (
     CLUSTER,
     CLUSTER_NODE,
+    CONFIG,
     INSTANCE,
     JOB,
     JOB_META,
@@ -203,6 +204,7 @@ def config_cli(parser):
         func_name="init_config",
         provider_groups=[PROFILE],
         argument_groups=[CLUSTER_NODE, CLUSTER, VCN_SUBNET, VCN],
+        skip_config_groups=[CONFIG],
     )
 
 
