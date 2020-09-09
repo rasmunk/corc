@@ -197,27 +197,28 @@ def run(provider_kwargs, cluster={}, job={}, storage={}):
         core_api = client.CoreV1Api()
         # storage_api = client.StorageV1Api()
 
-        # Storage endpoint credentials secret
+        # Storage endpoint credentials secret (Tied to a profile and job)
+        secret_profile_name = "{}-{}-{}".format(
+            STORAGE_CREDENTIALS_NAME, s3["name"], job["meta"]["name"]
+        )
         try:
             storage_credentials_secret = core_api.read_namespaced_secret(
-                STORAGE_CREDENTIALS_NAME, KUBERNETES_NAMESPACE
+                secret_profile_name, KUBERNETES_NAMESPACE
             )
         except ApiException:
             storage_credentials_secret = None
 
         # volumes
         secret_volume_source = V1SecretVolumeSource(
-            secret_name=STORAGE_CREDENTIALS_NAME
+            secret_name=secret_profile_name
         )
-        secret_volume = V1Volume(
-            name=STORAGE_CREDENTIALS_NAME, secret=secret_volume_source
-        )
+        secret_volume = V1Volume(name=secret_profile_name, secret=secret_volume_source)
         volumes.append(secret_volume)
 
         # Where the storage credentials should be mounted
         # in the compute unit
         secret_mount = V1VolumeMount(
-            name=STORAGE_CREDENTIALS_NAME,
+            name=secret_profile_name,
             mount_path=storage["credentials_path"],
             read_only=True,
         )
@@ -240,7 +241,7 @@ def run(provider_kwargs, cluster={}, job={}, storage={}):
                     aws_access_key_id=s3_config["aws_access_key_id"],
                     aws_secret_access_key=s3_config["aws_secret_access_key"],
                 )
-                secret_metadata = V1ObjectMeta(name=STORAGE_CREDENTIALS_NAME)
+                secret_metadata = V1ObjectMeta(name=secret_profile_name)
                 secrets_config = dict(metadata=secret_metadata, string_data=secret_data)
                 scheduler_config.update(dict(secret_kwargs=secrets_config))
 
