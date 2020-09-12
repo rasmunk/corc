@@ -78,7 +78,7 @@ For instance, the following command orchestrates a Kubernetes cluster called ``c
 After this is completed, a simple hello world job can be schduled straight after::
 
     # Schedule the job
-    :~# corc oci job run --storage-enable /bin/echo --job-args "Hello World"
+    :~# corc oci job run --storage-enable "/bin/echo Hello World"
     {
         "job": {
             "id": "job-1594378280"
