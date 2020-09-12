@@ -47,7 +47,7 @@ required_run_cluster_fields = {"name": str, "image": str}
 
 required_run_job_fields = {
     "meta": {"num_jobs": int, "num_parallel": int},
-    "command": str,
+    "commands": list,
 }
 
 required_storage_fields = {
@@ -153,30 +153,23 @@ def run(provider_kwargs, cluster={}, job={}, storage={}):
     jobio_args = [
         "jobio",
         "run",
-        job["command"],
-        "--job-name",
-        job["meta"]["name"],
     ]
-
-    if "args" in job:
-        jobio_args.extend(["--execute-args", " ".join(job["args"])])
+    jobio_args.extend(job["commands"])
+    jobio_args.extend(["--job-meta-name", job["meta"]["name"]])
 
     if "output_path" in job:
         jobio_args.extend(
-            [
-                "--execute-output-path",
-                job["output_path"],
-            ]
+            ["--job-output-path", job["output_path"],]
         )
 
     if "capture" in job and job["capture"]:
-        jobio_args.append("--execute-capture")
+        jobio_args.append("--job-capture")
 
     if "debug" in job["meta"]:
-        jobio_args.append("--job-debug")
+        jobio_args.append("--job-meta-debug")
 
     if "env_override" in job["meta"]:
-        jobio_args.append("--job-env-override")
+        jobio_args.append("--job-meta-env-override")
 
     # Maintained by the pod
     volumes = []
@@ -209,9 +202,7 @@ def run(provider_kwargs, cluster={}, job={}, storage={}):
             storage_credentials_secret = None
 
         # volumes
-        secret_volume_source = V1SecretVolumeSource(
-            secret_name=secret_profile_name
-        )
+        secret_volume_source = V1SecretVolumeSource(secret_name=secret_profile_name)
         secret_volume = V1Volume(name=secret_profile_name, secret=secret_volume_source)
         volumes.append(secret_volume)
 
@@ -479,10 +470,7 @@ def get_results(job={}, storage={}):
     # S3 storage
     # Look for s3 credentials and config files
     s3_config = load_s3_config(
-        s3["config_file"],
-        s3["credentials_file"],
-        storage["endpoint"],
-        name=s3["name"],
+        s3["config_file"], s3["credentials_file"], storage["endpoint"], name=s3["name"],
     )
 
     # Download results from s3
@@ -543,10 +531,7 @@ def delete_results(job={}, storage={}):
     # S3 storage
     # Look for s3 credentials and config files
     s3_config = load_s3_config(
-        s3["config_file"],
-        s3["credentials_file"],
-        storage["endpoint"],
-        name=s3["name"],
+        s3["config_file"], s3["credentials_file"], storage["endpoint"], name=s3["name"],
     )
 
     # Download results from s3
@@ -604,10 +589,7 @@ def list_results(job={}, storage={}):
     # S3 storage
     # Look for s3 credentials and config files
     s3_config = load_s3_config(
-        s3["config_file"],
-        s3["credentials_file"],
-        storage["endpoint"],
-        name=s3["name"],
+        s3["config_file"], s3["credentials_file"], storage["endpoint"], name=s3["name"],
     )
 
     s3_resource = stage_s3_resource(**s3_config)

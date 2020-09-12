@@ -48,9 +48,7 @@ from corc.providers.oci.network import (
 
 def new_compute_client(**kwargs):
     return new_client(
-        ComputeClient,
-        composite_class=ComputeClientCompositeOperations,
-        **kwargs,
+        ComputeClient, composite_class=ComputeClientCompositeOperations, **kwargs,
     )
 
 

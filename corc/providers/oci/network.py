@@ -237,10 +237,7 @@ def update_vcn_stack(
             create_subnet_details = prepare_details(
                 CreateSubnetDetails, **subnet_kwargs
             )
-            subnet = create_subnet(
-                network_client,
-                create_subnet_details,
-            )
+            subnet = create_subnet(network_client, create_subnet_details,)
             if subnet:
                 stack["subnets"][subnet.id] = subnet
     return stack
@@ -394,10 +391,7 @@ def get_vcn_stack(network_client, compartment_id, vcn_id):
     gateways = {
         gateway.id: gateway
         for gateway in list_entities(
-            network_client,
-            "list_internet_gateways",
-            compartment_id,
-            vcn_id=vcn.id,
+            network_client, "list_internet_gateways", compartment_id, vcn_id=vcn.id,
         )
     }
     subnets = {

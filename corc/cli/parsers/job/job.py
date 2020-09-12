@@ -1,3 +1,6 @@
+from jobio.cli.args import CommandAction
+
+
 def valid_job_group(parser):
     job_meta_group(parser)
     job_group(parser)
@@ -19,8 +22,7 @@ def job_meta_group(parser):
 
 def job_group(parser):
     job_group = parser.add_argument_group(title="Job Execute arguments")
-    job_group.add_argument("job_command", type=str, default="")
-    job_group.add_argument("--job-args", nargs="*", default=[])
+    job_group.add_argument("job_commands", nargs="+", action=CommandAction)
     job_group.add_argument("--job-capture", action="store_true")
     job_group.add_argument("--job-output-path", type=str, default="")
     job_group.add_argument("--job-working-dir", type=str, default="")
