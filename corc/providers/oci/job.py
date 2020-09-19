@@ -324,6 +324,9 @@ def run(provider_kwargs, cluster={}, job={}, storage={}):
         volume_mounts=volume_mounts,
     )
 
+    # If the working directory does not exist inside the container
+    # It will set permissions where it will be unable to expand the
+    # s3 bucket if the user doesn't have root permissions
     if "working_dir" in job:
         container_spec.update({"working_dir": job["working_dir"]})
 
