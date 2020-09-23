@@ -147,7 +147,7 @@ class TestInstanceConfigurer(unittest.TestCase):
             hosts=[endpoint],
         )
         configurer = AnsibleConfigurer(options)
-        configurer.apply()
+        configurer.apply(host)
 
 
 if __name__ == "__main__":

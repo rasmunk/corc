@@ -1,3 +1,4 @@
+from ansible.config.manager import ConfigManager
 from ansible.parsing.dataloader import DataLoader
 from ansible.inventory.manager import InventoryManager
 from ansible.vars.manager import VariableManager
@@ -45,8 +46,15 @@ class AnsibleConfigurer:
         self.variable_manager = VariableManager(
             loader=self.loader, inventory=self.inventory_manager
         )
+
+        # load ansible configuration
+        self.config_manager = ConfigManager()
+
+        # TODO, load the general ansible config into the Variable/Inventory Manager
         for host in self.options["hosts"]:
             self.inventory_manager.add_host(host, group="compute", port="22")
+
+        self.config_manager.get_config_value()
 
         self.variable_manager.set_host_variable(host, "ansible_connection", "ssh")
         self.variable_manager.set_host_variable(host, "ansible_user", "opc")
@@ -63,7 +71,14 @@ class AnsibleConfigurer:
 
         self.variable_manager.set_host_variable(host, "verbosity", 4)
 
-    def apply(self):
+    def apply(self, host, host_variables=None):
+
+        if not host_variables:
+            host_variables = {}
+
+        for k, v in host_variables.items():
+            self.variable_manager.set_host_variable(host, k, v)
+
         playbook_path = self.options["playbook_path"]
         playbook = Playbook.load(
             playbook_path, variable_manager=self.variable_manager, loader=self.loader
