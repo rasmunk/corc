@@ -1,6 +1,7 @@
 import os
 import time
 import unittest
+from corc.authenticator import SSHAuthenticator
 from corc.config import load_from_env_or_config, gen_config_provider_prefix
 from corc.configurer import AnsibleConfigurer
 from corc.providers.oci.instance import OCIInstanceOrchestrator
@@ -51,36 +52,10 @@ class TestInstanceConfigurer(unittest.TestCase):
             display_name=node_name,
         )
 
-        self.ssh_private_key_file = None
-        ssh_public_key_file = None
-        ssh_public_key = None
-
-        if "OCI_INSTANCE_SSH_KEY" in os.environ:
-            self.ssh_private_key_file = os.environ["OCI_INSTANCE_SSH_KEY"]
-            if not os.path.exists(self.ssh_private_key_file):
-                raise ValueError(
-                    "The specified OCI_INSTANCE_SSH_KEY path: {} does not exist".format(
-                        self.ssh_private_key_file
-                    )
-                )
-
-            # Get the public key compliment
-            ssh_public_key_file = self.ssh_private_key_file + ".pub"
-            with open(ssh_public_key_file, "r") as pub_file:
-                ssh_public_key = pub_file.read()
-
-        if not ssh_public_key_file or not self.ssh_private_key_file:
-            raise ValueError(
-                "Failed to load ssh keys, OCI_INSTANCE_SSH_KEY "
-                "environment variable must be set"
-            )
-
-        if not ssh_public_key:
-            raise ValueError(
-                "Failed to load the specified OCI_INSTANCE_SSH_KEY public key"
-            )
-
-        instance_metadata_options = dict(ssh_authorized_keys=[ssh_public_key])
+        self.authenticator = SSHAuthenticator()
+        instance_metadata_options = dict(
+            ssh_authorized_keys=[self.authenticator.credentials.public_key]
+        )
         internet_gateway_options = dict(
             display_name=internet_gateway_name, is_enabled=True
         )
@@ -113,7 +88,7 @@ class TestInstanceConfigurer(unittest.TestCase):
         OCIInstanceOrchestrator.validate_options(self.options)
         self.orchestrator = OCIInstanceOrchestrator(self.options)
         # Should not be ready at this point
-        self.orchestrator.setup()
+        self.orchestrator.setup(credentials=self.authenticator.credentials)
         self.assertTrue(self.orchestrator.is_ready())
         # Ensure that the orchestrated instance is reachable
         reachable = self.orchestrator.is_reachable()
@@ -142,12 +117,24 @@ class TestInstanceConfigurer(unittest.TestCase):
         # Extract the ip of the instance
         endpoint = self.orchestrator.endpoint()
         options = dict(
-            ssh_private_key_file=self.ssh_private_key_file,
-            playbook_path=playbook_path,
-            hosts=[endpoint],
+            host_variables=dict(
+                ansible_connection="ssh",
+                ansible_user="opc",
+                ansible_become="yes",
+                ansible_host_key_checking="False",
+                verbosity="verbosity",
+            ),
+            host_settings=dict(group="compute", port="22"),
+            apply_kwargs=dict(playbook_path=playbook_path),
         )
-        configurer = AnsibleConfigurer(options)
-        configurer.apply(host)
+
+        configurer = AnsibleConfigurer()
+        configuration = configurer.gen_configuration(options)
+        configurer.apply(
+            endpoint,
+            configuration=configuration,
+            credentials=self.authenticator.credentials,
+        )
 
 
 if __name__ == "__main__":

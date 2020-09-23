@@ -32,8 +32,11 @@ def run_playbook(
 
 
 class AnsibleConfigurer:
-    def __init__(self, options):
+    def __init__(self, options=None):
+        if not options:
+            options = {}
         self.options = options
+
         self.loader = DataLoader()
         if "inventory_path" in self.options:
             sources = self.options["inventory_path"]
@@ -41,47 +44,60 @@ class AnsibleConfigurer:
             sources = None
 
         self.inventory_manager = InventoryManager(self.loader, sources=sources)
-        self.inventory_manager.add_group("compute")
 
         self.variable_manager = VariableManager(
             loader=self.loader, inventory=self.inventory_manager
         )
 
-        # load ansible configuration
+        # TODO load ansible configuration
         self.config_manager = ConfigManager()
 
-        # TODO, load the general ansible config into the Variable/Inventory Manager
-        for host in self.options["hosts"]:
-            self.inventory_manager.add_host(host, group="compute", port="22")
+    def gen_configuration(self, options=None):
+        configuration = {}
+        if not options:
+            options = {}
 
-        self.config_manager.get_config_value()
+        configuration["host_variables"] = {}
+        if "host_variables" in options and isinstance(options["host_variables"], dict):
+            configuration["host_variables"].update(options["host_variables"])
 
-        self.variable_manager.set_host_variable(host, "ansible_connection", "ssh")
-        self.variable_manager.set_host_variable(host, "ansible_user", "opc")
-        self.variable_manager.set_host_variable(host, "ansible_become", "yes")
-        self.variable_manager.set_host_variable(host, "ansible_become_method", "sudo")
-        self.variable_manager.set_host_variable(
-            host, "ansible_host_key_checking", "False"
-        )
+        configuration["host_settings"] = {}
+        if "host_settings" in options and isinstance(options["host_settings"], dict):
+            configuration["host_settings"].update(options["host_settings"])
 
-        # Use the provided ssh key
-        self.variable_manager.set_host_variable(
-            host, "ansible_ssh_private_key_file", self.options["ssh_private_key_file"]
-        )
+        configuration["apply_kwargs"] = {}
+        if "apply_kwargs" in options and isinstance(options["apply_kwargs"], dict):
+            configuration["apply_kwargs"].update(options["apply_kwargs"])
+        return configuration
 
-        self.variable_manager.set_host_variable(host, "verbosity", 4)
+    def apply(self, host, configuration=None, credentials=None):
+        if not configuration:
+            configuration = {}
 
-    def apply(self, host, host_variables=None):
+        if (
+            "group" in configuration["host_settings"]
+            and configuration["host_settings"]["group"]
+        ):
+            self.inventory_manager.add_group(configuration["host_settings"]["group"])
 
-        if not host_variables:
-            host_variables = {}
+        if host not in self.inventory_manager.hosts:
+            self.inventory_manager.add_host(host, **configuration["host_settings"])
 
-        for k, v in host_variables.items():
+        for k, v in configuration["host_variables"].items():
             self.variable_manager.set_host_variable(host, k, v)
 
-        playbook_path = self.options["playbook_path"]
+        if "playbook_path" not in configuration["apply_kwargs"]:
+            return False
+
+        if credentials:
+            self.variable_manager.set_host_variable(
+                host, "ansible_ssh_private_key_file", credentials.private_key_file
+            )
+
         playbook = Playbook.load(
-            playbook_path, variable_manager=self.variable_manager, loader=self.loader
+            configuration["apply_kwargs"]["playbook_path"],
+            variable_manager=self.variable_manager,
+            loader=self.loader,
         )
 
         plays = playbook.get_plays()
@@ -97,5 +113,3 @@ class AnsibleConfigurer:
     def validate_options(cls, options):
         if not isinstance(options, dict):
             raise TypeError("options is not a dictionary")
-
-        # expected_ansible_keys = ["inventory_path", "playbook_path"]

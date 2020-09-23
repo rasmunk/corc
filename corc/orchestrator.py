@@ -20,7 +20,7 @@ class Orchestrator:
     def poll(self):
         raise NotImplementedError
 
-    def setup(self, **resource_config):
+    def setup(self, resource_config=None, credentials=None):
         raise NotImplementedError
 
     def resource_id(self):

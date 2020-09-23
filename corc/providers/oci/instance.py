@@ -330,7 +330,7 @@ class OCIInstanceOrchestrator(Orchestrator):
     def get_resource(self):
         return self.resource_id, self.instance
 
-    def setup(self, resource_config=None):
+    def setup(self, resource_config=None, credentials=None):
         # If shape in resource_config, override general options
         options = copy.deepcopy(self.options)
         if not resource_config:
@@ -342,6 +342,13 @@ class OCIInstanceOrchestrator(Orchestrator):
 
         if "shape_config" in resource_config:
             options["instance"]["shape_config"] = resource_config["shape_config"]
+
+        if hasattr(credentials, "public_key") and getattr(credentials, "public_key"):
+            if "instance_metadata" not in options:
+                options["instance_metadata"] = {}
+            options["instance_metadata"].update(
+                dict(ssh_authorized_keys=[getattr(credentials, "public_key")])
+            )
 
         # Ensure we have a VCN stack ready
         vcn_stack = self._get_vcn_stack()
