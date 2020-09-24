@@ -1,3 +1,7 @@
+import os
+from corc.defaults import default_base_path
+
+
 def is_in(a_values, b_struct):
     num_positives = 0
     a_len = len(a_values.keys())
@@ -62,3 +66,16 @@ def unset_check(value):
     if value is None:
         return True
     return False
+
+
+def get_corc_path(path=default_base_path, env_postfix=None):
+    env_var = None
+    if env_postfix and isinstance(env_postfix, str):
+        env_var = "CORC_{}".format(env_postfix)
+    if env_var in os.environ:
+        path = os.environ[env_var]
+    return path
+
+
+def corc_home_path(path=default_base_path):
+    return get_corc_path(path=path, env_postfix="HOME")

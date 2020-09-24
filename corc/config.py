@@ -3,6 +3,7 @@ import flatten_dict
 import os
 import yaml
 from corc.defaults import (
+    default_base_path,
     ANSIBLE,
     AWS_LOWER,
     OCI_LOWER,
@@ -12,6 +13,7 @@ from corc.defaults import (
     STORAGE,
     STORAGE_S3,
 )
+from corc.helpers import get_corc_path
 from corc.util import present_in, correct_type
 
 
@@ -128,22 +130,18 @@ corc_config_groups = {
     PROVIDER: valid_providers_config,
 }
 
+default_config_path = os.path.join(default_base_path, "config")
+
 
 def generate_default_config():
     return default_corc_config
 
 
-def get_config_path(path=None):
-    if "CORC_CONFIG_FILE" in os.environ:
-        path = os.environ["CORC_CONFIG_FILE"]
-    else:
-        # If no path is set programmatically
-        if not path:
-            path = os.path.join(os.path.expanduser("~"), ".corc", "config")
-    return path
+def get_config_path(path=default_config_path):
+    return get_corc_path(path=path, env_postfix="CONFIG_FILE")
 
 
-def save_config(config, path=None):
+def save_config(config, path=default_config_path):
     path = get_config_path(path)
     dir_path = os.path.dirname(path)
     if not os.path.exists(dir_path):
@@ -164,7 +162,7 @@ def save_config(config, path=None):
     return True
 
 
-def update_config(config, path=None):
+def update_config(config, path=default_config_path):
     path = get_config_path(path)
     if not config:
         return False
@@ -178,7 +176,7 @@ def update_config(config, path=None):
     return True
 
 
-def load_config(path=None):
+def load_config(path=default_config_path):
     path = get_config_path(path)
     if not os.path.exists(path):
         return False
@@ -192,16 +190,15 @@ def load_config(path=None):
     return config
 
 
-def config_exists(path=None):
+def config_exists(path=default_config_path):
     path = get_config_path(path)
     if not path:
         return False
     return os.path.exists(path)
 
 
-def remove_config(path=None):
+def remove_config(path=default_config_path):
     path = get_config_path(path=path)
-
     if not os.path.exists(path):
         return True
     try:
@@ -306,7 +303,7 @@ def load_from_env(name, throw=False):
     return False
 
 
-def set_in_config(set_dict, prefix=None, path=None):
+def set_in_config(set_dict, prefix=None, path=default_config_path):
     if not prefix:
         prefix = tuple()
 
@@ -323,7 +320,9 @@ def set_in_config(set_dict, prefix=None, path=None):
     return update_config(unflatten_dict, path=path)
 
 
-def load_from_config(find_dict, prefix=None, path=None, allow_sub_keys=False):
+def load_from_config(
+    find_dict, prefix=None, path=default_config_path, allow_sub_keys=False
+):
     if not prefix:
         prefix = tuple()
 

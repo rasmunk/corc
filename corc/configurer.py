@@ -1,3 +1,4 @@
+from corc.io import exists
 from ansible.config.manager import ConfigManager
 from ansible.parsing.dataloader import DataLoader
 from ansible.inventory.manager import InventoryManager
@@ -89,6 +90,14 @@ class AnsibleConfigurer:
         if "playbook_path" not in configuration["apply_kwargs"]:
             return False
 
+        if not exists(configuration["apply_kwargs"]["playbook_path"]):
+            print(
+                "The playbook_path: {} does not exist".format(
+                    configuration["apply_kwargs"]["playbook_path"]
+                )
+            )
+            return False
+
         if credentials:
             self.variable_manager.set_host_variable(
                 host, "ansible_ssh_private_key_file", credentials.private_key_file
@@ -108,6 +117,7 @@ class AnsibleConfigurer:
                 inventory_manager=self.inventory_manager,
                 loader=self.loader,
             )
+        return True
 
     @classmethod
     def validate_options(cls, options):

@@ -1,3 +1,5 @@
+import os
+
 # Package name
 PACKAGE_NAME = "corc"
 
@@ -69,3 +71,5 @@ KUBERNETES_NAMESPACE = "default"
 
 # Job defaults
 JOB_DEFAULT_NAME = "job"
+
+default_base_path = os.path.join(os.path.expanduser("~"), ".{}".format(PACKAGE_NAME))
