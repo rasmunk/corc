@@ -1,3 +1,4 @@
+from corc.defaults import default_host_key_order
 from corc.io import exists
 from ansible.config.manager import ConfigManager
 from ansible.parsing.dataloader import DataLoader
@@ -58,7 +59,13 @@ class AnsibleConfigurer:
         if not options:
             options = {}
 
-        configuration["host_variables"] = {}
+        configuration["host_variables"] = dict(
+            ansible_connection="ssh",
+            ansible_ssh_common_args="-o HostKeyAlgorithms={}".format(
+                ",".join(default_host_key_order)
+            ),
+        )
+
         if "host_variables" in options and isinstance(options["host_variables"], dict):
             configuration["host_variables"].update(options["host_variables"])
 

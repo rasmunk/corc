@@ -5,7 +5,7 @@ from corc.io import write, chmod, acquire_lock, release_lock, remove_content_fro
 from corc.io import load as fileload
 from corc.io import remove as fileremove
 from corc.helpers import get_corc_path
-from corc.defaults import default_base_path
+from corc.defaults import default_base_path, default_host_key_order
 
 
 default_ssh_path = os.path.join(default_base_path, "ssh")
@@ -117,18 +117,34 @@ class SSHAuthenticator:
     def credentials(self):
         return self._credentials
 
-    def prepare(self):
-        pass
+    def get_host_key(
+        self, endpoint, port=22, default_host_key_algos=default_host_key_order,
+    ):
+        transport = paramiko.transport.Transport("{}:{}".format(endpoint, port))
+        transport.start_client()
+        # Ensure that we use the same HostKeyAlgorithm order across
+        # SSH implementations
+        transport.get_security_options().key_types = tuple(default_host_key_algos)
+        host_key = transport.get_remote_server_key()
+        return host_key
 
-    def cleanup(self):
-        self.remove_credentials()
-        SSHAuthenticator.remove_from_known_hosts()
+    def prepare(self, endpoint):
+        # Get the host key of the target endpoint
+        host_key = self.get_host_key(endpoint)
+        return self.add_to_known_hosts(endpoint, host_key)
 
-    def add_to_known_hosts(self, endpoint):
+    def cleanup(self, endpoint):
+        credentials_removed = self.remove_credentials()
+        known_host_removed = self.remove_from_known_hosts(endpoint)
+        return credentials_removed and known_host_removed
+
+    def add_to_known_hosts(self, endpoint, host_key):
         path = os.path.join(os.path.expanduser("~"), ".ssh", "known_hosts")
         lock_path = "{}_lock".format(path)
-        known_host_str = "{endpoint} {public_key}".format(
-            endpoint=endpoint, public_key=self.credentials.public_key
+        known_host_str = "{endpoint} {key_type} {host_key}\n".format(
+            endpoint=endpoint,
+            key_type=host_key.get_name(),
+            host_key=host_key.get_base64(),
         )
         known_hosts_lock = acquire_lock(lock_path)
         if write(path, known_host_str, mode="+a"):

@@ -135,3 +135,6 @@ dmypy.json
 
 # Ignore job downloads
 job-*/
+
+# Ignore tmp files
+tmp/

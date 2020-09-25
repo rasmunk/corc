@@ -1,7 +1,8 @@
 import os
 import time
 import unittest
-from corc.providers.types import get_orchestrator, CONTAINER, LOCAL
+
+# from corc.providers.types import get_orchestrator, CONTAINER, LOCAL
 from corc.authenticator import SSHAuthenticator, gen_ssh_credentials
 from corc.config import load_from_env_or_config, gen_config_provider_prefix
 from corc.configurer import AnsibleConfigurer
@@ -115,25 +116,23 @@ class TestInstanceConfigurer(unittest.TestCase):
         self.assertTrue(reachable)
         self.endpoint = self.orchestrator.endpoint()
         self.assertIsNotNone(self.endpoint)
-        self.assertTrue(self.authenticator.add_to_known_hosts(self.endpoint))
+        self.assertTrue(self.authenticator.prepare(self.endpoint))
 
     def tearDown(self):
-        self.assertTrue(self.authenticator.remove_credentials())
-        self.assertTrue(self.authenticator.remove_from_known_hosts(self.endpoint))
+        self.assertTrue(self.authenticator.cleanup(self.endpoint))
         self.orchestrator.tear_down()
         self.assertFalse(self.orchestrator.is_ready())
         self.orchestrator = None
+        self.endpoint = None
         self.options = None
 
     def test_instance_ansible_configure(self):
         # Extract the ip of the instance
         options = dict(
             host_variables=dict(
-                ansible_connection="ssh",
                 ansible_user="opc",
                 ansible_become="yes",
                 ansible_become_method="sudo",
-                ansible_host_key_checking="False",
                 verbosity=4,
             ),
             host_settings=dict(group="compute", port="22"),
@@ -147,35 +146,6 @@ class TestInstanceConfigurer(unittest.TestCase):
             configuration=configuration,
             credentials=self.authenticator.credentials,
         )
-
-
-class TestLocalContainerConfigurer(unittest.TestCase):
-    def setUp(self):
-        self.credentials = gen_ssh_credentials(
-            ssh_dir_path=os.path.join(self.test_dir, "ssh")
-        )
-        orchestrator_klass, options = get_orchestrator(CONTAINER, LOCAL)
-        orchestrator_klass.validate_options(options)
-        self.orchestrator = orchestrator_klass(self.options)
-
-        # self.orchestrator
-        self.orchestrator.setup(credentials=self.credentials)
-
-        options = dict(
-            host_variables=dict(
-                ansible_connection="docker",
-                ansible_user="opc",
-                ansible_become="yes",
-                ansible_host_key_checking="False",
-                verbosity=4,
-            ),
-            host_settings=dict(group="container", port="22"),
-            apply_kwargs=dict(playbook_path=playbook_path),
-        )
-
-
-#     def test_container_configurer(self):
-#         pass
 
 
 if __name__ == "__main__":
