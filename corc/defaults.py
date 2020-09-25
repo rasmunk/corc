@@ -75,7 +75,7 @@ JOB_DEFAULT_NAME = "job"
 # Default state directory
 default_base_path = os.path.join(os.path.expanduser("~"), ".{}".format(PACKAGE_NAME))
 
-# Default HostKeyAlorithm order to use across SSH implementations
+# Default HostKeyAlgorithm order to use across SSH implementations
 # if no external configuration is given.
 # The order is defined by recommendations from https://infosec.mozilla.org/guidelines/openssh.html
 default_host_key_order = [
