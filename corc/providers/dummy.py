@@ -1,4 +1,5 @@
 import uuid
+from corc.config import default_config_path
 from corc.orchestrator import Orchestrator
 from corc.util import ping
 
@@ -35,7 +36,7 @@ class LocalOrchestrator(Orchestrator):
         self._is_ready = False
 
     @classmethod
-    def load_config_options(cls, provider="", path=None):
+    def load_config_options(cls, provider="", path=default_config_path):
         return {}
 
     @classmethod

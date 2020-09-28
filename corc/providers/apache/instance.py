@@ -2,6 +2,7 @@ from libcloud.compute.base import Node
 from libcloud.compute.providers import get_driver
 from corc.orchestrator import Orchestrator
 from corc.config import (
+    default_config_path,
     load_from_config,
     gen_config_provider_prefix,
 )
@@ -94,7 +95,7 @@ class ApacheInstanceOrchestrator(Orchestrator):
             self._is_ready = False
 
     @classmethod
-    def load_config_options(cls, provider="", path=None):
+    def load_config_options(cls, provider="", path=default_config_path):
         options = {}
         provider_prefix = ("apache", provider)
 

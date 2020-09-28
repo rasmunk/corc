@@ -22,6 +22,7 @@ from oci.core.models import (
 from corc.orchestrator import Orchestrator
 from corc.util import open_port
 from corc.config import (
+    default_config_path,
     load_from_config,
     load_from_env_or_config,
     gen_config_provider_prefix,
@@ -494,7 +495,7 @@ class OCIInstanceOrchestrator(Orchestrator):
         self._is_reachable = False
 
     @classmethod
-    def load_config_options(cls, provider="oci", path=None):
+    def load_config_options(cls, provider="oci", path=default_config_path):
         options = {}
         provider_prefix = (provider,)
         oci_profile = load_from_config(
