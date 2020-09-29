@@ -1,5 +1,6 @@
 import paramiko
 import os
+import subprocess
 from io import StringIO
 from corc.io import write, chmod, acquire_lock, release_lock, remove_content_from_file
 from corc.io import load as fileload
@@ -9,6 +10,19 @@ from corc.defaults import default_base_path, default_host_key_order
 
 
 default_ssh_path = os.path.join(default_base_path, "ssh")
+
+
+def make_certificate(identity, private_key_path, certificate_output_path):
+    result = subprocess.run(
+        ["ssh-keygen", "-s", private_key_path, "-I", identity, certificate_output_path],
+        capture_output=True,
+    )
+
+    if hasattr(result, "returncode"):
+        return_code = getattr(result, "returncode")
+        if return_code == 0:
+            return True
+    return False
 
 
 def gen_rsa_ssh_key_pair(size=2048):
@@ -21,15 +35,43 @@ def gen_rsa_ssh_key_pair(size=2048):
     return private_key, public_key
 
 
-def gen_ssh_credentials(ssh_dir_path=default_ssh_path, key_name="id_rsa", size=2048):
+def gen_ssh_credentials(
+    ssh_dir_path=default_ssh_path,
+    key_name="id_rsa",
+    size=2048,
+    create_certificate=False,
+    certificate_kwargs=None,
+):
+    if not certificate_kwargs:
+        certificate_kwargs = {}
+
     private_key, public_key = gen_rsa_ssh_key_pair(size=size)
     corc_ssh_path = get_corc_path(path=ssh_dir_path, env_postfix="SSH_PATH")
-    credentials = SSHCredentials(
+
+    private_key_file = os.path.join(corc_ssh_path, key_name)
+    public_key_file = os.path.join(corc_ssh_path, key_name)
+
+    credential_kwargs = dict(
         private_key=private_key,
-        private_key_file=os.path.join(corc_ssh_path, key_name),
+        private_key_file=private_key_file,
         public_key=public_key,
-        public_key_file=os.path.join(corc_ssh_path, "{}.pub".format(key_name)),
+        public_key_file=public_key_file,
     )
+
+    credentials = SSHCredentials(**credential_kwargs)
+
+    # For now the make_certificate function requires that the credentials exists
+    # in the FS
+    if create_certificate:
+        credentials.store()
+        if "identity" not in certificate_kwargs:
+            certificate_kwargs["identity"] = "UserIdentity"
+        certificate_file = os.path.join(corc_ssh_path, "{}-cert.pub".format(key_name))
+        if make_certificate(
+            certificate_kwargs["identity"], private_key_file, certificate_file
+        ):
+            credential_kwargs["certificate_file"] = certificate_file
+            credential_kwargs["certificate"] = fileload(certificate_file)
     return credentials
 
 
@@ -42,7 +84,9 @@ class SSHCredentials:
         private_key_file=None,
         public_key=None,
         public_key_file=None,
-        store_keys=False,
+        certificate=None,
+        certificate_file=None,
+        store_credentials=False,
     ):
         self._user = user
         self._password = password
@@ -50,8 +94,10 @@ class SSHCredentials:
         self._private_key_file = private_key_file
         self._public_key = public_key
         self._public_key_file = public_key_file
-        if store_keys:
-            self.save()
+        self._certificate = certificate
+        self._certificate_file = certificate_file
+        if store_credentials:
+            self.store()
 
     @property
     def user(self):
@@ -77,22 +123,41 @@ class SSHCredentials:
     def public_key_file(self):
         return self._public_key_file
 
+    @property
+    def certificate(self):
+        return self._certificate
+
+    @property
+    def certificate_file(self):
+        return self._certificate_file
+
     def store(self):
-        if write(self.private_key_file, self.private_key, mkdirs=True) and write(
-            self.public_key_file, self.public_key, mkdirs=True
-        ):
-            # Ensure the correct permissions
-            if chmod(self.private_key_file, 0o600) and chmod(
-                self.public_key_file, 0o644
-            ):
-                return True
-        return False
+        if self.private_key_file and self.private_key:
+            if not write(
+                self.private_key_file, self.private_key, mkdirs=True
+            ) or not chmod(self.private_key_file, 0o600):
+                return False
+
+        if self.public_key_file and self.public_key:
+            if not write(
+                self.public_key_file, self.public_key, mkdirs=True
+            ) or not chmod(self.public_key_file, 0o644):
+                return False
+
+        if self.certificate_file and self.certificate:
+            if not write(
+                self.certificate_file, self.certificate, mkdirs=True
+            ) or not chmod(self.certificate_file, 0o644):
+                return False
+        return True
 
     def load(self):
         if self.private_key_file:
             self.private_key = fileload(self.private_key_file)
         if self.public_key_file:
             self.public_key = fileload(self.public_key_file)
+        if self.certificate_file:
+            self.certificate_file = fileload(self.certificate_file)
 
     def remove(self):
         if os.path.exists(self.private_key_file):
@@ -101,15 +166,18 @@ class SSHCredentials:
         if os.path.exists(self.public_key_file):
             if not fileremove(self.public_key_file):
                 return False
+        if os.path.exists(self.certificate_file):
+            if not fileremove(self.certificate_file):
+                return False
         return True
 
 
 class SSHAuthenticator:
     # TODO, make independent known_hosts file path inside the corc directory
 
-    def __init__(self, credentials=None):
+    def __init__(self, credentials=None, **kwargs):
         if not credentials:
-            self._credentials = gen_ssh_credentials()
+            self._credentials = gen_ssh_credentials(**kwargs)
         else:
             self._credentials = credentials
 

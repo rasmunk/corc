@@ -77,7 +77,8 @@ default_base_path = os.path.join(os.path.expanduser("~"), ".{}".format(PACKAGE_N
 
 # Default HostKeyAlgorithm order to use across SSH implementations
 # if no external configuration is given.
-# The order is defined by recommendations from https://infosec.mozilla.org/guidelines/openssh.html
+# The order is defined by recommendations from
+# https://infosec.mozilla.org/guidelines/openssh.html
 default_host_key_order = [
     "ssh-ed25519-cert-v01@openssh.com",
     "ssh-rsa-cert-v01@openssh.com",
