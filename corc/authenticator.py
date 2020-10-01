@@ -182,10 +182,15 @@ class SSHAuthenticator:
             self._credentials = gen_ssh_credentials(**kwargs)
         else:
             self._credentials = credentials
+        self._is_prepared = False
 
     @property
     def credentials(self):
         return self._credentials
+
+    @property
+    def is_prepared(self):
+        return self._is_prepared
 
     def get_host_key(
         self, endpoint, port=22, default_host_key_algos=default_host_key_order,
@@ -201,12 +206,19 @@ class SSHAuthenticator:
     def prepare(self, endpoint):
         # Get the host key of the target endpoint
         host_key = self.get_host_key(endpoint)
-        return self.add_to_known_hosts(endpoint, host_key)
+        if self.add_to_known_hosts(endpoint, host_key):
+            self._is_prepared = True
+        return self.is_prepared
 
     def cleanup(self, endpoint):
+        is_cleaned = False
         credentials_removed = self.remove_credentials()
         known_host_removed = self.remove_from_known_hosts(endpoint)
-        return credentials_removed and known_host_removed
+        if credentials_removed and known_host_removed:
+            self._credentials = None
+            self._is_prepared = False
+            is_cleaned = True
+        return is_cleaned
 
     def add_to_known_hosts(self, endpoint, host_key):
         path = os.path.join(os.path.expanduser("~"), ".ssh", "known_hosts")
