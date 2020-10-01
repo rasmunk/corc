@@ -12,9 +12,9 @@ from corc.defaults import default_base_path, default_host_key_order
 default_ssh_path = os.path.join(default_base_path, "ssh")
 
 
-def make_certificate(identity, private_key_path, certificate_output_path):
+def make_certificate(identity, private_key_path, public_key_path):
     result = subprocess.run(
-        ["ssh-keygen", "-s", private_key_path, "-I", identity, certificate_output_path],
+        ["ssh-keygen", "-s", private_key_path, "-I", identity, public_key_path],
         capture_output=True,
     )
 
@@ -49,7 +49,7 @@ def gen_ssh_credentials(
     corc_ssh_path = get_corc_path(path=ssh_dir_path, env_postfix="SSH_PATH")
 
     private_key_file = os.path.join(corc_ssh_path, key_name)
-    public_key_file = os.path.join(corc_ssh_path, key_name)
+    public_key_file = os.path.join(corc_ssh_path, "{}.pub".format(key_name))
 
     credential_kwargs = dict(
         private_key=private_key,
@@ -68,10 +68,12 @@ def gen_ssh_credentials(
             certificate_kwargs["identity"] = "UserIdentity"
         certificate_file = os.path.join(corc_ssh_path, "{}-cert.pub".format(key_name))
         if make_certificate(
-            certificate_kwargs["identity"], private_key_file, certificate_file
+            certificate_kwargs["identity"], private_key_file, public_key_file
         ):
             credential_kwargs["certificate_file"] = certificate_file
             credential_kwargs["certificate"] = fileload(certificate_file)
+        else:
+            print("Failed to create certificate file: {}".format(certificate_file))
     return credentials
 
 
