@@ -16,16 +16,16 @@ from corc.providers.oci.instance import OCIInstanceOrchestrator
 class TestInstanceOrchestrator(unittest.TestCase):
     def setUp(self):
         # Load compartment_id from the env
-        prefix = ("oci",)
+        self.provider = ("oci",)
         oci_compartment_id = load_from_env_or_config(
             {"profile": {"compartment_id": {}}},
-            prefix=gen_config_provider_prefix(prefix),
+            prefix=gen_config_provider_prefix(self.provider),
             throw=True,
         )
 
         oci_name = load_from_env_or_config(
             {"profile": {"name": {}}},
-            prefix=gen_config_provider_prefix(prefix),
+            prefix=gen_config_provider_prefix(self.provider),
             throw=True,
         )
         oci_profile_options = dict(compartment_id=oci_compartment_id, name=oci_name,)
@@ -38,7 +38,7 @@ class TestInstanceOrchestrator(unittest.TestCase):
 
         # Add unique test postfix
         test_id = load_from_env_or_config(
-            {"test": {"id": {}}}, prefix=gen_config_provider_prefix(prefix)
+            {"test": {"id": {}}}, prefix=gen_config_provider_prefix(self.provider)
         )
         if test_id:
             node_name += test_id
@@ -116,6 +116,7 @@ class TestInstanceOrchestrator(unittest.TestCase):
             availability_domain=self.options["instance"]["availability_domain"]
         )
         resource_config = OCIInstanceOrchestrator.make_resource_config(
+            self.provider,
             provider_profile=self.options["profile"],
             provider_kwargs=provider_kwargs,
             cpu=required_num_cpus,
