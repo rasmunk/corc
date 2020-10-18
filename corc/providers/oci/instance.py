@@ -542,6 +542,7 @@ class OCIInstanceOrchestrator(Orchestrator):
     @classmethod
     def make_resource_config(
         cls,
+        provider,
         provider_profile=None,
         provider_kwargs=None,
         cpu=None,
@@ -561,7 +562,7 @@ class OCIInstanceOrchestrator(Orchestrator):
             # Try load from config
             availability_domain = load_from_env_or_config(
                 {"instance": {"availability_domain": {}}},
-                prefix=gen_config_provider_prefix(("profile",)),
+                prefix=gen_config_provider_prefix((provider,)),
             )
 
         # TODO, load OCI environment variables
