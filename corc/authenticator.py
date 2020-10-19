@@ -162,13 +162,13 @@ class SSHCredentials:
             self.certificate_file = fileload(self.certificate_file)
 
     def remove(self):
-        if os.path.exists(self.private_key_file):
+        if self.private_key_file and os.path.exists(self.private_key_file):
             if not fileremove(self.private_key_file):
                 return False
-        if os.path.exists(self.public_key_file):
+        if self.public_key_file and os.path.exists(self.public_key_file):
             if not fileremove(self.public_key_file):
                 return False
-        if os.path.exists(self.certificate_file):
+        if self.certificate_file and os.path.exists(self.certificate_file):
             if not fileremove(self.certificate_file):
                 return False
         return True
