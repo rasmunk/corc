@@ -255,7 +255,9 @@ def valid_config(config, verbose=False):
     return recursive_check_config(config["corc"], valid_corc_config, verbose=verbose)
 
 
-def load_from_env_or_config(find_dict={}, prefix=None, throw=False):
+def load_from_env_or_config(
+    find_dict={}, prefix=None, throw=False, path=default_base_path
+):
     value = False
     # Load from environment first
     dict_keys = flatten_dict.flatten(
@@ -277,10 +279,10 @@ def load_from_env_or_config(find_dict={}, prefix=None, throw=False):
         return value
 
     # Try config after
-    if config_exists():
-        config = load_config()
+    if config_exists(path=path):
+        config = load_config(path=path)
         if valid_config(config):
-            values = load_from_config(find_dict, prefix=prefix)
+            values = load_from_config(find_dict, prefix=prefix, path=path)
             flat_values = list(flatten_dict.flatten(values).values())
             if flat_values and len(flat_values) == 1:
                 value = flat_values[0]
@@ -291,7 +293,6 @@ def load_from_env_or_config(find_dict={}, prefix=None, throw=False):
                 "Failed to find var: {} in either environment or config, "
                 "env_error: {}".format(prefix, env_error)
             )
-
     return value
 
 

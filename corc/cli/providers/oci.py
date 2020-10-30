@@ -1,3 +1,4 @@
+from corc.defaults import default_base_path
 from corc.config import (
     config_exists,
     load_config,
@@ -9,7 +10,7 @@ from corc.providers.oci.config import generate_oci_config, valid_oci_config
 
 
 def init_config(provider_kwargs, cluster={}, vcn={}, config={}):
-    path = None
+    path = default_base_path
     if "path" in config:
         path = config["path"]
 
