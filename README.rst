@@ -95,3 +95,4 @@ Which will download the generated content available in the default output direct
 This by default includes a ``job`` description file that details what command was executed and how it went.
 
 The ``get`` COMMAND will unless otherwise specified, download the job output into the current directory with the ``job-name`` as the prefix, and a automatically unique generated postfix string. The ``corc oci job result get --job-meta-name job-15943782`` for instance produced a local directory called ``job-1594378280-mgjb2`` that contains the job output file.
+
