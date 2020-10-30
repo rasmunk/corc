@@ -1,4 +1,5 @@
 from oci.util import to_dict
+from corc.authenticator import SSHCredentials
 from corc.providers.oci.instance import (
     list_instances as oci_list_instances,
     delete_instance as oci_delete_instance,
@@ -11,10 +12,16 @@ from corc.providers.oci.instance import OCIInstanceOrchestrator, new_compute_cli
 def start_instance(provider_kwargs, instance={}, vcn={}):
     response = {}
     if provider_kwargs:
-
         internetgateway = vcn.pop("internetgateway", {})
         routetable = vcn.pop("routetable", {})
         subnet = vcn.pop("subnet", {})
+
+        credentials = []
+        if "ssh_authorized_keys" in instance and isinstance(
+            instance["ssh_authorized_keys"], list
+        ):
+            for public_key in instance["ssh_authorized_keys"]:
+                credentials.append(SSHCredentials(public_key=public_key))
 
         instance_options = dict(
             profile=provider_kwargs["profile"],
@@ -27,14 +34,19 @@ def start_instance(provider_kwargs, instance={}, vcn={}):
         OCIInstanceOrchestrator.validate_options(instance_options)
         orchestrator = OCIInstanceOrchestrator(instance_options)
 
-        orchestrator.setup()
+        orchestrator.setup(credentials=credentials)
         orchestrator.poll()
         if not orchestrator.is_ready():
             response["msg"] = "The instance is not ready"
             return False, response
 
         if not orchestrator.is_reachable():
-            response["msg"] = "The instance is ready but not reachable"
+            endpoint = orchestrator.endpoint()
+            response[
+                "msg"
+            ] = "The instance is ready at endpoint: {} but not reachable".format(
+                endpoint
+            )
             return False, response
 
         return True, response

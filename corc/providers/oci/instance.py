@@ -337,6 +337,9 @@ class OCIInstanceOrchestrator(Orchestrator):
         if not resource_config:
             resource_config = {}
 
+        if not credentials:
+            credentials = []
+
         # TODO, check isinstance dict resource_config
         if "shape" in resource_config:
             options["instance"]["shape"] = resource_config["shape"]
@@ -344,12 +347,17 @@ class OCIInstanceOrchestrator(Orchestrator):
         if "shape_config" in resource_config:
             options["instance"]["shape_config"] = resource_config["shape_config"]
 
-        if hasattr(credentials, "public_key") and getattr(credentials, "public_key"):
-            if "instance_metadata" not in options:
-                options["instance_metadata"] = {}
-            options["instance_metadata"].update(
-                dict(ssh_authorized_keys=[getattr(credentials, "public_key")])
-            )
+        if "instance_metadata" not in options:
+            options["instance_metadata"] = {}
+
+        for credential in credentials:
+            if hasattr(credential, "public_key") and getattr(credential, "public_key"):
+                if "ssh_authorized_keys" not in options["instance_metadata"]:
+                    options["instance_metadata"]["ssh_authorized_keys"] = []
+
+                options["instance_metadata"]["ssh_authorized_keys"].append(
+                    getattr(credential, "public_key")
+                )
 
         # Ensure we have a VCN stack ready
         vcn_stack = self._get_vcn_stack()

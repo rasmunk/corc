@@ -96,7 +96,7 @@ class TestInstanceConfigurer(unittest.TestCase):
         OCIInstanceOrchestrator.validate_options(self.options)
         self.orchestrator = OCIInstanceOrchestrator(self.options)
         # Should not be ready at this point
-        self.orchestrator.setup(credentials=self.authenticator.credentials)
+        self.orchestrator.setup(credentials=[self.authenticator.credentials])
         self.assertTrue(self.orchestrator.is_ready())
         # Ensure that the orchestrated instance is reachable
         reachable = self.orchestrator.is_reachable()
