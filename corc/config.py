@@ -256,7 +256,7 @@ def valid_config(config, verbose=False):
 
 
 def load_from_env_or_config(
-    find_dict={}, prefix=None, throw=False, path=default_base_path
+    find_dict={}, prefix=None, throw=False, path=default_config_path
 ):
     value = False
     # Load from environment first
