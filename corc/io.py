@@ -68,6 +68,13 @@ def remove(path):
 
 
 def remove_content_from_file(path, content):
+
+    if not os.path.exists(path):
+        return False
+
+    if not content:
+        return False
+
     lines = []
     with open(path, "r") as rh:
         lines = rh.readlines()
