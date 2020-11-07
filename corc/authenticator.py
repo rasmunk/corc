@@ -203,22 +203,64 @@ class SSHAuthenticator:
         host_key = transport.get_remote_server_key()
         return host_key
 
-    def prepare(self, endpoint):
+    def prepare(self, endpoint, allow_backauth=False):
         # Get the host key of the target endpoint
         host_key = self.get_host_key(endpoint)
         if self.add_to_known_hosts(endpoint, host_key):
-            self._is_prepared = True
+            if allow_backauth:
+                if self.add_to_authorized(endpoint):
+                    self._is_prepared = True
+            else:
+                self._is_prepared = True
         return self.is_prepared
 
-    def cleanup(self, endpoint):
+    def cleanup(self, endpoint, allow_backauth=False):
         is_cleaned = False
         credentials_removed = self.remove_credentials()
         known_host_removed = self.remove_from_known_hosts(endpoint)
+        authorized_removed = False
+        if allow_backauth:
+            authorized_removed = self.remove_from_authorized(endpoint)
+
         if credentials_removed and known_host_removed:
-            self._credentials = None
-            self._is_prepared = False
-            is_cleaned = True
+            if allow_backauth:
+                if authorized_removed:
+                    self._credentials = None
+                    self._is_prepared = False
+                    is_cleaned = True
+            else:
+                self._credentials = None
+                self._is_prepared = False
+                is_cleaned = True
         return is_cleaned
+
+    def add_to_authorized(self, path=None):
+        if not path:
+            path = os.path.join(os.path.expanduser("~"), ".ssh", "authorized_keys")
+        lock_path = "{}_lock".format(path)
+        authorized_str = "{public_key}\n".format(public_key=self.credentials.public_key)
+        authorized_lock = acquire_lock(lock_path)
+        if write(path, authorized_str, mode="+a"):
+            release_lock(authorized_lock)
+            return True
+        release_lock(authorized_lock)
+        return False
+
+    def get_authorized(self, path=None):
+        if not path:
+            path = os.path.join(os.path.expanduser("~", ".ssh", "authorized_keys"))
+
+        content = [key.replace("\n", "") for key in fileload(path, readlines=True)]
+        return content
+
+    def remove_from_authorized(self, path=None):
+        if not path:
+            path = os.path.join(os.path.expanduser("~"), ".ssh", "authorized_keys")
+        lock_path = "{}_lock".format(path)
+        authorized_lock = acquire_lock(lock_path)
+        remove_content_from_file(path, self.credentials.public_key)
+        release_lock(authorized_lock)
+        return True
 
     def add_to_known_hosts(self, endpoint, host_key):
         path = os.path.join(os.path.expanduser("~"), ".ssh", "known_hosts")

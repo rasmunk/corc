@@ -48,9 +48,11 @@ def write(path, content, mode="w", mkdirs=False):
     return False
 
 
-def load(path, mode="r"):
+def load(path, mode="r", readlines=False):
     try:
         with open(path, mode) as fh:
+            if readlines:
+                return fh.readlines()
             return fh.read()
     except Exception as err:
         print("Failed to load file: {} - {}".format(path, err))

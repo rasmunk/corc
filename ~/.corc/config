@@ -1,0 +1,75 @@
+corc:
+  configurers:
+    ANSIBLE: {}
+  job:
+    capture: true
+    meta:
+      debug: false
+      env_override: true
+      name: ''
+      num_jobs: 1
+      num_parallel: 1
+    output_path: /tmp/output
+    working_dir: ''
+  providers:
+    aws: {}
+    oci:
+      cluster:
+        domain: ''
+        image: nielsbohr/mccode-job-runner:latest
+        kubernetes_version: ''
+        name: cluster
+        node:
+          availability_domain: ''
+          id: ''
+          image: Oracle-Linux-7.8-2020.07.28-0
+          name: NodePool
+          node_shape: VM.Standard2.1
+          size: 1
+      instance:
+        availability_domain: ''
+        operating_system: CentOS
+        operating_system_version: '7'
+        shape: VM.Standard2.1
+        ssh_authorized_keys: []
+      profile:
+        compartment_id: ''
+        name: DEFAULT
+      vcn:
+        cidr_block: 10.0.0.0/16
+        display_name: VCN Network
+        dns_label: vcn
+        id: ''
+        internetgateway:
+          display_name: default_gateway
+          id: ''
+          is_enabled: true
+        routetable:
+          display_name: default_route_table
+          id: ''
+          routerules:
+          - cidr_block: null
+            destination: 0.0.0.0/0
+            destination_type: CIDR_BLOCK
+            id: ''
+        subnet:
+          cidr_block: 10.0.1.0/24
+          display_name: worker_subnet
+          dns_label: workers
+          id: ''
+  storage:
+    credentials_path: /mnt/creds
+    download_path: ''
+    enable: false
+    endpoint: ''
+    input_path: /tmp/input
+    output_path: /tmp/output
+    s3:
+      bucket_id: ''
+      bucket_input_prefix: input
+      bucket_name: ''
+      bucket_output_prefix: output
+      config_file: ~/.aws/config
+      credentials_file: ~/.aws/credentials
+      name: default
+    upload_path: ''
