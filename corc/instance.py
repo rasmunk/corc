@@ -1,4 +1,6 @@
 from oci.util import to_dict
+from corc.util import has_method
+from corc.providers.defaults import VIRTUAL_MACHINE
 from corc.authenticator import SSHCredentials
 from corc.providers.oci.instance import (
     list_instances as oci_list_instances,
@@ -6,54 +8,48 @@ from corc.providers.oci.instance import (
     get_instance as oci_get_instance,
     get_instance_by_name as oci_get_instance_by_name,
 )
+from corc.providers.types import get_orchestrator
 from corc.providers.oci.instance import OCIInstanceOrchestrator, new_compute_client
+from corc.helpers import import_from_module
 
 
-def start_instance(provider_kwargs, instance={}, vcn={}):
+def start_instance(provider, provider_kwargs, **kwargs):
     response = {}
-    if provider_kwargs:
-        internetgateway = vcn.pop("internetgateway", {})
-        routetable = vcn.pop("routetable", {})
-        subnet = vcn.pop("subnet", {})
+    # Get Provider orchestrator
+    credentials = []
+    if "ssh_authorized_keys" in kwargs and isinstance(
+        kwargs["ssh_authorized_keys"], list
+    ):
+        for public_key in kwargs["ssh_authorized_keys"]:
+            credentials.append(SSHCredentials(public_key=public_key))
 
-        credentials = []
-        if "ssh_authorized_keys" in instance and isinstance(
-            instance["ssh_authorized_keys"], list
-        ):
-            for public_key in instance["ssh_authorized_keys"]:
-                credentials.append(SSHCredentials(public_key=public_key))
+    # Get the orchestrator
+    orchestrator_klass, options = get_orchestrator(VIRTUAL_MACHINE, provider)
 
-        instance_options = dict(
-            profile=provider_kwargs["profile"],
-            instance=instance,
-            vcn=vcn,
-            internetgateway=internetgateway,
-            routetable=routetable,
-            subnet=subnet,
-        )
-        OCIInstanceOrchestrator.validate_options(instance_options)
-        orchestrator = OCIInstanceOrchestrator(instance_options)
+    options = dict(provider=provider, provider_kwargs=provider_kwargs, kwargs=kwargs)
 
-        orchestrator.setup(credentials=credentials)
-        orchestrator.poll()
-        if not orchestrator.is_ready():
-            response["msg"] = "The instance is not ready"
-            return False, response
+    instance_options = orchestrator_klass.adapt_options(**options)
+    orchestrator_klass.validate_options(instance_options)
+    orchestrator = orchestrator_klass(instance_options)
 
-        if not orchestrator.is_reachable():
-            endpoint = orchestrator.endpoint()
-            response[
-                "msg"
-            ] = "The instance is ready at endpoint: {} but not reachable".format(
-                endpoint
-            )
-            return False, response
+    orchestrator.setup(credentials=credentials)
+    orchestrator.poll()
+    if not orchestrator.is_ready():
+        response["msg"] = "The instance is not ready"
+        return False, response
 
+    if not orchestrator.is_reachable():
+        endpoint = orchestrator.endpoint()
+        response[
+            "msg"
+        ] = "The instance is ready at endpoint: {} but not reachable".format(endpoint)
+        return False, response
+    else:
         return True, response
     return False, response
 
 
-def stop_instance(provider_kwargs, instance={}):
+def stop_instance(provider, provider_kwargs, instance={}):
     response = {}
     if provider_kwargs:
         # Discover the vcn_stack for the cluster
@@ -82,36 +78,31 @@ def stop_instance(provider_kwargs, instance={}):
         return True, response
 
 
-def list_instances(provider_kwargs):
+def list_instances(provider, provider_kwargs, **kwargs):
     response = {}
-    if provider_kwargs:
-        client = new_compute_client(name=provider_kwargs["profile"]["name"])
-        instances = oci_list_instances(
-            client, provider_kwargs["profile"]["compartment_id"]
-        )
-        response["instances"] = to_dict(instances)
+    provider_func = import_from_module(
+        "corc.providers.{}.instance".format(provider),
+        "instance",
+        "client_list_instances",
+    )
+    instances = provider_func(provider, provider_kwargs, format_return=True, **kwargs)
+    if instances:
+        response["instances"] = instances
         return True, response
     return False, response
 
 
-def get_instance(provider_kwargs, instance={}):
+def get_instance(provider, provider_kwargs, instance={}):
     response = {}
-    if provider_kwargs:
-        if not instance["id"] and not instance["display_name"]:
-            response["msg"] = "Either the id or name of the instance must be provided"
-            return False, response
-        client = new_compute_client(name=provider_kwargs["profile"]["name"])
-        if instance["id"]:
-            instance_id = instance["id"]
-            instance = oci_get_instance(
-                client, provider_kwargs["profile"]["compartment_id"], instance_id
-            )
-        else:
-            instance = oci_get_instance_by_name(
-                client,
-                provider_kwargs["profile"]["compartment_id"],
-                instance["display_name"],
-            )
-        response["instance"] = to_dict(instance)
+    provider_func = import_from_module(
+        "corc.providers.{}.instance".format(provider), "instance", "client_get_instance"
+    )
+
+    instance, msg = provider_func(
+        provider, provider_kwargs, format_return=True, instance=instance
+    )
+    response["msg"] = msg
+    if instance:
+        response["instance"] = instance
         return True, response
     return False, response

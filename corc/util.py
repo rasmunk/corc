@@ -203,3 +203,10 @@ def open_port(host="127.0.0.1", port=22):
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
+
+
+def has_method(object_, method):
+    invert_op = getattr(object_, method, None)
+    if callable(invert_op):
+        return True
+    return False

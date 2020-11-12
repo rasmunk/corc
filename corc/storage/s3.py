@@ -1,7 +1,5 @@
 import boto3
 import botocore
-from botocore.configloader import load_config
-from botocore.credentials import SharedCredentialProvider
 import copy
 import os
 
@@ -155,28 +153,3 @@ def list_objects(s3_resource, bucket_name, all_objects=True, **kwargs):
 
 def stage_s3_resource(**kwargs):
     return boto3.resource("s3", **kwargs)
-
-
-def load_s3_config(config_file, credentials_file, endpoint_url, name="DEFAULT"):
-    s3_config = load_config(config_file)
-    if not s3_config:
-        raise RuntimeError("Failed to load s3 config: {}".format(config_file))
-
-    s3_creds_provider = SharedCredentialProvider(credentials_file, profile_name=name,)
-    s3_creds_config = s3_creds_provider.load()
-    if not s3_creds_config:
-        raise RuntimeError(
-            "Failed to load s3 credentials config: {}".format(credentials_file)
-        )
-
-    (s3_access_key, s3_secret_key, s3_token,) = s3_creds_config.get_frozen_credentials()
-    region = s3_config["profiles"][name]["region"]
-
-    s3_config = dict(
-        aws_access_key_id=s3_access_key,
-        aws_secret_access_key=s3_secret_key,
-        region_name=region,
-        endpoint_url=endpoint_url,
-    )
-
-    return s3_config

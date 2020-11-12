@@ -193,3 +193,7 @@ def valid_oci_config(config, verbose=False):
         return False
 
     return recursive_check_config(config["oci"], valid_full_oci_config, verbose=verbose)
+
+
+def load_config_groups(**kwargs):
+    return oci_config_groups

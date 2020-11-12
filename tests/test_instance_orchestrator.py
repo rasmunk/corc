@@ -8,9 +8,11 @@ from corc.config import (
     save_config,
     remove_config,
 )
+from corc.providers.defaults import EC2, VIRTUAL_MACHINE
 from corc.providers.oci.network import get_subnet_in_vcn_stack
 from corc.providers.oci.config import generate_oci_config
 from corc.providers.oci.instance import OCIInstanceOrchestrator
+from corc.providers.types import get_orchestrator
 
 
 class TestInstanceOrchestrator(unittest.TestCase):
@@ -174,41 +176,44 @@ class TestInstanceOrchestrator(unittest.TestCase):
         self.assertFalse(self.orchestrator.is_ready())
 
 
-# class TestEC2InstanceOrchestrator(unittest.TestCase):
-#     def setUp(self):
-#         test_name = "Test_Instance_Orch"
-#         node_name = test_name + "_Node"
+class TestEC2InstanceOrchestrator(unittest.TestCase):
+    def setUp(self):
+        test_name = "Test_Instance_Orch"
+        node_name = test_name + "_Node"
 
-#         compute_options = dict(name=node_name)
-#         # (access_key_id)
-#         ec2_args = ("",)
-#         ec2_kwargs = {"secret": ""}
+        image = "ami-01ca03df4a6012157"
+        size = "t1.micro"
+        options = dict(instance=dict(name=node_name, image=image, size=size))
 
-#         self.options = dict(compute=compute_options)
-#         EC2Orchestrator, options = get_orchestrator(INSTANCE, EC2)
-#         options["driver"]["args"] = ec2_args
-#         options["driver"]["kwargs"] = ec2_kwargs
-#         self.options.update(options)
+        # (access_key_id)
+        ec2_args = ("",)
+        ec2_kwargs = {"secret": ""}
 
-#         EC2Orchestrator.validate_options(self.options)
-#         self.orchestrator = EC2Orchestrator(self.options)
-#         # Should not be ready at this point
-#         self.assertFalse(self.orchestrator.is_ready())
+        self.options = options
+        EC2Orchestrator, options = get_orchestrator(VIRTUAL_MACHINE, EC2)
+        options["driver"]["args"] = ec2_args
+        options["driver"]["kwargs"] = ec2_kwargs
+        self.options.update(options)
 
-#     def tearDown(self):
-#         self.orchestrator.tear_down()
-#         self.assertFalse(self.orchestrator.is_ready())
-#         self.orchestrator = None
-#         self.options = None
+        EC2Orchestrator.validate_options(self.options)
+        self.orchestrator = EC2Orchestrator(self.options)
+        # Should not be ready at this point
+        self.assertFalse(self.orchestrator.is_ready())
 
-#     def test_setup_instance(self):
-#         self.orchestrator.setup()
-#         self.assertTrue(self.orchestrator.is_ready())
+    def tearDown(self):
+        self.orchestrator.tear_down()
+        self.assertFalse(self.orchestrator.is_ready())
+        self.orchestrator = None
+        self.options = None
 
-#     def test_teardown_instance(self):
-#         self.assertFalse(self.orchestrator.is_ready())
-#         self.orchestrator.tear_down()
-#         self.assertFalse(self.orchestrator.is_ready())
+    def test_setup_instance(self):
+        self.orchestrator.setup()
+        self.assertTrue(self.orchestrator.is_ready())
+
+    def test_teardown_instance(self):
+        self.assertFalse(self.orchestrator.is_ready())
+        self.orchestrator.tear_down()
+        self.assertFalse(self.orchestrator.is_ready())
 
 
 if __name__ == "__main__":

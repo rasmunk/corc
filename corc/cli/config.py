@@ -6,22 +6,28 @@ from corc.config import (
     generate_default_config,
     valid_config,
 )
-from corc.providers.oci.config import generate_oci_config, valid_oci_config
+from corc.helpers import import_from_module
 
 
-def init_config(provider_kwargs, cluster={}, vcn={}, config={}):
+def prepare_provider_config(provider, provider_kwargs, **kwargs):
+    prepare_config = import_from_module(
+        "corc.cli.providers.{}.config".format(provider), "config", "prepare_config"
+    )
+
+    return prepare_config(provider, provider_kwargs, **kwargs)
+
+
+def init_config(provider, provider_kwargs, **kwargs):
     path = get_config_path()
-    if "path" in config:
-        path = config["path"]
+    if "path" in kwargs:
+        path = kwargs["path"]
 
-    oci_config_dict = {"oci": {"cluster": cluster}}
-    oci_config_dict["oci"].update(provider_kwargs)
-
-    # Expects that the default corc config is present
-    oci_config = generate_oci_config(**oci_config_dict)
     response = {}
-    if not valid_oci_config(oci_config, verbose=True):
-        response["msg"] = "The generated oci config is invalid"
+    provider_config = prepare_provider_config(provider, provider_kwargs, **kwargs)
+    if not provider_config:
+        response["msg"] = "Failed to generate the provider config for: {}".format(
+            provider
+        )
         return False, response
 
     # If no config exists -> create it
@@ -37,7 +43,7 @@ def init_config(provider_kwargs, cluster={}, vcn={}, config={}):
         return False, response
 
     # Update with user arguments
-    _config["corc"]["providers"].update(oci_config)
+    _config["corc"]["providers"].update(provider_config)
 
     if not save_config(_config, path=path):
         response["msg"] = "Failed to save new config"

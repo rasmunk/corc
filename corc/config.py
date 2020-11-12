@@ -5,7 +5,7 @@ import yaml
 from corc.defaults import (
     default_base_path,
     ANSIBLE,
-    AWS_LOWER,
+    EC2,
     OCI_LOWER,
     PROVIDER,
     JOB,
@@ -56,9 +56,9 @@ valid_job_config = {
     "working_dir": str,
 }
 
-default_providers_config = {AWS_LOWER: {}, OCI_LOWER: {}}
+default_providers_config = {EC2: {}, OCI_LOWER: {}}
 
-valid_providers_config = {AWS_LOWER: dict, OCI_LOWER: dict}
+valid_providers_config = {EC2: dict, OCI_LOWER: dict}
 
 
 default_s3_storage_config = {
@@ -110,7 +110,7 @@ default_corc_config = {
         "job": default_job_config,
         "storage": default_storage_config,
         "configurers": {ANSIBLE: default_configurer_config},
-        "providers": {AWS_LOWER: {}, OCI_LOWER: {},},
+        "providers": {EC2: {}, OCI_LOWER: {},},
     }
 }
 

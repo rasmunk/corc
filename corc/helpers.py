@@ -1,4 +1,6 @@
 import os
+from botocore.configloader import load_config
+from botocore.credentials import SharedCredentialProvider
 from corc.defaults import default_base_path
 
 
@@ -79,3 +81,35 @@ def get_corc_path(path=default_base_path, env_postfix=None):
 
 def corc_home_path(path=default_base_path):
     return get_corc_path(path=path, env_postfix="HOME")
+
+
+def import_from_module(module_path, module_name, func_name):
+    module = __import__(module_path, fromlist=[module_name])
+    return getattr(module, func_name)
+
+
+def load_aws_config(config_path, credentials_path, profile_name="default"):
+    aws_config = load_config(config_path)
+    if not aws_config:
+        raise RuntimeError("Failed to load config: {}".format(config_path))
+
+    aws_creds_provider = SharedCredentialProvider(
+        credentials_path, profile_name=profile_name,
+    )
+    aws_creds_config = aws_creds_provider.load()
+    if not aws_creds_config:
+        raise RuntimeError(
+            "Failed to load aws credentials config: {}".format(credentials_path)
+        )
+    (
+        aws_access_key,
+        aws_secret_key,
+        aws_token,
+    ) = aws_creds_config.get_frozen_credentials()
+
+    profile_attributes = aws_config["profiles"][profile_name]
+    aws_config = dict(
+        aws_access_key_id=aws_access_key, aws_secret_access_key=aws_secret_key,
+    )
+    aws_config.update(profile_attributes)
+    return aws_config

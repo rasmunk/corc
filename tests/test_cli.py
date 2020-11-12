@@ -46,6 +46,13 @@ class TestCLI(unittest.TestCase):
         os.remove(self.config_path)
         self.assertFalse(os.path.exists(self.config_path))
 
+    def test_cli_aws_help(self):
+        args = ["corc", "aws", "-h"]
+        result = subprocess.run(args)
+        self.assertIsNotNone(result)
+        self.assertTrue(hasattr(result, "returncode"))
+        self.assertEqual(result.returncode, 0)
+
 
 if __name__ == "__main__":
     unittest.main()

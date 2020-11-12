@@ -1,7 +1,7 @@
 import argparse
 import datetime
 import json
-from corc.defaults import PACKAGE_NAME, AWS_LOWER, OCI_LOWER, PROFILE
+from corc.defaults import PACKAGE_NAME, OCI_LOWER, PROFILE
 from corc.defaults import (
     CLUSTER,
     CLUSTER_NODE,
@@ -16,6 +16,7 @@ from corc.defaults import (
     VCN_ROUTETABLE,
     VCN_SUBNET,
 )
+from corc.providers.defaults import EC2
 from corc.cli.parsers.job.job import (
     job_group,
     job_meta_group,
@@ -28,10 +29,7 @@ from corc.cli.parsers.cluster.cluster import (
     valid_cluster_group,
 )
 from corc.cli.parsers.config.config import add_config_group
-from corc.cli.parsers.instance.instance import (
-    start_instance_group,
-    instance_identity_group,
-)
+from corc.cli.parsers.instance.instance import instance_identity_group
 from corc.cli.parsers.job.job import select_job_group
 from corc.cli.parsers.network.vcn import (
     vcn_identity_group,
@@ -45,9 +43,9 @@ from corc.cli.parsers.storage.storage import (
     select_storage,
 )
 from corc.cli.parsers.storage.s3 import add_s3_group, s3_config_group, s3_extra
-from corc.cli.parsers.providers.aws import add_aws_group
-from corc.cli.parsers.providers.oci import add_oci_group
-from corc.cli.helpers import cli_exec
+from corc.cli.parsers.providers.ec2.profile import add_ec2_group
+from corc.cli.parsers.providers.oci.profile import add_oci_group
+from corc.cli.helpers import cli_exec, import_from_module
 from corc.util import eprint
 
 
@@ -62,19 +60,25 @@ def run():
     config_parser = commands.add_parser("config")
     config_cli(config_parser)
 
-    # AWS
-    aws_parser = commands.add_parser(AWS_LOWER)
-    add_aws_group(aws_parser)
+    # EC2
+    ec2_parser = commands.add_parser(EC2)
+    add_ec2_group(ec2_parser)
+    ec2_commands = ec2_parser.add_subparsers(title="COMMAND")
+    ec2_orchestration_parser = ec2_commands.add_parser("orchestration")
+    orchestration_cli(EC2, ec2_orchestration_parser)
+
+    ec2_job_parser = ec2_commands.add_parser("job")
+    job_cli(ec2_job_parser)
 
     # OCI
     oci_parser = commands.add_parser(OCI_LOWER)
     add_oci_group(oci_parser)
     oci_commands = oci_parser.add_subparsers(title="COMMAND")
-    orchestration_parser = oci_commands.add_parser("orchestration")
-    orchestration_cli(orchestration_parser)
+    oci_orchestration_parser = oci_commands.add_parser("orchestration")
+    orchestration_cli(OCI_LOWER, oci_orchestration_parser)
 
-    job_parser = oci_commands.add_parser("job")
-    job_cli(job_parser)
+    oci_job_parser = oci_commands.add_parser("job")
+    job_cli(oci_job_parser)
 
     args = parser.parse_args()
     # Execute default function
@@ -186,25 +190,37 @@ def job_cli(parser):
 
 def config_cli(parser):
     config_commands = parser.add_subparsers(title="COMMAND")
-    # AWS
-    aws_parser = config_commands.add_parser(AWS_LOWER)
-    add_aws_group(aws_parser)
+
+    # EC2
+    ec2_parser = config_commands.add_parser(EC2)
+    add_ec2_group(ec2_parser)
+    ec2_commands = ec2_parser.add_subparsers(title="COMMAND")
+    ec2_generate_parser = ec2_commands.add_parser("generate")
+
+    add_config_group(ec2_generate_parser)
+    ec2_generate_parser.set_defaults(
+        func=cli_exec,
+        module_path="corc.cli.config",
+        module_name="config",
+        func_name="init_config",
+        provider_groups=[PROFILE],
+    )
 
     # OCI
     oci_parser = config_commands.add_parser(OCI_LOWER)
     add_oci_group(oci_parser)
     oci_commands = oci_parser.add_subparsers(title="COMMAND")
     oci_generate_parser = oci_commands.add_parser("generate")
+
     add_config_group(oci_generate_parser)
     valid_cluster_group(oci_generate_parser)
     oci_generate_parser.set_defaults(
         func=cli_exec,
-        module_path="corc.cli.providers.{provider}",
-        module_name="{provider}",
+        module_path="corc.cli.config",
+        module_name="config",
         func_name="init_config",
         provider_groups=[PROFILE],
         argument_groups=[CLUSTER_NODE, CLUSTER, VCN_SUBNET, VCN],
-        skip_config_groups=[CONFIG],
     )
 
 
@@ -268,65 +284,85 @@ def cluster_cli(parser):
     # update_parser.set_defaults(func=update_cluster)
 
 
-def instance_cli(parser):
+def instance_cli(provider, parser):
     instance_commands = parser.add_subparsers(title="COMMAND")
+
+    # Start Command
     start_parser = instance_commands.add_parser("start")
-    start_instance_group(start_parser)
-    vcn_identity_group(start_parser)
-    vcn_config_group(start_parser)
+    start_instance_groups = import_from_module(
+        "corc.cli.providers.{}.instance".format(provider),
+        "instance",
+        "start_instance_groups",
+    )
+    start_provider_groups, start_argument_groups = start_instance_groups(start_parser)
     start_parser.set_defaults(
         func=cli_exec,
         module_path="corc.instance",
         module_name="instance",
         func_name="start_instance",
-        provider_groups=[PROFILE],
-        argument_groups=[
-            INSTANCE,
-            VCN_INTERNETGATEWAY,
-            VCN_ROUTETABLE,
-            VCN_SUBNET,
-            VCN,
-        ],
+        provider_groups=start_provider_groups,
+        argument_groups=start_argument_groups,
     )
 
+    # Stop Command
     stop_parser = instance_commands.add_parser("stop")
-    instance_identity_group(stop_parser)
+    stop_instance_groups = import_from_module(
+        "corc.cli.providers.{}.instance".format(provider),
+        "instance",
+        "stop_instance_groups",
+    )
+    stop_provider_groups, stop_argument_groups = stop_instance_groups(stop_parser)
     stop_parser.set_defaults(
         func=cli_exec,
         module_path="corc.instance",
         module_name="instance",
         func_name="stop_instance",
-        provider_groups=[PROFILE],
-        argument_groups=[INSTANCE],
+        provider_groups=stop_provider_groups,
+        argument_groups=stop_argument_groups,
     )
 
+    # Get Command
     get_parser = instance_commands.add_parser("get")
-    instance_identity_group(get_parser)
+    get_instance_groups = import_from_module(
+        "corc.cli.providers.{}.instance".format(provider),
+        "instance",
+        "get_instance_groups",
+    )
+    get_provider_groups, get_argument_groups = get_instance_groups(get_parser)
     get_parser.set_defaults(
         func=cli_exec,
         module_path="corc.instance",
         module_name="instance",
         func_name="get_instance",
-        provider_groups=[PROFILE],
-        argument_groups=[INSTANCE],
+        provider_groups=get_provider_groups,
+        argument_groups=get_argument_groups,
     )
 
+    # List Command
     list_parser = instance_commands.add_parser("list")
+    list_instance_groups = import_from_module(
+        "corc.cli.providers.{}.instance".format(provider),
+        "instance",
+        "list_instance_groups",
+    )
+    list_provider_groups, list_argument_groups = list_instance_groups(list_parser)
     list_parser.set_defaults(
         func=cli_exec,
         module_path="corc.instance",
         module_name="instance",
         func_name="list_instances",
-        provider_groups=[PROFILE],
+        provider_groups=list_provider_groups,
+        argument_groups=list_argument_groups,
     )
 
 
-def orchestration_cli(parser):
+def orchestration_cli(provider, parser):
     orchestration_commands = parser.add_subparsers(title="COMMAND")
-    oci_instance_parser = orchestration_commands.add_parser("instance")
-    instance_cli(oci_instance_parser)
-    oci_cluster_parser = orchestration_commands.add_parser("cluster")
-    cluster_cli(oci_cluster_parser)
+    instance_parser = orchestration_commands.add_parser("instance")
+    instance_cli(provider, instance_parser)
+
+    # cluster_parser = orchestration_commands.add_parser("cluster")
+    # cluster_cli(provider, cluster_parser)
 
 
 if __name__ == "__main__":

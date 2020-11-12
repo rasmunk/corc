@@ -26,12 +26,12 @@ from corc.defaults import (
     JOB_DEFAULT_NAME,
 )
 from corc.util import validate_dict_fields, validate_dict_values, validate_either_values
+from corc.helpers import load_aws_config
 from corc.storage.s3 import (
     bucket_exists,
     delete_bucket,
     delete_objects,
     list_objects,
-    load_s3_config,
     required_s3_fields,
     upload_to_s3,
     upload_directory_to_s3,
@@ -220,12 +220,12 @@ def run(provider_kwargs, cluster={}, job={}, storage={}):
             jobio_args.append("--storage-s3")
             # S3 storage
             # Look for s3 credentials and config files
-            s3_config = load_s3_config(
+            s3_config = load_aws_config(
                 s3["config_file"],
-                s3["credentials_file"],
-                storage["endpoint"],
+                credentials_file=s3["credentials_file"],
                 name=s3["name"],
             )
+            s3_config["endpoint_url"] = storage["endpoint"]
 
             if not storage_credentials_secret:
                 secret_data = dict(
@@ -472,9 +472,10 @@ def get_results(job={}, storage={}):
 
     # S3 storage
     # Look for s3 credentials and config files
-    s3_config = load_s3_config(
-        s3["config_file"], s3["credentials_file"], storage["endpoint"], name=s3["name"],
+    s3_config = load_aws_config(
+        s3["config_file"], s3["credentials_file"], name=s3["name"],
     )
+    s3_config["endpoint_url"] = storage["endpoint"]
 
     # Download results from s3
     s3_resource = stage_s3_resource(**s3_config)
@@ -533,9 +534,10 @@ def delete_results(job={}, storage={}):
     response = {"id": job["meta"]["name"]}
     # S3 storage
     # Look for s3 credentials and config files
-    s3_config = load_s3_config(
-        s3["config_file"], s3["credentials_file"], storage["endpoint"], name=s3["name"],
+    s3_config = load_aws_config(
+        s3["config_file"], s3["credentials_file"], name=s3["name"],
     )
+    s3_config["endpoint_url"] = storage["endpoint"]
 
     # Download results from s3
     s3_resource = stage_s3_resource(**s3_config)
@@ -591,9 +593,10 @@ def list_results(job={}, storage={}):
 
     # S3 storage
     # Look for s3 credentials and config files
-    s3_config = load_s3_config(
-        s3["config_file"], s3["credentials_file"], storage["endpoint"], name=s3["name"],
+    s3_config = load_aws_config(
+        s3["config_file"], s3["credentials_file"], name=s3["name"],
     )
+    s3_config["endpoint_url"] = storage["endpoint"]
 
     s3_resource = stage_s3_resource(**s3_config)
     response = {"id": job["meta"]["name"]}

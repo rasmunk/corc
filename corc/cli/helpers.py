@@ -9,9 +9,10 @@ from corc.config import (
     gen_config_prefix,
     gen_config_provider_prefix,
 )
-from corc.providers.oci.config import oci_config_groups
+from corc.helpers import import_from_module
 from corc.defaults import PROVIDERS_LOWER
 from corc.util import missing_fields
+from corc.providers.config import get_provider_config_groups
 
 
 def cli_exec(args):
@@ -39,7 +40,7 @@ def cli_exec(args):
         module_path = module_path.format(provider=provider)
         # load missing provider kwargs from config
         provider_configuration = prepare_kwargs_configurations(
-            provider_kwargs, provider_groups, strip_group_prefix=False
+            provider, provider_kwargs, provider_groups, strip_group_prefix=False
         )
         provider_kwargs = load_missing_action_kwargs(provider_configuration)
 
@@ -48,21 +49,18 @@ def cli_exec(args):
         return False
 
     # Extract config kwargs from args
-    kwargs_configuration = prepare_kwargs_configurations(args, argument_groups)
+    kwargs_configuration = prepare_kwargs_configurations(
+        provider, args, argument_groups
+    )
     # Load config and fill in missing values
     action_kwargs = load_missing_action_kwargs(kwargs_configuration)
 
     # Extract none config kwargs from args
     extra_action_kwargs = prepare_none_config_kwargs(args, skip_config_groups)
 
-    if provider and provider_kwargs:
-        return func(provider_kwargs, **action_kwargs, **extra_action_kwargs)
+    if provider:
+        return func(provider, provider_kwargs, **action_kwargs, **extra_action_kwargs)
     return func(**action_kwargs, **extra_action_kwargs)
-
-
-def import_from_module(module_path, module_name, func_name):
-    module = __import__(module_path, fromlist=[module_name])
-    return getattr(module, func_name)
 
 
 def prepare_none_config_kwargs(args, skip_config_groups_groups):
@@ -81,7 +79,9 @@ def prepare_provider_kwargs(args, namespace_wrap=False):
     return provider, provider_kwargs
 
 
-def prepare_kwargs_configurations(args, argument_groups, strip_group_prefix=True):
+def prepare_kwargs_configurations(
+    provider, args, argument_groups, strip_group_prefix=True
+):
     """ Used to load missing arguments from the configuration file """
     # Try to find all available args
     kwargs_configurations = []
@@ -119,9 +119,10 @@ def prepare_kwargs_configurations(args, argument_groups, strip_group_prefix=True
             flat_group_kwargs_config[prefix_action_config] = valid_action_config
             flat_group_kwargs_config[prefix_config_prefix] = config_prefix
 
-        if group in oci_config_groups:
-            valid_action_config = oci_config_groups[group]
-            prefix = ("oci",) + prefix
+        provider_groups = get_provider_config_groups(provider)
+        if group in provider_groups:
+            valid_action_config = provider_groups[group]
+            prefix = (provider,) + prefix
             config_prefix = gen_config_provider_prefix(prefix)
             flat_group_kwargs_config[prefix_action_config] = valid_action_config
             flat_group_kwargs_config[prefix_config_prefix] = config_prefix

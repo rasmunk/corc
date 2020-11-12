@@ -19,6 +19,7 @@ from oci.core.models import (
     CreateInternetGatewayDetails,
     CreateRouteTableDetails,
 )
+from oci.util import to_dict
 from corc.orchestrator import Orchestrator
 from corc.util import open_port
 from corc.config import (
@@ -77,6 +78,14 @@ def create_instance(
     return instance
 
 
+def client_list_instances(provider, provider_kwargs, format_return=False, **kwargs):
+    client = new_compute_client(name=provider_kwargs["profile"]["name"])
+    instances = list_instances(client, provider_kwargs["profile"]["compartment_id"])
+    if format_return:
+        return to_dict(instances)
+    return instances
+
+
 def list_instances(compute_client, compartment_id, kwargs=None):
     if not kwargs:
         kwargs = {}
@@ -91,6 +100,31 @@ def list_instances(compute_client, compartment_id, kwargs=None):
 
 def delete_instance(compute_client, instance_id, **kwargs):
     return delete(compute_client, "terminate_instance", instance_id, **kwargs)
+
+
+def client_get_instance(provider, provider_kwargs, format_return=False, instance=None):
+    if not instance["id"] and not instance["display_name"]:
+        msg = "Either the id or name of the instance must be provided"
+        return False, msg
+
+    client = new_compute_client(name=provider_kwargs["profile"]["name"])
+    found_instance = None
+    if instance["id"]:
+        instance_id = instance["id"]
+        found_instance = get_instance(
+            client, provider_kwargs["profile"]["compartment_id"], instance_id
+        )
+    else:
+        found_instance = get_instance_by_name(
+            client,
+            provider_kwargs["profile"]["compartment_id"],
+            instance["display_name"],
+        )
+    if found_instance:
+        if format_return:
+            return to_dict(instance), ""
+        return instance, ""
+    return None, "Failed to find an instance"
 
 
 def get_instance(compute_client, compartment_id, instance_id, kwargs=None):
@@ -331,6 +365,14 @@ class OCIInstanceOrchestrator(Orchestrator):
     def get_resource(self):
         return self.resource_id, self.instance
 
+    def poll(self):
+        target_endpoint = self.endpoint()
+        if target_endpoint:
+            if open_port(target_endpoint, self.port):
+                self._is_reachable = True
+                return
+        self._is_reachable = False
+
     def setup(self, resource_config=None, credentials=None):
         # If shape in resource_config, override general options
         options = copy.deepcopy(self.options)
@@ -494,13 +536,18 @@ class OCIInstanceOrchestrator(Orchestrator):
         else:
             self._is_ready = False
 
-    def poll(self):
-        target_endpoint = self.endpoint()
-        if target_endpoint:
-            if open_port(target_endpoint, self.port):
-                self._is_reachable = True
-                return
-        self._is_reachable = False
+    @classmethod
+    def adapt_options(cls, **kwargs):
+        adapted_options = {}
+        for k, v in kwargs.items():
+            if k == "vcn":
+                adapted_options["internetgateway"] = v.pop("internetgateway", {})
+                adapted_options["routetable"] = v.pop("routetable", {})
+                adapted_options["subnet"] = v.pop("subnet", {})
+                adapted_options[k] = v
+            else:
+                adapted_options[k] = v
+        return adapted_options
 
     @classmethod
     def load_config_options(cls, provider="oci", path=default_config_path):

@@ -17,7 +17,7 @@ from corc.cli.parsers.config.config import valid_config_group
 from corc.cli.parsers.instance.instance import valid_instance_group
 from corc.cli.parsers.job.job import valid_job_group
 from corc.cli.parsers.network.vcn import valid_vcn_group
-from corc.cli.parsers.providers.oci import valid_oci_group
+from corc.cli.parsers.providers.oci.profile import valid_oci_group
 from corc.cli.parsers.storage.storage import valid_storage_group
 from corc.cli.parsers.storage.s3 import valid_s3_group
 
@@ -75,7 +75,6 @@ def get_arguments(argument_types, strip_group_prefix=True, parser=None):
             argument_groups[argument_group](parser)
 
     args, unknown = parser.parse_known_intermixed_args()
-    # args = parser.parse_args()
     if strip_group_prefix:
         stripped_args = {}
         for argument_group in argument_types:

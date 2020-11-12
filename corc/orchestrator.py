@@ -33,6 +33,12 @@ class Orchestrator:
         raise NotImplementedError
 
     @classmethod
+    def adapt_options(cls, **kwargs):
+        """Used to adapt the orchestrators options if required
+        before they are passed to the validate_options"""
+        pass
+
+    @classmethod
     def load_config_options(cls, provider="", path=None):
         raise NotImplementedError
 

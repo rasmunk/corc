@@ -6,11 +6,14 @@ from corc.config import (
     load_from_config,
     gen_config_provider_prefix,
 )
+from corc.util import open_port, eprint
+from corc.providers.apache.helpers import new_apache_client
 
 
 def valid_instance(instance):
     if not isinstance(instance, Node):
         raise TypeError("The Instance must be of type libcloud.compute.base.Node")
+    return True
 
 
 def get_instance_by_name(client, name):
@@ -27,6 +30,53 @@ def get_instance_by_name(client, name):
     return None
 
 
+def client_get_instance(provider, provider_kwargs, format_return=False, instance=None):
+    client = new_apache_client(provider, provider_kwargs)
+    found_instance = get_instance(client, instance["uuid"])
+    if found_instance:
+        if format_return:
+            return str(found_instance), ""
+        return found_instance, ""
+    return None, "Failed to find an instance with: {} details".format(instance)
+
+
+def get_instance(client, instance_uuid, *args, **kwargs):
+    try:
+        instances = client.list_nodes(*args, **kwargs)
+    except Exception as err:
+        eprint(err)
+        return None
+
+    for instance in instances:
+        if instance.uuid == instance_uuid:
+            return instance
+    return None
+
+
+def client_delete_instance(provider, provider_kwargs, instance_uuid, **kwargs):
+    client = new_apache_client(provider, provider_kwargs, **kwargs)
+    instance = get_instance(client, instance_uuid)
+    if instance:
+        return delete_instance(client, instance)
+    return False
+
+
+def delete_instance(client, instance):
+    return client.destroy_node(instance)
+
+
+def client_list_instances(provider, provider_kwargs, format_return=False, **kwargs):
+    client = new_apache_client(provider, provider_kwargs, **kwargs)
+    instances = list_instances(client)
+    if format_return:
+        return [str(i) for i in instances]
+    return instances
+
+
+def list_instances(client):
+    return client.list_nodes()
+
+
 default_location_config = {"name": str, "country": str, "driver": dict}
 
 valid_location_config = {"name": "", "country": "", "driver": {}}
@@ -40,34 +90,58 @@ class ApacheInstanceOrchestrator(Orchestrator):
     def __init__(self, options):
         super().__init__(options)
         # Setup the specific container driver provider
-        if "driver" not in options:
-            raise KeyError("key: 'driver' must be specified")
-
-        if "args" in options["driver"]:
-            driver_args = options["driver"]["args"]
-        else:
-            driver_args = tuple()
-
-        if "kwargs" in options["driver"]:
-            driver_kwargs = options["driver"]["kwargs"]
-        else:
-            driver_kwargs = {}
-
-        cls = get_driver(options["driver"]["provider"])
-        self.client = cls(*driver_args, **driver_kwargs)
+        self.client = new_apache_client(
+            options["provider"], options["provider_kwargs"], **options["kwargs"]
+        )
         self.instance = None
 
     def endpoint(self, select=None):
-        raise NotImplementedError
+        # Return the endpoint that is being orchestrated
+        public_endpoint = None
+        return "127.0.0.1"
+
+    def get_resource(self):
+        return self.resource_id, self.instance
 
     def poll(self):
-        raise NotImplementedError
+        # target_endpoint = self.endpoint()
+        # if target_endpoint:
+        #     if open_port(target_endpoint, self.port):
+        #         self._is_reachable = True
+        #         return
+        # self._is_reachable = False
+        self._is_reachable = True
+        return
 
-    def setup(self):
-        # TODO, find the image to run
-        # images = self.client.list_images()
-        # image = self.client.get_image("")
-        instance = self.client.create_node(*self.options["instance"]["args"])
+    def setup(self, resource_config=None, credentials=None):
+        image = None
+        instance_options = self.options["kwargs"]["instance"]
+
+        if instance_options["image"]:
+            image = self.client.get_image(instance_options["image"])
+        if not image:
+            raise RuntimeError(
+                "Failed to find the appropriate image: {}".format(
+                    instance_options["image"]
+                )
+            )
+
+        size = None
+        if instance_options["size"]:
+            sizes = self.client.list_sizes()
+            for _size in sizes:
+                if _size.id == instance_options["size"]:
+                    size = _size
+                    break
+
+        if not size:
+            raise RuntimeError(
+                "Failed to find an appropriate size: {}".format(
+                    instance_options["size"]
+                )
+            )
+
+        instance = self.client.create_node(instance_options["name"], size, image)
         if valid_instance(instance):
             self.instance = instance
         else:
@@ -78,9 +152,7 @@ class ApacheInstanceOrchestrator(Orchestrator):
 
     def tear_down(self):
         if not self.instance:
-            self.instance = get_instance_by_name(
-                self.client, self.options["compute"]["name"]
-            )
+            self.instance = get_instance_by_name(self.client, instance_options["name"])
 
         if self.instance:
             deleted = self.client.destroy_node(self.instance)
@@ -93,6 +165,20 @@ class ApacheInstanceOrchestrator(Orchestrator):
             self._is_ready = True
         else:
             self._is_ready = False
+
+    @classmethod
+    def adapt_options(cls, **kwargs):
+        options = {}
+        # Find provider
+        if "provider" in kwargs:
+            options["provider"] = kwargs["provider"]
+
+        if "provider_kwargs" in kwargs:
+            options["provider_kwargs"] = kwargs["provider_kwargs"]
+
+        if "kwargs" in kwargs:
+            options["kwargs"] = kwargs["kwargs"]
+        return options
 
     @classmethod
     def load_config_options(cls, provider="", path=default_config_path):

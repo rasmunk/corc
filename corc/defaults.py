@@ -1,10 +1,12 @@
 import os
 
+from corc.providers.defaults import EC2
+
 # Package name
 PACKAGE_NAME = "corc"
 
 # Providers
-AWS = "AWS"
+# AWS = "AWS"
 AWS_LOWER = "aws"
 
 OCI = "OCI"
@@ -13,8 +15,8 @@ OCI_LOWER = "oci"
 PROVIDER = "PROVIDER"
 DEFAULT_PROVIDER = OCI
 DEFAULT_PROVIDER_LOWER = OCI_LOWER
-PROVIDERS = [AWS, OCI]
-PROVIDERS_LOWER = [AWS_LOWER, OCI_LOWER]
+PROVIDERS = [EC2, OCI]
+PROVIDERS_LOWER = [EC2, OCI_LOWER]
 
 PROFILE = "PROFILE"
 
@@ -33,7 +35,6 @@ RUN = "RUN"
 STORAGE = "STORAGE"
 S3 = "S3"
 STORAGE_S3 = "{}_{}".format(STORAGE, S3)
-
 
 # Networking
 SUBNET = "SUBNET"
