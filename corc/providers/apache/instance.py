@@ -102,7 +102,6 @@ class ApacheInstanceOrchestrator(Orchestrator):
 
     def endpoint(self, select=None):
         # Return the endpoint that is being orchestrated
-        public_endpoint = None
         return "127.0.0.1"
 
     def get_resource(self):
