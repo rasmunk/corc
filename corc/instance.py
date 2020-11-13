@@ -8,11 +8,14 @@ def start_instance(provider, provider_kwargs, **kwargs):
     response = {}
     # Get Provider orchestrator
     credentials = []
-    if "ssh_authorized_keys" in kwargs and isinstance(
-        kwargs["ssh_authorized_keys"], list
-    ):
-        for public_key in kwargs["ssh_authorized_keys"]:
-            credentials.append(SSHCredentials(public_key=public_key))
+
+    if "instance" in kwargs:
+        instance_options = kwargs["instance"]
+        if "ssh_authorized_keys" in instance_options and isinstance(
+            instance_options["ssh_authorized_keys"], list
+        ):
+            for public_key in instance_options["ssh_authorized_keys"]:
+                credentials.append(SSHCredentials(public_key=public_key))
 
     # Get the orchestrator
     orchestrator_klass, options = get_orchestrator(VIRTUAL_MACHINE, provider)

@@ -566,7 +566,14 @@ class OCIInstanceOrchestrator(Orchestrator):
     @classmethod
     def adapt_options(cls, **kwargs):
         adapted_options = {}
-        for k, v in kwargs.items():
+        options = {}
+        if "provider_kwargs" in kwargs:
+            options.update(kwargs["provider_kwargs"])
+
+        if "kwargs" in kwargs:
+            options.update(kwargs["kwargs"])
+
+        for k, v in options.items():
             if k == "vcn":
                 adapted_options["internetgateway"] = v.pop("internetgateway", {})
                 adapted_options["routetable"] = v.pop("routetable", {})
