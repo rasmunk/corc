@@ -41,9 +41,6 @@ def load_driver_options(
     profile_name="default",
     **kwargs
 ):
-    config_exists = os.path.exists(config_path)
-    credentials_exists = os.path.exists(credentials_path)
-
     if "profile" in provider_kwargs:
         if "name" in provider_kwargs["profile"]:
             profile_name = provider_kwargs["profile"]["name"]
@@ -62,6 +59,9 @@ def load_driver_options(
 
     if "EC2_PROFILE_NAME" in os.environ:
         profile_name = os.environ["EC2_PROFILE_NAME".format(provider)]
+
+    config_exists = os.path.exists(config_path)
+    credentials_exists = os.path.exists(credentials_path)
 
     aws_config = {}
     if config_exists and credentials_exists:
