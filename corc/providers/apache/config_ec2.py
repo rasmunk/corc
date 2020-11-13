@@ -54,14 +54,14 @@ def load_driver_options(
         if "credentials_file" in provider_kwargs["profile"]:
             credentials_path = provider_kwargs["profile"]["credentials_file"]
 
-    if "{}_CONFIG_PATH".format(provider) in os.environ:
-        config_path = os.environ["{}_CONFIG_PATH".format(provider)]
+    if "EC2_CONFIG_PATH" in os.environ:
+        config_path = os.environ["EC2_CONFIG_PATH"]
 
-    if "{}_CREDENTIALS_PATH".format(provider) in os.environ:
-        credentials_path = os.environ["{}_CREDENTIALS_PATH".format(provider)]
+    if "EC2_CREDENTIALS_PATH" in os.environ:
+        credentials_path = os.environ["EC2_CREDENTIALS_PATH".format(provider)]
 
-    if "{}_PROFILE_NAME".format(provider) in os.environ:
-        profile_name = os.environ["{}_PROFILE_NAME".format(provider)]
+    if "EC2_PROFILE_NAME" in os.environ:
+        profile_name = os.environ["EC2_PROFILE_NAME".format(provider)]
 
     aws_config = {}
     if config_exists and credentials_exists:
@@ -70,11 +70,11 @@ def load_driver_options(
         )
 
     aws_access_key_id, aws_secret_access_key = None, None
-    if "{}_ACCESS_KEY_ID".format(provider) in os.environ:
-        aws_access_key_id = os.environ["{}_ACCESS_KEY_ID".format(provider)]
+    if "EC2_ACCESS_KEY_ID" in os.environ:
+        aws_access_key_id = os.environ["EC2_ACCESS_KEY_ID"]
 
-    if "{}_SECRET_ACCESS_KEY".format(provider) in os.environ:
-        aws_secret_access_key = os.environ["{}_SECRET_ACCESS_KEY".format(provider)]
+    if "EC2_SECRET_ACCESS_KEY" in os.environ:
+        aws_secret_access_key = os.environ["EC2_SECRET_ACCESS_KEY"]
 
     if not aws_access_key_id and config_exists:
         aws_access_key_id = aws_config.pop("aws_access_key_id")
