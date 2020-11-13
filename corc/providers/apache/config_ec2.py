@@ -41,6 +41,9 @@ def load_driver_options(
     profile_name="default",
     **kwargs
 ):
+    config_exists = os.path.exists(config_path)
+    credentials_exists = os.path.exists(credentials_path)
+
     if "profile" in provider_kwargs:
         if "name" in provider_kwargs["profile"]:
             profile_name = provider_kwargs["profile"]["name"]
@@ -60,9 +63,10 @@ def load_driver_options(
     if "{}_PROFILE_NAME".format(provider) in os.environ:
         profile_name = os.environ["{}_PROFILE_NAME".format(provider)]
 
-    aws_config = load_aws_config(
-        config_path, credentials_path, profile_name=profile_name
-    )
+    if config_exists and credentials_exists:
+        aws_config = load_aws_config(
+            config_path, credentials_path, profile_name=profile_name
+        )
 
     aws_access_key_id, aws_secret_access_key = None, None
     if "{}_ACCESS_KEY_ID".format(provider) in os.environ:
@@ -71,10 +75,10 @@ def load_driver_options(
     if "{}_SECRET_ACCESS_KEY".format(provider) in os.environ:
         aws_secret_access_key = os.environ["{}_SECRET_ACCESS_KEY".format(provider)]
 
-    if not aws_access_key_id:
+    if not aws_access_key_id and config_exists:
         aws_access_key_id = aws_config.pop("aws_access_key_id")
 
-    if not aws_secret_access_key:
+    if not aws_secret_access_key and config_exists:
         aws_secret_access_key = aws_config.pop("aws_secret_access_key")
 
     return [aws_access_key_id, aws_secret_access_key], aws_config
