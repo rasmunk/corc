@@ -138,3 +138,5 @@ job-*/
 
 # Ignore tmp files
 tmp/
+
+~
