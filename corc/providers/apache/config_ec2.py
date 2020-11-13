@@ -55,10 +55,10 @@ def load_driver_options(
         config_path = os.environ["EC2_CONFIG_PATH"]
 
     if "EC2_CREDENTIALS_PATH" in os.environ:
-        credentials_path = os.environ["EC2_CREDENTIALS_PATH".format(provider)]
+        credentials_path = os.environ["EC2_CREDENTIALS_PATH"]
 
     if "EC2_PROFILE_NAME" in os.environ:
-        profile_name = os.environ["EC2_PROFILE_NAME".format(provider)]
+        profile_name = os.environ["EC2_PROFILE_NAME"]
 
     config_exists = os.path.exists(config_path)
     credentials_exists = os.path.exists(credentials_path)
