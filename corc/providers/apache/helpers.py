@@ -8,7 +8,7 @@ def discover_apache_driver(provider):
 
 def discover_apache_driver_options(provider):
     loader = import_from_module(
-        "corc.providers.apache.config_{}".format(provider, provider),
+        "corc.providers.apache.config_{}".format(provider),
         "config_{}".format(provider),
         "load_driver_options",
     )
