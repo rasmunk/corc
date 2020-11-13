@@ -1,8 +1,5 @@
-import os
-from libcloud.compute.types import Provider as ComputeProvider
 from libcloud.compute.providers import get_driver
 from corc.helpers import import_from_module
-from corc.providers.types import EC2
 
 
 def discover_apache_driver(provider):

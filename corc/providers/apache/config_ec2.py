@@ -63,7 +63,18 @@ def load_driver_options(
     aws_config = load_aws_config(
         config_path, credentials_path, profile_name=profile_name
     )
-    aws_access_key_id = aws_config.pop("aws_access_key_id")
-    aws_secret_access_key = aws_config.pop("aws_secret_access_key")
+
+    aws_access_key_id, aws_secret_access_key = None, None
+    if "{}_ACCESS_KEY_ID".format(provider) in os.environ:
+        aws_access_key_id = os.environ["{}_ACCESS_KEY_ID".format(provider)]
+
+    if "{}_SECRET_ACCESS_KEY".format(provider) in os.environ:
+        aws_secret_access_key = os.environ["{}_SECRET_ACCESS_KEY".format(provider)]
+
+    if not aws_access_key_id:
+        aws_access_key_id = aws_config.pop("aws_access_key_id")
+
+    if not aws_secret_access_key:
+        aws_secret_access_key = aws_config.pop("aws_secret_access_key")
 
     return [aws_access_key_id, aws_secret_access_key], aws_config

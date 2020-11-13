@@ -178,21 +178,20 @@ class TestInstanceOrchestrator(unittest.TestCase):
 
 class TestEC2InstanceOrchestrator(unittest.TestCase):
     def setUp(self):
+        self.provider = "ec2"
         test_name = "Test_Instance_Orch"
         node_name = test_name + "_Node"
 
-        image = "ami-01ca03df4a6012157"
+        image = "ami-0bfa4fefe067b7946"
         size = "t1.micro"
-        options = dict(instance=dict(name=node_name, image=image, size=size))
-
-        # (access_key_id)
-        ec2_args = ("",)
-        ec2_kwargs = {"secret": ""}
+        options = dict(
+            provider="ec2",
+            provider_kwargs=dict(name="default", region="eu-west-1"),
+            kwargs=dict(instance=dict(name=node_name, image=image, size=size)),
+        )
 
         self.options = options
         EC2Orchestrator, options = get_orchestrator(VIRTUAL_MACHINE, EC2)
-        options["driver"]["args"] = ec2_args
-        options["driver"]["kwargs"] = ec2_kwargs
         self.options.update(options)
 
         EC2Orchestrator.validate_options(self.options)

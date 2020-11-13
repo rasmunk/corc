@@ -5,8 +5,6 @@ from corc.defaults import PACKAGE_NAME, OCI_LOWER, PROFILE
 from corc.defaults import (
     CLUSTER,
     CLUSTER_NODE,
-    CONFIG,
-    INSTANCE,
     JOB,
     JOB_META,
     STORAGE,
@@ -29,7 +27,6 @@ from corc.cli.parsers.cluster.cluster import (
     valid_cluster_group,
 )
 from corc.cli.parsers.config.config import add_config_group
-from corc.cli.parsers.instance.instance import instance_identity_group
 from corc.cli.parsers.job.job import select_job_group
 from corc.cli.parsers.network.vcn import (
     vcn_identity_group,

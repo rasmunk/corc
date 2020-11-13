@@ -1,12 +1,11 @@
 from libcloud.compute.base import Node
-from libcloud.compute.providers import get_driver
 from corc.orchestrator import Orchestrator
 from corc.config import (
     default_config_path,
     load_from_config,
     gen_config_provider_prefix,
 )
-from corc.util import open_port, eprint
+from corc.util import eprint
 from corc.providers.apache.helpers import new_apache_client
 
 
@@ -93,6 +92,9 @@ class ApacheInstanceOrchestrator(Orchestrator):
     def __init__(self, options):
         super().__init__(options)
         # Setup the specific container driver provider
+        if "kwargs" not in options:
+            options["kwargs"] = {}
+
         self.client = new_apache_client(
             options["provider"], options["provider_kwargs"], **options["kwargs"]
         )
@@ -154,6 +156,7 @@ class ApacheInstanceOrchestrator(Orchestrator):
             self._is_ready = True
 
     def tear_down(self):
+        instance_options = self.options["kwargs"]["instance"]
         if not self.instance:
             self.instance = get_instance_by_name(self.client, instance_options["name"])
 

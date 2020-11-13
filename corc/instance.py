@@ -1,15 +1,6 @@
-from oci.util import to_dict
-from corc.util import has_method
 from corc.providers.defaults import VIRTUAL_MACHINE
 from corc.authenticator import SSHCredentials
-from corc.providers.oci.instance import (
-    list_instances as oci_list_instances,
-    delete_instance as oci_delete_instance,
-    get_instance as oci_get_instance,
-    get_instance_by_name as oci_get_instance_by_name,
-)
 from corc.providers.types import get_orchestrator
-from corc.providers.oci.instance import OCIInstanceOrchestrator, new_compute_client
 from corc.helpers import import_from_module
 
 
