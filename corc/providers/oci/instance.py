@@ -98,6 +98,33 @@ def list_instances(compute_client, compartment_id, kwargs=None):
     )
 
 
+def client_delete_instance(provider, provider_kwargs, instance=None):
+    if not instance["id"] and not instance["display_name"]:
+        return False, "Either the id or display-name of the instance must be provided"
+
+    compute_client = new_compute_client(name=provider_kwargs["profile"]["name"])
+    if instance["id"]:
+        instance_id = instance["id"]
+    else:
+        instance_object = get_instance_by_name(
+            compute_client,
+            provider_kwargs["profile"]["compartment_id"],
+            instance["display_name"],
+        )
+        if not instance_object:
+            return (
+                False,
+                "Failed to find an instance with display-name: {}".format(
+                    instance["display_name"]
+                ),
+            )
+
+        instance_id = instance_object.id
+
+    deleted = delete_instance(compute_client, instance_id)
+    return deleted, instance_id
+
+
 def delete_instance(compute_client, instance_id, **kwargs):
     return delete(compute_client, "terminate_instance", instance_id, **kwargs)
 

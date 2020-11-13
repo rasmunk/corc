@@ -53,12 +53,15 @@ def get_instance(client, instance_uuid, *args, **kwargs):
     return None
 
 
-def client_delete_instance(provider, provider_kwargs, instance_uuid, **kwargs):
+def client_delete_instance(provider, provider_kwargs, instance=None, **kwargs):
     client = new_apache_client(provider, provider_kwargs, **kwargs)
-    instance = get_instance(client, instance_uuid)
-    if instance:
-        return delete_instance(client, instance)
-    return False
+    found_instance = get_instance(client, instance["uuid"])
+    if found_instance:
+        deleted = delete_instance(client, found_instance)
+        if deleted:
+            return found_instance.uuid, ""
+        return False, "Failed to delete: {}".format(found_instance.uuid)
+    return False, "Could not find: {}".format(**instance)
 
 
 def delete_instance(client, instance):

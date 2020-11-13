@@ -51,31 +51,18 @@ def start_instance(provider, provider_kwargs, **kwargs):
 
 def stop_instance(provider, provider_kwargs, instance={}):
     response = {}
-    if provider_kwargs:
-        # Discover the vcn_stack for the cluster
-        if not instance["id"] and not instance["display_name"]:
-            response[
-                "msg"
-            ] = "Either the id or display-name of the instance must be provided"
-            return False, response
+    provider_func = import_from_module(
+        "corc.providers.{}.instance".format(provider),
+        "instance",
+        "client_delete_instance",
+    )
+    deleted_id, msg = provider_func(provider, provider_kwargs, instance=instance)
+    response["msg"] = msg
+    if not deleted_id:
+        return False, response
 
-        compute_client = new_compute_client(name=provider_kwargs["profile"]["name"])
-        if instance["id"]:
-            instance_id = instance["id"]
-        else:
-            instance_object = oci_get_instance_by_name(
-                compute_client,
-                provider_kwargs["profile"]["compartment_id"],
-                instance["display_name"],
-            )
-            instance_id = instance_object.id
-
-        response["id"] = instance_id
-        deleted = oci_delete_instance(compute_client, instance_id)
-        if not deleted:
-            response["msg"] = "Failed to delete: {}".format(instance_id)
-            return False, response
-        return True, response
+    response["id"] = deleted_id
+    return True, response
 
 
 def list_instances(provider, provider_kwargs, **kwargs):
