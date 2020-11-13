@@ -97,16 +97,6 @@ jobs:
   - stage: vcn_tests
     python: '3.8'
     script: travis_wait pytest -s -v tests/test_vcn_*.py
-  # - stage: container_orchestrator_tests
-  #   python3: '3.6'
-  #   script: &4
-  #   - travis_wait pytest -s -v tests/test_container_orchestrator.py
-  # - stage: container_orchestrator_tests
-  #   python: '3.7'
-  #   script: *4
-  # - stage: container_orchestrator_tests
-  #   python: '3.8'
-  #   script: *4
   - stage: deploy
     python: '3.6'
     script: &5
@@ -138,3 +128,5 @@ env:
   - CORC_PROVIDERS_OCI_TEST_ID="$TRAVIS_JOB_ID-$TRAVIS_JOB_NUMBER"
   - CORC_PROVIDERS_OCI_PROFILE_NAME="DEFAULT"
   - secure: cTxYL2PDcAQeHRMJOP8zj5ytTqCurAEg5c6bB03zZ7nRA2PfOCDOohzzfBpmD2ztROg2HcRmM3JSr0mIyJMKHrn6kFq6tcotVpfFVyC/bfOrHmkl3ttnun3GdswBnOrjUrPnHJ5CjTciuWTPexa35rKsU4veATfXNSws1bpQNcl48PZYrhIqd5ekpmtaxzH1ONyelP4zkLNFNeoobTS7NF9FsKBas1HELGGqHoia550fx6xh26wPPD90dFw8vbLLT0iq3giYpaltXlxIK7EJnmbYXZ51s5iMCuDBhQLUcFEB8b4phJPADROvZSjXXd45b3xFWWc29RoHqEajSE+RdyzdqDd0eucFdFMd91IX3gHCJb1OqV2NAclBbGayy6V0KZmKHD4cT74A5CN5en0HvUh7K6HUuwDMEXUJL8xSv+UMbaOOvZBkM9qgcTtVNjOR6y5OQtmBYQ79p5gTFbM5QP64ggcoaffJQssepC/g6sp129jlS46+o+vo62Mv8FvCd6RsWBDVZ8nQZhWy6VLmQTEpidEx0XhCUGZuV4OGIP7lSToKZjU8YtIkDTafzabUSPBlC0IqFSY+Q3jqXdlCTa2VFN8s/bYhOWnM7Zt/xjYjiBCjNOJQJnF0q6LKkgorjktq2SvXjalfrDOTJd4WGiChrfGnrpR7hwlj/O4UBqw=
+  - secure: ABPG9/BEWz1z26olQ8TfGx6dqfHEAYTzMvL09qKkj02x+BTL6/XQgjpD5Xo6gOgmoZqge1w1bQtVZHBPCbzay4HIS4AGeWOeEyEC0TTaxtFwfsy7jzou5eggYEfmqusqNk3H5qKu3oW6v6SY/0dl3gnWKWWxekzKljl2AM/klh4k/a5jbwFAQ/JhTyaf60wLPzXa53qyIoBNOg9TE7oK5xDa/RcQTPGJ37VLU8q4TsbynkJTg1awpCtGiLmORTe40AP9N2BmBdo/inIvFAjm/TlSoyGl00ljE+kSeujiv6kctUM1vkLUGwMQcqqmbsutNIVzxUHDiMP9fqpBpN7kC3oNRy5HjV+EEvKdHxR4wvlRsNQaJxS5qePP3Fl274vPV7+qQiNwomGbEn3ApWrfHjJG9wmSNy9EOiFSEY4OrWsRcWrAHtbMm/AEX1TQWwhy9IJy9WFqCDQPpnNyBCVp992clMYLvbVizst3hBVKtFh2tC0WZpneM0QnqwY9Zxiz0ZvIaA01rE10H1zOyqpmraaCa01rdeOYFi552bH4ErD/x25ykLfDRZdCX8rJ9LB77zFcP5Voy+azvWorCFrvnO8O+3fsYkFqs39pzKlOBADlW3aDocOi8ZKc9CewDFzlOTuN8fxcQf71FJuRUId5fvd5zKrVznaOFB5y6jBNLPc=
+  - secure: WZNveCPbqqvH5tYoTRrWq6UmERnyv3ahC+BvVS9R9kKygS9twL9K2bSFVXvVLfIL5H2IGSEdVvG1NAI+cr2yV3ZKtlBswgDL0BwzKcybXJflQA53Ig0U0E3dtX8m1kJhNuxkIK5DxZ07zHlM95/aO8VEJwEoA0yePxNLxTW8qjVLxEzT/6zQBy56oBg4F9CY1nCyqSXMox4OI1enduRVJJaPl9UKH156mBZ3ig3g2YFFcUfAA4nYMTEqd6ijUbKvz5zYP5RIOL59kkszoA/nd4Sf1LId+PLKNQx0dWIWPOVKOIWRo2i/jXwmV2ZlXlwKMEv01oMW4qdSo851OSp4SzB4Um1Sw0y+DEQqYm6q/8ZAs6UfzkEFcGzQrtT1qK4dPBFrahytfc/EgkUYPl4ZkZg3SfzfWoY87Wno+lGRpahTR9CIBExY0ZZAI+LRX2MhmglpNyv9289tsi2IYG1RuOrXsCcXVDUanOzUG2xTZPh+fQgqMRpyfzigleJFpA7L83lkBKTBp3k0e6VSCYlVTScZ7UUuiAKacu1rCgFsNc7GkkKOBzq99l2/ov+Do8/3p3mkDg9oTdbblLpEMzxSL+jj1z6rKIq6XTgTz2pyszvgl7jVh/9zTOYOtOa3XoIImipog5xbEwPfmhqoZ8S4SBP91FRe0THeMukTzzzfQNc=
