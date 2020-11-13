@@ -63,7 +63,7 @@ def load_driver_options(
     if "{}_PROFILE_NAME".format(provider) in os.environ:
         profile_name = os.environ["{}_PROFILE_NAME".format(provider)]
 
-    aws_config = None
+    aws_config = {}
     if config_exists and credentials_exists:
         aws_config = load_aws_config(
             config_path, credentials_path, profile_name=profile_name
