@@ -46,8 +46,22 @@ class TestCLI(unittest.TestCase):
         os.remove(self.config_path)
         self.assertFalse(os.path.exists(self.config_path))
 
-    def test_cli_aws_help(self):
-        args = ["corc", "aws", "-h"]
+    def test_cli_config_ec2_generate(self):
+        args = ["corc", "config", "ec2", "generate", "--config-path", self.config_path]
+        result = subprocess.run(args)
+        self.assertIsNotNone(result)
+        self.assertTrue(hasattr(result, "returncode"))
+        self.assertEqual(result.returncode, 0)
+
+        # Check that the config is generated
+        self.assertTrue(os.path.exists(self.config_path))
+        # Clean up
+        os.remove(self.config_path)
+        self.assertFalse(os.path.exists(self.config_path))
+
+
+    def test_cli_ec2_help(self):
+        args = ["corc", "ec2", "-h"]
         result = subprocess.run(args)
         self.assertIsNotNone(result)
         self.assertTrue(hasattr(result, "returncode"))

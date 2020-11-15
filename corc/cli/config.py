@@ -17,10 +17,10 @@ def prepare_provider_config(provider, provider_kwargs, **kwargs):
     return prepare_config(provider, provider_kwargs, **kwargs)
 
 
-def init_config(provider, provider_kwargs, **kwargs):
+def init_config(provider, provider_kwargs, config=None, **kwargs):
     path = get_config_path()
-    if "path" in kwargs:
-        path = kwargs["path"]
+    if config and "path" in config:
+        path = config["path"]
 
     response = {}
     provider_config = prepare_provider_config(provider, provider_kwargs, **kwargs)
