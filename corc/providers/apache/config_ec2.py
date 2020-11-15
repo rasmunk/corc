@@ -48,7 +48,7 @@ def load_driver_options(
     **kwargs
 ):
 
-    aws_access_key_id, aws_secret_access_key = None, None
+    aws_access_key_id, aws_secret_access_key, region = None, None, None
     if "profile" in provider_kwargs:
         if "name" in provider_kwargs["profile"]:
             profile_name = provider_kwargs["profile"]["name"]
@@ -59,11 +59,14 @@ def load_driver_options(
         if "credentials_file" in provider_kwargs["profile"]:
             credentials_path = provider_kwargs["profile"]["credentials_file"]
 
-        if "aws_access_key_id" in provider_kwargs:
-            aws_access_key_id = provider_kwargs["aws_access_key_id"]
+        if "aws_access_key_id" in provider_kwargs["profile"]:
+            aws_access_key_id = provider_kwargs["profile"]["aws_access_key_id"]
 
-        if "aws_secret_access_key" in provider_kwargs:
-            aws_secret_access_key = provider_kwargs["aws_secret_access_key"]
+        if "aws_secret_access_key" in provider_kwargs["profile"]:
+            aws_secret_access_key = provider_kwargs["profile"]["aws_secret_access_key"]
+
+        if "region" in provider_kwargs["profile"]:
+            region = provider_kwargs["profile"]["region"]
 
     config_exists = os.path.exists(config_path)
     credentials_exists = os.path.exists(credentials_path)
@@ -73,6 +76,9 @@ def load_driver_options(
         aws_config = load_aws_config(
             config_path, credentials_path, profile_name=profile_name
         )
+
+    if "region" not in aws_config and region:
+        aws_config["region"] = region
 
     if not aws_access_key_id and config_exists:
         aws_access_key_id = aws_config.pop("aws_access_key_id")
