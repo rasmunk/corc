@@ -13,8 +13,7 @@ including VM's, virtual networks and container clusters.
 
 In addition, corc provides the capability to schedule job on orchestrated resources
 
-The current implementation only supports the `OCI <https://en.wikipedia.org/wiki/Oracle_Cloud>`_ backend.
-Future plans includes expanding this to support AWS as well.
+The current implementation supports the `OCI <https://en.wikipedia.org/wiki/Oracle_Cloud>`_ and AWS `EC2 <https://en.wikipedia.org/wiki/Amazon_Elastic_Compute_Cloud>`_ backend.
 
 ------------
 Installation
@@ -57,7 +56,7 @@ The available options can be discovered through the CLI itself, e.g::
       -h, --help        show this help message and exit
 
     COMMAND:
-      {config,aws,oci}
+      {config,ec2,oci}
 
 A good start is to first generate the corc configuration. Afterwards the provider specific details such as the OCI ``compartment_id`` should be filled into this.
 By default the corc configuration is placed into the ``~/.corc/config`` file. Currently OCI is the only supported provider, which means that this is also the only provider that will be put into the configuration file.
