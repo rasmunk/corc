@@ -47,6 +47,8 @@ def load_driver_options(
     profile_name="default",
     **kwargs
 ):
+
+    aws_access_key_id, aws_secret_access_key = None, None
     if "profile" in provider_kwargs:
         if "name" in provider_kwargs["profile"]:
             profile_name = provider_kwargs["profile"]["name"]
@@ -57,6 +59,12 @@ def load_driver_options(
         if "credentials_file" in provider_kwargs["profile"]:
             credentials_path = provider_kwargs["profile"]["credentials_file"]
 
+        if "aws_access_key_id" in provider_kwargs:
+            aws_access_key_id = provider_kwargs["aws_access_key_id"]
+
+        if "aws_secret_access_key" in provider_kwargs:
+            aws_secret_access_key = provider_kwargs["aws_secret_access_key"]
+
     config_exists = os.path.exists(config_path)
     credentials_exists = os.path.exists(credentials_path)
 
@@ -65,13 +73,6 @@ def load_driver_options(
         aws_config = load_aws_config(
             config_path, credentials_path, profile_name=profile_name
         )
-
-    aws_access_key_id, aws_secret_access_key = None, None
-    if "EC2_ACCESS_KEY_ID" in os.environ:
-        aws_access_key_id = os.environ["EC2_ACCESS_KEY_ID"]
-
-    if "EC2_SECRET_ACCESS_KEY" in os.environ:
-        aws_secret_access_key = os.environ["EC2_SECRET_ACCESS_KEY"]
 
     if not aws_access_key_id and config_exists:
         aws_access_key_id = aws_config.pop("aws_access_key_id")
