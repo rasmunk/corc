@@ -54,10 +54,10 @@ def load_driver_options(
             profile_name = provider_kwargs["profile"]["name"]
 
         if "config_file" in provider_kwargs["profile"]:
-            config_path = provider_kwargs["profile"]["config_file"]
+            config_path = os.path.expanduser(provider_kwargs["profile"]["config_file"])
 
         if "credentials_file" in provider_kwargs["profile"]:
-            credentials_path = provider_kwargs["profile"]["credentials_file"]
+            credentials_path = os.path.expanduser(provider_kwargs["profile"]["credentials_file"])
 
         if "aws_access_key_id" in provider_kwargs["profile"]:
             aws_access_key_id = provider_kwargs["profile"]["aws_access_key_id"]
