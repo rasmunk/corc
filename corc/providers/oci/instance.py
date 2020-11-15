@@ -20,6 +20,7 @@ from oci.core.models import (
     CreateRouteTableDetails,
 )
 from oci.util import to_dict
+from corc.authenticator import SSHCredentials
 from corc.orchestrator import Orchestrator
 from corc.util import open_port
 from corc.config import (
@@ -740,6 +741,15 @@ class OCIInstanceOrchestrator(Orchestrator):
                 resource_config["shape_config"] = instance_shape_details
             resource_config["shape"] = minimum_shape.shape
         return resource_config
+
+    @classmethod
+    def make_credentials(cls, **kwargs):
+        credentials = []
+        if "instance" in kwargs and "ssh_authorized_keys" in kwargs["instance"]:
+            public_keys = kwargs["instance"]["ssh_authorized_keys"]
+            for public_key in public_keys:
+                credentials.append(SSHCredentials(public_key=public_key))
+        return credentials
 
     @classmethod
     def validate_options(cls, options):

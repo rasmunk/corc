@@ -1,31 +1,19 @@
 from corc.providers.defaults import VIRTUAL_MACHINE
-from corc.authenticator import SSHCredentials
 from corc.providers.types import get_orchestrator
 from corc.helpers import import_from_module
 
 
 def start_instance(provider, provider_kwargs, **kwargs):
     response = {}
-    # Get Provider orchestrator
-    credentials = []
-
-    if "instance" in kwargs:
-        instance_options = kwargs["instance"]
-        if "ssh_authorized_keys" in instance_options and isinstance(
-            instance_options["ssh_authorized_keys"], list
-        ):
-            for public_key in instance_options["ssh_authorized_keys"]:
-                credentials.append(SSHCredentials(public_key=public_key))
-
-    # Get the orchestrator
+    # Get the provider orchestrator
     orchestrator_klass, options = get_orchestrator(VIRTUAL_MACHINE, provider)
-
     options = dict(provider=provider, provider_kwargs=provider_kwargs, kwargs=kwargs)
 
     instance_options = orchestrator_klass.adapt_options(**options)
     orchestrator_klass.validate_options(instance_options)
+    # Prepare credentials
+    credentials = orchestrator_klass.make_credentials(**instance_options)
     orchestrator = orchestrator_klass(instance_options)
-
     orchestrator.setup(credentials=credentials)
     orchestrator.poll()
     if not orchestrator.is_ready():

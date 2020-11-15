@@ -182,11 +182,47 @@ class TestEC2InstanceOrchestrator(unittest.TestCase):
         test_name = "Test_Instance_Orch"
         node_name = test_name + "_Node"
 
-        image = "ami-0bfa4fefe067b7946"
-        size = "t1.micro"
+        ec2_config_file = load_from_env_or_config(
+            {"profile": {"config_file": {}}},
+            prefix=gen_config_provider_prefix((self.provider,)),
+        )
+
+        ec2_credentials_file = load_from_env_or_config(
+            {"profile": {"credentials_file": {}}},
+            prefix=gen_config_provider_prefix((self.provider,)),
+        )
+
+        aws_access_key_id = load_from_env_or_config(
+            {"aws_access_key_id": ""},
+            prefix=gen_config_provider_prefix((self.provider,)),
+        )
+
+        aws_secret_access_key = load_from_env_or_config(
+            {"aws_secret_access_key": {}},
+            prefix=gen_config_provider_prefix((self.provider,)),
+        )
+
+        profile_options = dict(name="default", region="eu-west-1")
+
+        if aws_access_key_id and aws_secret_access_key:
+            profile_options.update(
+                dict(
+                    aws_access_key_id=aws_access_key_id,
+                    aws_secret_access_key=aws_secret_access_key,
+                )
+            )
+        elif ec2_config_file and ec2_credentials_file:
+            profile_options.update(
+                dict(config_file=ec2_config_file, credentials_file=ec2_credentials_file)
+            )
+        else:
+            raise RuntimeError("Either AWS keys or config variables must be set")
+
+        image = "ami-02170f991f9a22f64"
+        size = "t2.micro"
         options = dict(
             provider="ec2",
-            provider_kwargs=dict(name="default", region="eu-west-1"),
+            provider_kwargs=dict(profile=profile_options),
             kwargs=dict(instance=dict(name=node_name, image=image, size=size)),
         )
 

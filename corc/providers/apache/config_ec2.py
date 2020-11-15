@@ -15,11 +15,17 @@ valid_profile_config = {"name": str, "config_file": str, "credentials_file": str
 
 default_instance_config = {
     "name": "instance",
-    "image": "ami-01ca03df4a6012157",
+    "image": "ami-0f18ced0fd6aae5c2",
     "size": "t1.micro",
+    "ssh_authorized_key": "",
 }
 
-valid_instance_config = {"name": str, "image": str, "size": str}
+valid_instance_config = {
+    "name": str,
+    "image": str,
+    "size": str,
+    "ssh_authorized_key": str,
+}
 
 default_config = {
     "profile": default_profile_config,
@@ -50,15 +56,6 @@ def load_driver_options(
 
         if "credentials_file" in provider_kwargs["profile"]:
             credentials_path = provider_kwargs["profile"]["credentials_file"]
-
-    if "EC2_CONFIG_PATH" in os.environ:
-        config_path = os.environ["EC2_CONFIG_PATH"]
-
-    if "EC2_CREDENTIALS_PATH" in os.environ:
-        credentials_path = os.environ["EC2_CREDENTIALS_PATH"]
-
-    if "EC2_PROFILE_NAME" in os.environ:
-        profile_name = os.environ["EC2_PROFILE_NAME"]
 
     config_exists = os.path.exists(config_path)
     credentials_exists = os.path.exists(credentials_path)

@@ -20,5 +20,4 @@ def new_apache_client(provider, provider_kwargs, **kwargs):
     driver = discover_apache_driver(provider)
     options_loader = discover_apache_driver_options(provider)
     driver_args, driver_kwargs = options_loader(provider, provider_kwargs, **kwargs)
-
     return driver(*driver_args, **driver_kwargs)

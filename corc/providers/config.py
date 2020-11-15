@@ -60,16 +60,6 @@ def valid_config(provider, config, verbose=False):
         config[provider], provider_valid_config, verbose=verbose
     )
 
-    # config
-    # oci config, apache config, ec2 config, ecs config
-
-    # load_config(p)
-    # apache providers -> if p in ps
-    # load_config(p)
-
-    # corc.providers.ec2.config.load_config(provider=None) -> return ec2_config
-    # corc.providers.oci.config.load_config(**kwargs) -> return default_config
-
 
 def get_provider_config_groups(provider):
     return load_config_groups(provider)

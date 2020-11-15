@@ -47,5 +47,9 @@ class Orchestrator:
         raise NotImplementedError
 
     @classmethod
+    def make_credentials(cls, **kwargs):
+        raise NotImplementedError
+
+    @classmethod
     def validate_options(cls, options):
         raise NotImplementedError

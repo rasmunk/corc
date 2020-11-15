@@ -1,4 +1,5 @@
-from libcloud.compute.base import Node
+from libcloud.compute.base import Node, NodeAuthSSHKey, NodeAuthPassword
+from corc.authenticator import SSHCredentials
 from corc.orchestrator import Orchestrator
 from corc.config import (
     default_config_path,
@@ -145,7 +146,21 @@ class ApacheInstanceOrchestrator(Orchestrator):
                 )
             )
 
-        instance = self.client.create_node(instance_options["name"], size, image)
+        auth = None
+        # Since only one auth is supported, take the first credentials
+        if credentials:
+            credential = credentials[0]
+            if credential.password:
+                auth = NodeAuthPassword(credential.password)
+            if credential.public_key:
+                # libcloud expected the NodeAuthSSHKey string to be a
+                # 3 component string seperated by spaces
+                # {type} {key} {comment}
+                auth = NodeAuthSSHKey(credential.public_key)
+
+        instance = self.client.create_node(
+            instance_options["name"], size, image, auth=auth
+        )
         if valid_instance(instance):
             self.instance = instance
         else:
@@ -200,6 +215,17 @@ class ApacheInstanceOrchestrator(Orchestrator):
             options["profile"] = apache_profile["profile"]
 
         return options
+
+    @classmethod
+    def make_credentials(cls, **kwargs):
+        credentials = []
+        # HACK
+        if "kwargs" in kwargs:
+            kwargs = kwargs["kwargs"]
+        if "instance" in kwargs and "ssh_authorized_key" in kwargs["instance"]:
+            public_key = kwargs["instance"]["ssh_authorized_key"]
+            credentials.append(SSHCredentials(public_key=public_key))
+        return credentials
 
     @classmethod
     def validate_options(cls, options):

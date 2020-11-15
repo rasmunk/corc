@@ -9,3 +9,4 @@ def start_instance_group(parser):
     instance_group.add_argument("--instance-name", default="")
     instance_group.add_argument("--instance-image", default="")
     instance_group.add_argument("--instance-size", default="")
+    instance_group.add_argument("--instance-ssh-authorized-key", default="")
