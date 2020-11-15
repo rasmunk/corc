@@ -59,7 +59,6 @@ class TestCLI(unittest.TestCase):
         os.remove(self.config_path)
         self.assertFalse(os.path.exists(self.config_path))
 
-
     def test_cli_ec2_help(self):
         args = ["corc", "ec2", "-h"]
         result = subprocess.run(args)

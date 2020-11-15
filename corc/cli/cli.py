@@ -202,7 +202,7 @@ def config_cli(parser):
         module_name="config",
         func_name="init_config",
         provider_groups=[PROFILE],
-        skip_config_groups=[CONFIG]
+        skip_config_groups=[CONFIG],
     )
 
     # OCI
@@ -220,7 +220,7 @@ def config_cli(parser):
         func_name="init_config",
         provider_groups=[PROFILE],
         argument_groups=[CLUSTER_NODE, CLUSTER, VCN_SUBNET, VCN],
-        skip_config_groups=[CONFIG]
+        skip_config_groups=[CONFIG],
     )
 
 
