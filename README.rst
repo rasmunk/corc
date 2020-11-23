@@ -1,8 +1,8 @@
 ====
 corc
 ====
-.. image:: https://travis-ci.org/rasmunk/corc.svg?branch=master
-    :target: https://travis-ci.org/rasmunk/corc
+.. image:: https://travis-ci.com/rasmunk/corc.svg?branch=master
+    :target: https://travis-ci.com/rasmunk/corc
 .. image:: https://badge.fury.io/py/corc.svg
     :target: https://badge.fury.io/py/corc
 
