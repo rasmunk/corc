@@ -55,7 +55,7 @@ def list_instances(provider, provider_kwargs, **kwargs):
         "client_list_instances",
     )
     instances = provider_func(provider, provider_kwargs, format_return=True, **kwargs)
-    if instances:
+    if instances or isinstance(instances, list) and len(instances) == 0:
         response["instances"] = instances
         return True, response
     return False, response
