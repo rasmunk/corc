@@ -1,6 +1,6 @@
 oci==2.21.2
 oci-cli==2.12.9
-cryptography==2.8
+cryptography==3.2
 pyOpenSSL==18.0.0
 PyYAML==5.1.2
 six==1.14.0
