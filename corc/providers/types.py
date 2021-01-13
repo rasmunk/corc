@@ -6,7 +6,6 @@ from corc.providers.defaults import (
     CONTAINER,
     DOCKER,
     EC2,
-    ECS,
     LOCAL,
     KUBERNETES,
     OCI,
@@ -33,9 +32,10 @@ ORCHESTRATORS = {
             },
         }
     },
+    # TODO, switch EC2 to ECS
     CONTAINER_CLUSTER: {
         OCI: {"klass": OCIClusterOrchestrator},
-        ECS: {
+        EC2: {
             "klass": ApacheClusterOrchestrator,
             "options": {"driver": {"provider": ContainerProvider.ECS}},
         },

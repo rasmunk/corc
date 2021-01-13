@@ -11,8 +11,6 @@ from corc.defaults import (
     STORAGE,
     STORAGE_S3,
     VCN,
-    VCN_INTERNETGATEWAY,
-    VCN_ROUTETABLE,
     VCN_SUBNET,
 )
 from corc.providers.defaults import EC2
@@ -27,11 +25,6 @@ from corc.cli.parsers.cluster.cluster import (
 )
 from corc.cli.parsers.config.config import add_config_group
 from corc.cli.parsers.job.job import select_job_group
-from corc.cli.parsers.network.vcn import (
-    vcn_identity_group,
-    vcn_config_group,
-    vcn_subnet_config_group,
-)
 from corc.cli.parsers.storage.storage import (
     add_storage_group,
     delete_storage,

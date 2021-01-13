@@ -52,7 +52,7 @@ def list_clusters(provider, provider_kwargs, **kwargs):
     provider_func = import_from_module(
         "corc.providers.{}.cluster".format(provider), "cluster", "client_list_clusters",
     )
-    items = provider_func(provider, provider_kwargs, format_return=True, **kwargs)
+    clusters = provider_func(provider, provider_kwargs, format_return=True, **kwargs)
     if clusters or isinstance(clusters, list) and len(clusters) == 0:
         response["clusters"] = clusters
         return True, response

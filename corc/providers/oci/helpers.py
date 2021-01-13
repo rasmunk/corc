@@ -1,5 +1,6 @@
 import os
 import oci
+from oci.core import ComputeClient, ComputeClientCompositeOperations
 from oci.exceptions import CompositeOperationError, ServiceError
 
 
@@ -13,6 +14,12 @@ def _perform_client_func_action(client, func_name, *args, **kwargs):
     else:
         func = _get_client_func(client, func_name)
     return perform_action(func, *args, **kwargs)
+
+
+def new_compute_client(**kwargs):
+    return new_client(
+        ComputeClient, composite_class=ComputeClientCompositeOperations, **kwargs,
+    )
 
 
 def new_client(oci_client_class, composite_class=None, name="DEFAULT", **kwargs):

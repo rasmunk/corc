@@ -19,6 +19,18 @@ def get_cluster_by_name(client, name):
     return None
 
 
+def client_list_clusters(provider, provider_kwargs, format_return=False, **kwargs):
+    raise NotImplementedError
+
+
+def client_delete_cluster(provider, provider_kwargs, cluster=None):
+    raise NotImplementedError
+
+
+def client_get_cluster(provider, provider_kwargs, format_return=False, cluster=None):
+    raise NotImplementedError
+
+
 default_location_config = {"name": str, "country": str, "driver": dict}
 
 valid_location_config = {"name": "", "country": "", "driver": {}}

@@ -37,6 +37,7 @@ from corc.providers.oci.helpers import (
     new_client,
     stack_was_deleted,
     prepare_details,
+    new_compute_client,
 )
 from corc.providers.oci.network import (
     ensure_vcn_stack,
@@ -47,12 +48,6 @@ from corc.providers.oci.network import (
     refresh_vcn_stack,
     get_subnet_in_vcn_stack,
 )
-
-
-def new_compute_client(**kwargs):
-    return new_client(
-        ComputeClient, composite_class=ComputeClientCompositeOperations, **kwargs,
-    )
 
 
 def valid_instance(instance):

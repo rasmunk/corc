@@ -16,8 +16,10 @@ from oci.container_engine.models import (
     NodeSourceViaImageDetails,
 )
 from oci.core.models import CreateSubnetDetails
+from oci.util import to_dict
 from corc.providers.oci.helpers import (
     new_client,
+    new_compute_client,
     create,
     delete,
     get,
@@ -291,7 +293,7 @@ def client_get_cluster(provider, provider_kwargs, format_return=False, cluster=N
     return None, "Failed to find an cluster"
 
 
-def get_instance(compute_client, compartment_id, cluster_id, kwargs=None):
+def get_cluster(compute_client, compartment_id, cluster_id, kwargs=None):
     if not kwargs:
         kwargs = {}
     return get(compute_client, "get_cluster", cluster_id, **kwargs)
