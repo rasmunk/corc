@@ -1,9 +1,6 @@
 from corc.defaults import PROFILE, CLUSTER
-
-from corc.cli.parsers.providers.ec2.cluster import (
-    start_cluster_group,
-    cluster_identity_group,
-)
+from corc.cli.parsers.cluster.cluster import cluster_identity_group
+from corc.cli.parsers.providers.ec2.cluster import start_cluster_group
 
 
 def start_cluster_groups(parser):
@@ -12,13 +9,12 @@ def start_cluster_groups(parser):
     provider_groups = [PROFILE]
     argument_groups = [
         CLUSTER,
-        
-        ]
+    ]
     return provider_groups, argument_groups
 
 
 def stop_cluster_groups(parser):
-    stop_cluster_group(parser)
+    cluster_identity_group(parser)
 
     provider_groups = [PROFILE]
     argument_groups = [CLUSTER]

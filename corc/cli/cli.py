@@ -21,7 +21,9 @@ from corc.cli.parsers.job.job import (
     job_meta_group,
 )
 from corc.cli.parsers.cluster.cluster import (
+    cluster_identity_group,
     valid_cluster_group,
+    cluster_schedule_group,
 )
 from corc.cli.parsers.config.config import add_config_group
 from corc.cli.parsers.job.job import select_job_group
@@ -222,7 +224,7 @@ def config_cli(parser):
 
 def cluster_cli(provider, parser):
     cluster_commands = parser.add_subparsers(title="COMMAND")
-    
+
     # Start Command
     start_parser = cluster_commands.add_parser("start")
     start_cluster_groups = import_from_module(
@@ -257,7 +259,7 @@ def cluster_cli(provider, parser):
         argument_groups=stop_argument_groups,
     )
 
-        # Get Command
+    # Get Command
     get_parser = cluster_commands.add_parser("get")
     get_cluster_groups = import_from_module(
         "corc.cli.providers.{}.cluster".format(provider),
@@ -281,72 +283,15 @@ def cluster_cli(provider, parser):
         "cluster",
         "list_cluster_groups",
     )
-    list_provider_groups, list_argument_groups = list(list_parser)
-    list_parser.set_defaults(
-        func=cli_exec,
-        module_path="corc.instance",
-        module_name="instance",
-        func_name="list_instances",
-        provider_groups=list_provider_groups,
-        argument_groups=list_argument_groups,
-    )
-
-
-    start_cluster_group(start_parser)
-    cluster_identity_group(start_parser)
-    cluster_node_group(start_parser)
-    vcn_identity_group(start_parser)
-    vcn_config_group(start_parser)
-    vcn_subnet_config_group(start_parser)
-    start_parser.set_defaults(
-        func=cli_exec,
-        module_path="corc.cluster",
-        module_name="cluster",
-        func_name="start_cluster",
-        provider_groups=[PROFILE],
-        argument_groups=[
-            CLUSTER_NODE,
-            CLUSTER,
-            VCN_INTERNETGATEWAY,
-            VCN_ROUTETABLE,
-            VCN_SUBNET,
-            VCN,
-        ],
-    )
-    stop_parser = cluster_commands.add_parser("stop")
-    cluster_identity_group(stop_parser)
-    stop_parser.set_defaults(
-        func=cli_exec,
-        module_path="corc.cluster",
-        module_name="cluster",
-        func_name="stop_cluster",
-        provider_groups=[PROFILE],
-        argument_groups=[CLUSTER],
-    )
-
-    get_parser = cluster_commands.add_parser("get")
-    cluster_identity_group(get_parser)
-    get_parser.set_defaults(
-        func=cli_exec,
-        module_path="corc.cluster",
-        module_name="cluster",
-        func_name="get_cluster",
-        provider_groups=[PROFILE],
-        argument_groups=[CLUSTER],
-    )
-
-    list_parser = cluster_commands.add_parser("list")
+    list_provider_groups, list_argument_groups = list_cluster_groups(list_parser)
     list_parser.set_defaults(
         func=cli_exec,
         module_path="corc.cluster",
         module_name="cluster",
         func_name="list_clusters",
-        provider_groups=[PROFILE],
+        provider_groups=list_provider_groups,
+        argument_groups=list_argument_groups,
     )
-
-    # update_parser = cluster_commands.add_parser("update")
-    # cluster_identity_group(update_parser)
-    # update_parser.set_defaults(func=update_cluster)
 
 
 def instance_cli(provider, parser):

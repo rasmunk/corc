@@ -1,50 +1,33 @@
-from corc.defaults import (
-    INSTANCE,
-    VCN_INTERNETGATEWAY,
-    VCN_ROUTETABLE,
-    VCN_SUBNET,
-    VCN,
-    PROFILE,
-)
-
-from corc.cli.parsers.providers.oci.instance import (
-    start_instance_group,
-    instance_identity_group,
-)
-from corc.cli.parsers.network.vcn import vcn_identity_group, vcn_config_group
+from corc.defaults import PROFILE, CLUSTER
+from corc.cli.parsers.cluster.cluster import cluster_identity_group
+from corc.cli.parsers.providers.oci.cluster import start_cluster_group
 
 
-def start_instance_groups(parser):
-    start_instance_group(parser)
-    vcn_identity_group(parser)
-    vcn_config_group(parser)
+def start_cluster_groups(parser):
+    start_cluster_group(parser)
 
     provider_groups = [PROFILE]
     argument_groups = [
-        INSTANCE,
-        VCN_INTERNETGATEWAY,
-        VCN_ROUTETABLE,
-        VCN_SUBNET,
-        VCN,
+        CLUSTER,
     ]
     return provider_groups, argument_groups
 
 
-def stop_instance_groups(parser):
-    instance_identity_group(parser)
+def stop_cluster_groups(parser):
+    cluster_identity_group(parser)
 
     provider_groups = [PROFILE]
-    argument_groups = [INSTANCE]
+    argument_groups = [CLUSTER]
     return provider_groups, argument_groups
 
 
-def get_instance_groups(parser):
-    instance_identity_group(parser)
+def get_cluster_groups(parser):
+    cluster_identity_group(parser)
 
     provider_groups = [PROFILE]
-    argument_groups = [INSTANCE]
+    argument_groups = [CLUSTER]
     return provider_groups, argument_groups
 
 
-def list_instance_groups(parser):
+def list_cluster_groups(parser):
     return [PROFILE], []
