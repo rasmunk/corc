@@ -175,16 +175,6 @@ def delete_cluster_stack(container_engine_client, cluster_id, delete_vcn=False):
     return delete_cluster(container_engine_client, cluster_id)
 
 
-def delete_cluster(container_engine_client, cluster_id, **kwargs):
-    return delete(
-        container_engine_client,
-        "delete_cluster",
-        cluster_id,
-        wait_for_states=[WorkRequest.STATUS_SUCCEEDED, WorkRequest.STATUS_FAILED],
-        **kwargs,
-    )
-
-
 def create_cluster(container_engine_client, create_cluster_details, create_kwargs=None):
     if not create_kwargs:
         create_kwargs = dict(
@@ -214,6 +204,13 @@ def create_cluster(container_engine_client, create_cluster_details, create_kwarg
 
     return cluster
 
+def client_list_clusters(provider, provider_kwargs, format_return=False, **kwargs):
+    client = new_compute_client(name=provider_kwargs["profile"]["name"])
+    clusters = list_clusters(client, provider_kwargs["profile"]["compartment_id"])
+    if format_return:
+        return to_dict(clusters)
+    return clusters
+
 
 def list_clusters(container_engine_client, compartment_id, cluster_kwargs=None):
     if not cluster_kwargs:
@@ -229,6 +226,74 @@ def list_clusters(container_engine_client, compartment_id, cluster_kwargs=None):
         compartment_id=compartment_id,
         **cluster_kwargs,
     )
+
+
+def client_delete_cluster(provider, provider_kwargs, cluster=None):
+    if not cluster["id"] and not cluster["display_name"]:
+        return False, "Either the id or display-name of the cluster must be provided"
+
+    compute_client = new_compute_client(name=provider_kwargs["profile"]["name"])
+    if cluster["id"]:
+        cluster_id = cluster["id"]
+    else:
+        _object = get_cluster_by_name(
+            compute_client,
+            provider_kwargs["profile"]["compartment_id"],
+            cluster["display_name"],
+        )
+        if not _object:
+            return (
+                False,
+                "Failed to find a cluster with display-name: {}".format(
+                    _object["display_name"]
+                ),
+            )
+
+        cluster_id = _object.id
+
+    deleted = delete_cluster(compute_client, cluster_id)
+    return deleted, cluster_id
+
+
+def delete_cluster(container_engine_client, cluster_id, **kwargs):
+    return delete(
+        container_engine_client,
+        "delete_cluster",
+        cluster_id,
+        wait_for_states=[WorkRequest.STATUS_SUCCEEDED, WorkRequest.STATUS_FAILED],
+        **kwargs,
+    )
+
+
+def client_get_cluster(provider, provider_kwargs, format_return=False, cluster=None):
+    if not cluster["id"] and not cluster["display_name"]:
+        msg = "Either the id or name of the cluster must be provided"
+        return False, msg
+
+    client = new_compute_client(name=provider_kwargs["profile"]["name"])
+    found_cluster = None
+    if cluster["id"]:
+        cluster_id = cluster["id"]
+        found_cluster = get_cluster(
+            client, provider_kwargs["profile"]["compartment_id"], cluster_id
+        )
+    else:
+        found_cluster = get_cluster_by_name(
+            client,
+            provider_kwargs["profile"]["compartment_id"],
+            cluster["display_name"],
+        )
+    if found_cluster:
+        if format_return:
+            return to_dict(cluster), ""
+        return cluster, ""
+    return None, "Failed to find an cluster"
+
+
+def get_instance(compute_client, compartment_id, cluster_id, kwargs=None):
+    if not kwargs:
+        kwargs = {}
+    return get(compute_client, "get_cluster", cluster_id, **kwargs)
 
 
 def get_cluster_by_name(

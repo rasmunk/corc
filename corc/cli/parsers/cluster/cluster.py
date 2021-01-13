@@ -1,38 +1,25 @@
+from corc.cli.parsers.providers.oci.cluster import (
+    start_cluster_group as oci_start_cluster
+)
+from corc.cli.parsers.providers.ec2.cluster import (
+    start_cluster_group as ec2_start_cluster
+)
+from corc.cli.parsers.providers.oci.cluster import (
+    cluster_schedule_group,
+    cluster_node_identity_group,
+    cluster_node_group
+)
+
+
 def valid_cluster_group(parser):
     cluster_schedule_group(parser)
     cluster_identity_group(parser)
-    start_cluster_group(parser)
-    cluster_node_identity_group(parser)
+    oci_start_cluster(parser)
+    ec2_start_cluster(parser)
     cluster_node_group(parser)
-
-
-def cluster_schedule_group(parser):
-    cluster_group = parser.add_argument_group(title="Cluster Runtime arguments")
-    cluster_group.add_argument("--cluster-image", default="")
+    cluster_node_identity_group(parser)
 
 
 def cluster_identity_group(parser):
     cluster_group = parser.add_argument_group(title="Cluster Identity arguments")
     cluster_group.add_argument("--cluster-id", default="")
-    cluster_group.add_argument("--cluster-name", default="")
-
-
-def start_cluster_group(parser):
-    cluster_group = parser.add_argument_group(title="Cluster Start arguments")
-    cluster_group.add_argument("--cluster-kubernetes-version", default="")
-    cluster_group.add_argument("--cluster-domain", default="")
-
-
-def cluster_node_identity_group(parser):
-    node_group = parser.add_argument_group(title="Cluster Node Identity")
-    node_group.add_argument("--cluster-node-id", default="")
-    node_group.add_argument("--cluster-node-name", default="")
-
-
-def cluster_node_group(parser):
-    node_group = parser.add_argument_group(title="Cluster Node arguments")
-    node_group.add_argument("--cluster-node-availability-domain", default="")
-    node_group.add_argument("--cluster-node-size", type=int, default=1)
-    node_group.add_argument("--cluster-node-node-shape", default="")
-    # https://oracle-cloud-infrastructure-python-sdk.readthedocs.io/en/latest/api/cims/models/oci.cims.models.CreateResourceDetails.html?highlight=availability_domain#oci.cims.models.CreateResourceDetails.availability_domain
-    node_group.add_argument("--cluster-node-image", default="")
