@@ -31,6 +31,9 @@ jobs:
   - stage: prepare
     python: '3.8'
     script: *1
+  - stage: prepare
+    python: '3.9'
+    script: *1
   - stage: config_tests
     python: '3.6'
     script: &2
@@ -41,6 +44,9 @@ jobs:
   - stage: config_tests
     python: '3.8'
     script: *2
+  - stage: config_tests
+    python: '3.9'
+    script: *2
   - stage: cli_tests
     python: '3.6'
     script: &3
@@ -50,6 +56,9 @@ jobs:
     script: *3
   - stage: cli_tests
     python: '3.8'
+    script: *3
+  - stage: cli_tests
+    python: '3.9'
     script: *3
   - stage: cluster_tests
     python: '3.6'
@@ -64,6 +73,9 @@ jobs:
     script: travis_wait pytest -s -v tests/test_instance_orchestrator.py
   - stage: instance_orchestration_tests
     python: '3.8'
+    script: travis_wait pytest -s -v tests/test_instance_orchestrator.py
+  - stage: instance_orchestration_tests
+    python: '3.9'
     script: travis_wait pytest -s -v tests/test_instance_orchestrator.py
   - stage: instance_configurer_tests
     python: '3.6'
@@ -88,6 +100,13 @@ jobs:
     - OCI_INSTANCE_SSH_KEY=$TRAVIS_BUILD_DIR/.ssh/oci_id_rsa
     - ANSIBLE_HOST_KEY_CHECKING=False
     script: travis_wait pytest -s -v tests/test_instance_configurer.py
+  - stage: instance_configurer_tests
+    python: '3.9'
+    before_script: *4
+    env:
+    - OCI_INSTANCE_SSH_KEY=$TRAVIS_BUILD_DIR/.ssh/oci_id_rsa
+    - ANSIBLE_HOST_KEY_CHECKING=False
+    script: travis_wait pytest -s -v tests/test_instance_configurer.py
   - stage: vcn_tests
     python: '3.6'
     script: travis_wait pytest -s -v tests/test_vcn_*.py
@@ -96,6 +115,9 @@ jobs:
     script: travis_wait pytest -s -v tests/test_vcn_*.py
   - stage: vcn_tests
     python: '3.8'
+    script: travis_wait pytest -s -v tests/test_vcn_*.py
+  - stage: vcn_tests
+    python: '3.9'
     script: travis_wait pytest -s -v tests/test_vcn_*.py
   - stage: deploy
     python: '3.6'
@@ -118,6 +140,10 @@ jobs:
     deploy: *6
   - stage: deploy
     python: '3.8'
+    script: *5
+    deploy: *6
+  - stage: deploy
+    python: '3.9'
     script: *5
     deploy: *6
 env:
