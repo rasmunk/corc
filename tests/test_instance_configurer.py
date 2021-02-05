@@ -10,7 +10,9 @@ from corc.providers.oci.instance import OCIInstanceOrchestrator
 
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
-playbook_path = os.path.join(current_dir, "res", "configurer", "playbook.yml")
+playbook_dir = os.path.join(current_dir, "res", "configurer")
+playbook_hostname = os.path.join(playbook_dir, "playbook.yml")
+playbook_change_user = os.path.join(playbook_dir, "change_user.yml")
 
 
 class TestInstanceConfigurer(unittest.TestCase):
@@ -136,7 +138,7 @@ class TestInstanceConfigurer(unittest.TestCase):
                 verbosity=4,
             ),
             host_settings=dict(group="compute", port="22"),
-            apply_kwargs=dict(playbook_path=playbook_path),
+            apply_kwargs=dict(playbook_path=playbook_hostname),
         )
 
         configurer = AnsibleConfigurer()

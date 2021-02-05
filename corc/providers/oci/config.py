@@ -27,7 +27,7 @@ default_cluster_node_config = {
     "availability_domain": "",
     "size": 1,
     "node_shape": "VM.Standard2.1",
-    "image": "Oracle-Linux-7.8-2020.09.23-0",
+    "image": "Oracle-Linux-7.9-2020.11.10-1",
 }
 
 

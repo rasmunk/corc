@@ -231,8 +231,13 @@ def list_clusters(container_engine_client, compartment_id, cluster_kwargs=None):
 
 
 def client_delete_cluster(provider, provider_kwargs, cluster=None):
-    if not cluster["id"] and not cluster["display_name"]:
-        return False, "Either the id or display-name of the cluster must be provided"
+    if "id" not in cluster and "name" not in cluster:
+        msg = "Either the id or name of the cluster must be set"
+        return False, msg
+
+    if not cluster["id"] and not cluster["name"]:
+        msg = "Either the id or name for the cluster must have a value"
+        return False, msg
 
     compute_client = new_cluster_engine_client(name=provider_kwargs["profile"]["name"])
     if cluster["id"]:
@@ -241,13 +246,13 @@ def client_delete_cluster(provider, provider_kwargs, cluster=None):
         _object = get_cluster_by_name(
             compute_client,
             provider_kwargs["profile"]["compartment_id"],
-            cluster["display_name"],
+            cluster["name"],
         )
         if not _object:
             return (
                 False,
                 "Failed to find a cluster with display-name: {}".format(
-                    _object["display_name"]
+                    _object["name"]
                 ),
             )
 
@@ -268,8 +273,12 @@ def delete_cluster(container_engine_client, cluster_id, **kwargs):
 
 
 def client_get_cluster(provider, provider_kwargs, format_return=False, cluster=None):
-    if not cluster["id"] and not cluster["display_name"]:
-        msg = "Either the id or name of the cluster must be provided"
+    if "id" not in cluster and "name" not in cluster:
+        msg = "Either the id or name of the cluster must be set"
+        return False, msg
+
+    if not cluster["id"] and not cluster["name"]:
+        msg = "Either the id or name for the cluster must have a value"
         return False, msg
 
     client = new_cluster_engine_client(name=provider_kwargs["profile"]["name"])
@@ -281,15 +290,13 @@ def client_get_cluster(provider, provider_kwargs, format_return=False, cluster=N
         )
     else:
         found_cluster = get_cluster_by_name(
-            client,
-            provider_kwargs["profile"]["compartment_id"],
-            cluster["display_name"],
+            client, provider_kwargs["profile"]["compartment_id"], cluster["name"],
         )
     if found_cluster:
         if format_return:
             return to_dict(cluster), ""
         return cluster, ""
-    return None, "Failed to find an cluster"
+    return None, "Failed to find a cluster with details: {}".format(cluster)
 
 
 def get_cluster(compute_client, compartment_id, cluster_id, kwargs=None):
@@ -547,7 +554,7 @@ class OCIClusterOrchestrator(Orchestrator):
     def poll(self):
         self._is_reachable = True
 
-    def setup(self):
+    def setup(self, resource_config=None, credentials=None):
         # Ensure we have a VCN stack ready
         vcn_stack = self._get_vcn_stack()
         if not vcn_stack:
@@ -700,6 +707,26 @@ class OCIClusterOrchestrator(Orchestrator):
             self._is_ready = True
         else:
             self._is_ready = False
+
+    @classmethod
+    def adapt_options(cls, **kwargs):
+        adapted_options = {}
+        options = {}
+        if "provider_kwargs" in kwargs:
+            options.update(kwargs["provider_kwargs"])
+
+        if "kwargs" in kwargs:
+            options.update(kwargs["kwargs"])
+
+        for k, v in options.items():
+            if k == "vcn":
+                adapted_options["internetgateway"] = v.pop("internetgateway", {})
+                adapted_options["routetable"] = v.pop("routetable", {})
+                adapted_options["subnet"] = v.pop("subnet", {})
+                adapted_options[k] = v
+            else:
+                adapted_options[k] = v
+        return adapted_options
 
     @classmethod
     def validate_options(cls, options):

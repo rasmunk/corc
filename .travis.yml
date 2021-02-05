@@ -7,9 +7,9 @@ before_install:
 - tar -xvf $TRAVIS_BUILD_DIR/oci_data.tar -C $TRAVIS_BUILD_DIR/
 - rm -rf ~/.ansible
 install:
-- pip install -r tests/requirements.txt
-- pip install -r requirements-dev.txt
-- pip install -r requirements.txt
+- pip install .[dev]
+- pip install .
+- pip install .[test]
 stages:
 - prepare
 - config_tests

@@ -95,8 +95,11 @@ def list_instances(compute_client, compartment_id, kwargs=None):
 
 
 def client_delete_instance(provider, provider_kwargs, instance=None):
-    if not instance["id"] and not instance["display_name"]:
+    if "id" not in instance and "display_name" not in instance:
         return False, "Either the id or display-name of the instance must be provided"
+
+    if not instance["id"] and not instance["display_name"]:
+        return False, "Either the id or display-name of the instance must have a value"
 
     compute_client = new_compute_client(name=provider_kwargs["profile"]["name"])
     if instance["id"]:
@@ -126,9 +129,11 @@ def delete_instance(compute_client, instance_id, **kwargs):
 
 
 def client_get_instance(provider, provider_kwargs, format_return=False, instance=None):
+    if "id" not in instance and "display_name" not in instance:
+        return False, "Either the id or display-name of the instance must be provided"
+
     if not instance["id"] and not instance["display_name"]:
-        msg = "Either the id or name of the instance must be provided"
-        return False, msg
+        return False, "Either the id or display-name of the instance must have a value"
 
     client = new_compute_client(name=provider_kwargs["profile"]["name"])
     found_instance = None

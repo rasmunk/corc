@@ -35,7 +35,7 @@ setup(
     keywords=["Cloud", "Orchstration", "Compute"],
     install_requires=read_req("requirements.txt"),
     extras_require={
-        "test": read_req("requirements-dev.txt"),
+        "test": read_req("tests/requirements.txt"),
         "dev": read_req("requirements-dev.txt"),
     },
     entry_points={"console_scripts": ["corc = corc.cli.cli:run"]},

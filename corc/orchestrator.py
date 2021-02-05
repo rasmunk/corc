@@ -44,11 +44,11 @@ class Orchestrator:
 
     @classmethod
     def make_resource_config(cls, **kwargs):
-        raise NotImplementedError
+        return None
 
     @classmethod
     def make_credentials(cls, **kwargs):
-        raise NotImplementedError
+        return None
 
     @classmethod
     def validate_options(cls, options):
