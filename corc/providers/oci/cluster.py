@@ -19,7 +19,6 @@ from oci.core.models import CreateSubnetDetails
 from oci.util import to_dict
 from corc.providers.oci.helpers import (
     new_client,
-    new_compute_client,
     create,
     delete,
     get,
@@ -208,7 +207,7 @@ def create_cluster(container_engine_client, create_cluster_details, create_kwarg
 
 
 def client_list_clusters(provider, provider_kwargs, format_return=False, **kwargs):
-    client = new_compute_client(name=provider_kwargs["profile"]["name"])
+    client = new_cluster_engine_client(name=provider_kwargs["profile"]["name"])
     clusters = list_clusters(client, provider_kwargs["profile"]["compartment_id"])
     if format_return:
         return to_dict(clusters)
@@ -235,7 +234,7 @@ def client_delete_cluster(provider, provider_kwargs, cluster=None):
     if not cluster["id"] and not cluster["display_name"]:
         return False, "Either the id or display-name of the cluster must be provided"
 
-    compute_client = new_compute_client(name=provider_kwargs["profile"]["name"])
+    compute_client = new_cluster_engine_client(name=provider_kwargs["profile"]["name"])
     if cluster["id"]:
         cluster_id = cluster["id"]
     else:
@@ -273,7 +272,7 @@ def client_get_cluster(provider, provider_kwargs, format_return=False, cluster=N
         msg = "Either the id or name of the cluster must be provided"
         return False, msg
 
-    client = new_compute_client(name=provider_kwargs["profile"]["name"])
+    client = new_cluster_engine_client(name=provider_kwargs["profile"]["name"])
     found_cluster = None
     if cluster["id"]:
         cluster_id = cluster["id"]
