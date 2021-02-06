@@ -33,7 +33,7 @@ class TestInstanceConfigurer(unittest.TestCase):
         )
         oci_profile_options = dict(compartment_id=oci_compartment_id, name=oci_name,)
 
-        test_name = "Test_Instance_Conf"
+        test_name = "New_Test_Instance_Conf"
         node_name = test_name + "_Node"
         vcn_name = test_name + "_Network"
         internet_gateway_name = test_name + "_Internet_Gateway"
@@ -128,7 +128,7 @@ class TestInstanceConfigurer(unittest.TestCase):
         self.endpoint = None
         self.options = None
 
-    def test_instance_ansible_configure(self):
+    def test_instance_ansible_change_hostname(self):
         # Extract the ip of the instance
         options = dict(
             host_variables=dict(
@@ -148,6 +148,37 @@ class TestInstanceConfigurer(unittest.TestCase):
             configuration=configuration,
             credentials=self.authenticator.credentials,
         )
+
+    def test_instance_ansible_change_user(self):
+        # Extract the ip of the instance
+        options = dict(
+            host_variables=dict(
+                ansible_user="opc",
+                ansible_become="yes",
+                ansible_become_method="sudo",
+                verbosity=4,
+                users=[dict(
+                    name="new_user",
+                    sudoer="yes",
+                    auth_key=self.authenticator.credentials.public_key,
+                    group=["adm", "wheel"]
+                )],
+                remove_users=[dict(
+                    name="opc"
+                )]
+            ),
+            host_settings=dict(group="compute", port="22"),
+            apply_kwargs=dict(playbook_path=playbook_change_user),
+        )
+
+        configurer = AnsibleConfigurer()
+        configuration = configurer.gen_configuration(options)
+        applied = configurer.apply(
+            self.endpoint,
+            configuration=configuration,
+            credentials=self.authenticator.credentials,
+        )
+        self.assertTrue(applied)
 
 
 if __name__ == "__main__":

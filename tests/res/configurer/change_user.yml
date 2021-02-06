@@ -1,38 +1,59 @@
-- hosts: all
-  vars:
-    ansible_user: opc
-    ansible_become: yes
-    ansible_become_method: sudo
-    ansible_ssh_private_key_file: "/home/rasmus/corc/ssh/id_rsa"
-    verbosity: 4
-
-    new_user: rasmus
-    new_user_groups:
-      - users
-      - adm
-
+- hosts: compute
+# From https://gist.github.com/fulv/3928d098e8c35af1cc5363a4d2d4fcd0
   tasks:
-    - name: "add the user {{ new_user }}"
+    - name: Add users
       user:
-        name: "{{ new_user }}"
-        groups: "{{ new_user_groups }}"
+        name={{ item.name }}
+        system={{ item.sudoer }}
+        shell=/bin/bash
+        append=yes
+        groups={{ item.group  }}
+      when: item.group is defined
+      with_items: "{{ users }}"
 
-    - name: "copy {{ ansible_user }} home to {{ new_user }}"
-      command:
-        cmd: "cp -r /home/{{ ansible_user }} /home/{{ new_user }}"
+    - name: Add users
+      user:
+        name={{ item.name }}
+        system={{ item.sudoer }}
+        shell=/bin/bash
+      when: item.group is not defined
+      with_items: "{{ users }}"
 
-    # - name: "copy the old user: {{ ansible_user }} to {{ new_user }}"
-    #   file:
-    #     state: directory
-    #     path: "/home/{{ ansible_user }}"
-    #     owner: "{{ new_user }}"
-    #     group: "{{ new_user }}"
-    #     mode: '0775'
-    #   become: yes
+    - name: "Add .ssh directories"
+      file:
+        path=/home/{{ item.name }}/.ssh
+        state=directory
+        mode=0700
+        owner={{ item.name }}
+        group={{ item.group|default(item.name)  }}
+      with_items: "{{ users }}"
 
-    # - name: "remove the old user {{ ansible_user }} home"
-    #   file:
-    #     state: absent
-    #     path: "/home/{{ ansible_user }}"
-    #     mode: '0775'
-    #   become: yes
+    - name: Add keys
+      lineinfile:
+        dest=/home/{{ item.name }}/.ssh/authorized_keys
+        state=present
+        create=yes
+        line="{{ item.auth_key }}"
+        owner={{ item.name }}
+        group={{ item.group|default(item.name)  }}
+        mode=0644
+      when: item.auth_key is defined
+      with_items: "{{ users }}"
+
+    - name: Add to sudoers
+      copy:
+        dest: /etc/sudoers.d/{{ item.name }}
+        content: |
+                {{ item.name }}  ALL=(ALL) ALL
+                {{ item.name }}  ALL=(plone_daemon, plone_buildout) NOPASSWD:ALL
+                {{ item.name }}  ALL=(root) NOPASSWD:/usr/bin/supervisorctl
+      when: item.sudoer
+      with_items: "{{ users }}"
+
+    - name: remove the original user
+      user:
+        name: "{{ item.name }}"
+        state: absent
+        remove: yes
+      when: remove_users is defined
+      with_items: "{{ remove_users }}"
