@@ -20,15 +20,15 @@ def start_instance(provider, provider_kwargs, **kwargs):
         response["msg"] = "The instance is not ready"
         return False, response
 
-    endpoint = orchestrator.endpoint()
+    endpoints = orchestrator.endpoints()
     if not orchestrator.is_reachable():
         response[
             "msg"
-        ] = "The instance is ready at endpoint: {} but not reachable".format(endpoint)
+        ] = "The instance is ready at endpoints: {} but not reachable".format(endpoints)
         return False, response
     else:
-        response["msg"] = "The instance is ready at endpoint: {} and reachable".format(
-            endpoint
+        response["msg"] = "The instance is ready at endpoints: {} and reachable".format(
+            endpoints
         )
         return True, response
     return False, response

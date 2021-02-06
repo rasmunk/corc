@@ -413,7 +413,7 @@ class OCIInstanceOrchestrator(Orchestrator):
         return self.resource_id, self.instance
 
     def poll(self):
-        target_endpoint = self.endpoint()
+        target_endpoint = self.endpoint(select="public_ip")
         if target_endpoint:
             if open_port(target_endpoint, self.port):
                 self._is_reachable = True

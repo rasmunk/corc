@@ -116,7 +116,7 @@ class TestInstanceConfigurer(unittest.TestCase):
             time.sleep(1)
             num_waited += 1
         self.assertTrue(reachable)
-        self.endpoint = self.orchestrator.endpoint()
+        self.endpoint = self.orchestrator.endpoint(select="public_ip")
         self.assertIsNotNone(self.endpoint)
         self.assertTrue(self.authenticator.prepare(self.endpoint))
 
