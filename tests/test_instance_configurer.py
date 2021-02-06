@@ -143,6 +143,7 @@ class TestInstanceConfigurer(unittest.TestCase):
 
         configurer = AnsibleConfigurer()
         configuration = configurer.gen_configuration(options)
+
         configurer.apply(
             self.endpoint,
             configuration=configuration,
@@ -157,15 +158,15 @@ class TestInstanceConfigurer(unittest.TestCase):
                 ansible_become="yes",
                 ansible_become_method="sudo",
                 verbosity=4,
-                users=[dict(
-                    name="new_user",
-                    sudoer="yes",
-                    auth_key=self.authenticator.credentials.public_key,
-                    group=["adm", "wheel"]
-                )],
-                remove_users=[dict(
-                    name="opc"
-                )]
+                users=[
+                    dict(
+                        name="new_user",
+                        sudoer="yes",
+                        auth_key=self.authenticator.credentials.public_key,
+                        group=["adm", "wheel"],
+                    )
+                ],
+                remove_users=[dict(name="opc")],
             ),
             host_settings=dict(group="compute", port="22"),
             apply_kwargs=dict(playbook_path=playbook_change_user),
