@@ -47,6 +47,9 @@ VCN_INTERNETGATEWAY = "{}_{}".format(VCN, INTERNETGATEWAY)
 VCN_ROUTETABLE = "{}_{}".format(VCN, ROUTETABLE)
 VCN_ROUTETABLE_ROUTERULES = "{}_{}".format(VCN_ROUTETABLE, ROUTERULES)
 
+# To get extra information about an entity
+DETAILS = "DETAILS"
+
 # Action groups
 ACTION_GROUPS = [
     ANSIBLE,

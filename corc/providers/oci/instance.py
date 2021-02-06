@@ -1,12 +1,5 @@
 import copy
 import oci
-from oci.core import (
-    ComputeClient,
-    ComputeClientCompositeOperations,
-    VirtualNetworkClient,
-    VirtualNetworkClientCompositeOperations,
-)
-from oci.identity import IdentityClient, IdentityClientCompositeOperations
 from oci.core.models import (
     InstanceSourceViaImageDetails,
     LaunchInstanceDetails,
@@ -34,10 +27,11 @@ from corc.providers.oci.helpers import (
     delete,
     get,
     list_entities,
-    new_client,
+    new_compute_client,
+    new_identity_client,
+    new_network_client,
     stack_was_deleted,
     prepare_details,
-    new_compute_client,
 )
 from corc.providers.oci.network import (
     ensure_vcn_stack,
@@ -128,7 +122,9 @@ def delete_instance(compute_client, instance_id, **kwargs):
     return delete(compute_client, "terminate_instance", instance_id, **kwargs)
 
 
-def client_get_instance(provider, provider_kwargs, format_return=False, instance=None):
+def client_get_instance(
+    provider, provider_kwargs, format_return=False, instance=None, details=None
+):
     if "id" not in instance and "display_name" not in instance:
         return False, "Either the id or display-name of the instance must be provided"
 
@@ -148,10 +144,24 @@ def client_get_instance(provider, provider_kwargs, format_return=False, instance
             provider_kwargs["profile"]["compartment_id"],
             instance["display_name"],
         )
+
     if found_instance:
+        extra_details = {}
+        if details:
+            if "endpoints" in details:
+                network_client = new_network_client(
+                    name=provider_kwargs["profile"]["name"]
+                )
+                endpoints = get_instance_endpoints(
+                    client,
+                    network_client,
+                    provider_kwargs["profile"]["compartment_id"],
+                    found_instance.id,
+                )
+                extra_details["endpoints"] = endpoints
         if format_return:
-            return to_dict(instance), ""
-        return instance, ""
+            return (to_dict(instance), extra_details), ""
+        return (instance, extra_details), ""
     return None, "Failed to find an instance"
 
 
@@ -170,6 +180,23 @@ def get_instance_by_name(compute_client, compartment_id, display_name, kwargs=No
     if instances:
         return instances[0]
     return None
+
+
+def get_instance_endpoints(compute_client, network_client, compartment_id, instance_id):
+    vnic_attachments = list_entities(
+        compute_client, "list_vnic_attachments", compartment_id, instance_id=instance_id
+    )
+
+    instance_endpoints = []
+    for vnic_attach in vnic_attachments:
+        vnic = get(network_client, "get_vnic", vnic_attach.vnic_id)
+        endpoints = {}
+        if hasattr(vnic, "public_ip") and vnic.public_ip:
+            endpoints["public_ip"] = vnic.public_ip
+        if hasattr(vnic, "private_ip") and vnic.private_ip:
+            endpoints["private_ip"] = vnic.private_ip
+        instance_endpoints.append(endpoints)
+    return instance_endpoints
 
 
 def _prepare_source_details(available_images, **kwargs):
@@ -285,24 +312,11 @@ def _gen_instance_stack_details(vcn_id, subnet_id, images, shapes, **options):
 class OCIInstanceOrchestrator(Orchestrator):
     def __init__(self, options):
         super().__init__(options)
+        self.compute_client = new_compute_client(name=options["profile"]["name"],)
 
-        self.compute_client = new_client(
-            ComputeClient,
-            composite_class=ComputeClientCompositeOperations,
-            name=options["profile"]["name"],
-        )
+        self.identity_client = new_identity_client(name=options["profile"]["name"],)
 
-        self.identity_client = new_client(
-            IdentityClient,
-            composite_class=IdentityClientCompositeOperations,
-            name=options["profile"]["name"],
-        )
-
-        self.network_client = new_client(
-            VirtualNetworkClient,
-            composite_class=VirtualNetworkClientCompositeOperations,
-            name=options["profile"]["name"],
-        )
+        self.network_client = new_network_client(name=options["profile"]["name"],)
 
         self.port = 22
         self.instance = None
@@ -374,21 +388,26 @@ class OCIInstanceOrchestrator(Orchestrator):
 
     def endpoint(self, select=None):
         # Return the endpoint that is being orchestrated
-        public_endpoint = None
+        endpoints = self.endpoints(select=select)
+        if endpoints:
+            return endpoints[0]
+        return None
+
+    def endpoints(self, select=None):
+        # Return the endpoint that is being orchestrated
+        endpoints = []
         if self.instance:
-            vnic_attachments = list_entities(
+            endpoints = get_instance_endpoints(
                 self.compute_client,
-                "list_vnic_attachments",
+                self.network_client,
                 self.options["profile"]["compartment_id"],
                 instance_id=self.instance.id,
             )
-            # For now just pick the first attachment
-            for vnic_attach in vnic_attachments:
-                vnic = get(self.network_client, "get_vnic", vnic_attach.vnic_id)
-                if hasattr(vnic, "public_ip") and vnic.public_ip:
-                    public_endpoint = vnic.public_ip
-                    break
-        return public_endpoint
+            if select:
+                endpoints = [
+                    endpoint[select] for endpoint in endpoints if select in endpoint
+                ]
+        return endpoints
 
     def get_resource(self):
         return self.resource_id, self.instance
@@ -656,11 +675,7 @@ class OCIInstanceOrchestrator(Orchestrator):
             )
 
         # TODO, load OCI environment variables
-        compute_client = new_client(
-            ComputeClient,
-            composite_class=ComputeClientCompositeOperations,
-            name=provider_profile["name"],
-        )
+        compute_client = new_compute_client(name=provider_profile["name"])
 
         resource_config = {}
         available_shapes = list_entities(

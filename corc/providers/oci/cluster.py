@@ -1,13 +1,3 @@
-from oci.core import (
-    ComputeClient,
-    ComputeClientCompositeOperations,
-    VirtualNetworkClient,
-    VirtualNetworkClientCompositeOperations,
-)
-from oci.container_engine import (
-    ContainerEngineClient,
-    ContainerEngineClientCompositeOperations,
-)
 from oci.container_engine.models import Cluster, CreateClusterDetails, WorkRequest
 from oci.container_engine.models import (
     CreateNodePoolDetails,
@@ -18,7 +8,9 @@ from oci.container_engine.models import (
 from oci.core.models import CreateSubnetDetails
 from oci.util import to_dict
 from corc.providers.oci.helpers import (
-    new_client,
+    new_compute_client,
+    new_container_engine_client,
+    new_network_client,
     create,
     delete,
     get,
@@ -55,20 +47,8 @@ from corc.providers.oci.network import (
 )
 
 
-def new_cluster_engine_client(**kwargs):
-    return new_client(
-        ContainerEngineClient,
-        composite_class=ContainerEngineClientCompositeOperations,
-        **kwargs,
-    )
-
-
 def refresh_kube_config(cluster_id, name="DEFAULT"):
-    container_engine_client = new_client(
-        ContainerEngineClient,
-        composite_class=ContainerEngineClientCompositeOperations,
-        name=name,
-    )
+    container_engine_client = new_container_engine_client(name=name)
     # Try to load the existing
     # Create or refresh the kubernetes config
 
@@ -207,7 +187,7 @@ def create_cluster(container_engine_client, create_cluster_details, create_kwarg
 
 
 def client_list_clusters(provider, provider_kwargs, format_return=False, **kwargs):
-    client = new_cluster_engine_client(name=provider_kwargs["profile"]["name"])
+    client = new_container_engine_client(name=provider_kwargs["profile"]["name"])
     clusters = list_clusters(client, provider_kwargs["profile"]["compartment_id"])
     if format_return:
         return to_dict(clusters)
@@ -239,7 +219,9 @@ def client_delete_cluster(provider, provider_kwargs, cluster=None):
         msg = "Either the id or name for the cluster must have a value"
         return False, msg
 
-    compute_client = new_cluster_engine_client(name=provider_kwargs["profile"]["name"])
+    compute_client = new_container_engine_client(
+        name=provider_kwargs["profile"]["name"]
+    )
     if cluster["id"]:
         cluster_id = cluster["id"]
     else:
@@ -281,7 +263,7 @@ def client_get_cluster(provider, provider_kwargs, format_return=False, cluster=N
         msg = "Either the id or name for the cluster must have a value"
         return False, msg
 
-    client = new_cluster_engine_client(name=provider_kwargs["profile"]["name"])
+    client = new_container_engine_client(name=provider_kwargs["profile"]["name"])
     found_cluster = None
     if cluster["id"]:
         cluster_id = cluster["id"]
@@ -452,21 +434,12 @@ class OCIClusterOrchestrator(Orchestrator):
         self.options["cluster"]["node"]["image"] = image_options
 
         # Set clients
-        self.compute_client = new_client(
-            ComputeClient,
-            composite_class=ComputeClientCompositeOperations,
-            name=options["profile"]["name"],
+        self.compute_client = new_compute_client(name=options["profile"]["name"])
+        self.container_engine_client = new_container_engine_client(
+            name=options["profile"]["name"]
         )
-        self.container_engine_client = new_client(
-            ContainerEngineClient,
-            composite_class=ContainerEngineClientCompositeOperations,
-            name=options["profile"]["name"],
-        )
-        self.network_client = new_client(
-            VirtualNetworkClient,
-            composite_class=VirtualNetworkClientCompositeOperations,
-            name=options["profile"]["name"],
-        )
+
+        self.network_client = new_network_client(name=options["profile"]["name"])
 
         if (
             "kubernetes_version" not in self.options["cluster"]

@@ -20,13 +20,16 @@ def start_instance(provider, provider_kwargs, **kwargs):
         response["msg"] = "The instance is not ready"
         return False, response
 
+    endpoint = orchestrator.endpoint()
     if not orchestrator.is_reachable():
-        endpoint = orchestrator.endpoint()
         response[
             "msg"
         ] = "The instance is ready at endpoint: {} but not reachable".format(endpoint)
         return False, response
     else:
+        response["msg"] = "The instance is ready at endpoint: {} and reachable".format(
+            endpoint
+        )
         return True, response
     return False, response
 
@@ -61,14 +64,18 @@ def list_instances(provider, provider_kwargs, **kwargs):
     return False, response
 
 
-def get_instance(provider, provider_kwargs, instance={}):
+def get_instance(provider, provider_kwargs, instance={}, details={}):
     response = {}
     provider_func = import_from_module(
         "corc.providers.{}.instance".format(provider), "instance", "client_get_instance"
     )
 
     instance, msg = provider_func(
-        provider, provider_kwargs, format_return=True, instance=instance
+        provider,
+        provider_kwargs,
+        format_return=True,
+        instance=instance,
+        details=details,
     )
     response["msg"] = msg
     if instance:

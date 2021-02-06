@@ -170,6 +170,25 @@ class TestInstanceOrchestrator(unittest.TestCase):
         self.assertTrue(hasattr(subnet, "freeform_tags"))
         self.assertEqual(getattr(subnet, "freeform_tags"), new_subnet["freeform_tags"])
 
+    def test_instance_endpoints(self):
+        self.orchestrator.setup()
+        all_endpoints = self.orchestrator.endpoints()
+        self.assertIsInstance(all_endpoints, list)
+        self.assertNotEqual(all_endpoints, [])
+        for endpoint in all_endpoints:
+            self.assertIn("public_ip", endpoint)
+            self.assertIn("private_ip", endpoint)
+
+        public_endpoint = self.orchestrator.endpoint(select="public_ip")
+        self.assertIsNotNone(public_endpoint)
+        self.assertIsNot(type(public_endpoint), dict)
+        self.assertIsInstance(public_endpoint, str)
+
+        private_endpoint = self.orchestrator.endpoint(select="private_ip")
+        self.assertIsNotNone(private_endpoint)
+        self.assertIsNot(type(private_endpoint), dict)
+        self.assertIsInstance(private_endpoint, str)
+
     def test_teardown_instance(self):
         self.assertFalse(self.orchestrator.is_ready())
         self.orchestrator.tear_down()

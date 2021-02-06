@@ -17,6 +17,9 @@ class Orchestrator:
     def endpoint(self, select=None):
         raise NotImplementedError
 
+    def endpoints(self, select=None):
+        raise NotImplementedError
+
     def poll(self):
         raise NotImplementedError
 

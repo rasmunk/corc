@@ -1,4 +1,3 @@
-from oci.core import VirtualNetworkClient, VirtualNetworkClientCompositeOperations
 from oci.core.models import (
     CreateVcnDetails,
     Vcn,
@@ -22,7 +21,7 @@ from oci.retry import DEFAULT_RETRY_STRATEGY
 from corc.cli.args import get_arguments, OCI, VCN
 from corc.helpers import is_in, exists_in_dict, find_in_dict, unset_check
 from corc.providers.oci.helpers import (
-    new_client,
+    new_network_client,
     prepare_details,
     list_entities,
     get,
@@ -923,11 +922,8 @@ def create_subnet_stack(
 if __name__ == "__main__":
     vcn_args = get_arguments([VCN], strip_group_prefix=True)
     args = get_arguments([OCI], strip_group_prefix=True)
-    network_client = new_client(
-        VirtualNetworkClient,
-        composite_class=VirtualNetworkClientCompositeOperations,
-        name=args.name,
-    )
+
+    network_client = new_network_client(name=args.name,)
 
     removed_vcns = delete_compartment_vcns(network_client, args.compartment_id)
     print("Deleted vcns: {}".format(removed_vcns))

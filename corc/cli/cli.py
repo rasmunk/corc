@@ -331,7 +331,11 @@ def instance_cli(provider, parser):
         "instance",
         "get_instance_groups",
     )
-    get_provider_groups, get_argument_groups = get_instance_groups(get_parser)
+    (
+        get_provider_groups,
+        get_argument_groups,
+        get_none_config_groups,
+    ) = get_instance_groups(get_parser)
     get_parser.set_defaults(
         func=cli_exec,
         module_path="corc.instance",
@@ -339,6 +343,7 @@ def instance_cli(provider, parser):
         func_name="get_instance",
         provider_groups=get_provider_groups,
         argument_groups=get_argument_groups,
+        skip_config_groups=get_none_config_groups,
     )
 
     # List Command

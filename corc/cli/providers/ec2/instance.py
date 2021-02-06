@@ -26,7 +26,8 @@ def get_instance_groups(parser):
 
     provider_groups = [PROFILE]
     argument_groups = [INSTANCE]
-    return provider_groups, argument_groups
+    none_config_groups = []
+    return provider_groups, argument_groups, none_config_groups
 
 
 def list_instance_groups(parser):

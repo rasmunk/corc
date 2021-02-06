@@ -1,6 +1,16 @@
 import os
 import oci
-from oci.core import ComputeClient, ComputeClientCompositeOperations
+from oci.core import (
+    ComputeClient,
+    ComputeClientCompositeOperations,
+    VirtualNetworkClient,
+    VirtualNetworkClientCompositeOperations,
+)
+from oci.container_engine import (
+    ContainerEngineClient,
+    ContainerEngineClientCompositeOperations,
+)
+from oci.identity import IdentityClient, IdentityClientCompositeOperations
 from oci.exceptions import CompositeOperationError, ServiceError
 
 
@@ -19,6 +29,28 @@ def _perform_client_func_action(client, func_name, *args, **kwargs):
 def new_compute_client(**kwargs):
     return new_client(
         ComputeClient, composite_class=ComputeClientCompositeOperations, **kwargs,
+    )
+
+
+def new_container_engine_client(**kwargs):
+    return new_client(
+        ContainerEngineClient,
+        composite_class=ContainerEngineClientCompositeOperations,
+        **kwargs,
+    )
+
+
+def new_network_client(**kwargs):
+    return new_client(
+        VirtualNetworkClient,
+        composite_class=VirtualNetworkClientCompositeOperations,
+        **kwargs,
+    )
+
+
+def new_identity_client(**kwargs):
+    return new_client(
+        IdentityClient, composite_class=IdentityClientCompositeOperations, **kwargs,
     )
 
 

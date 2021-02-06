@@ -1,4 +1,5 @@
 from corc.defaults import (
+    DETAILS,
     INSTANCE,
     VCN_INTERNETGATEWAY,
     VCN_ROUTETABLE,
@@ -10,6 +11,7 @@ from corc.defaults import (
 from corc.cli.parsers.providers.oci.instance import (
     start_instance_group,
     instance_identity_group,
+    instance_get_group,
 )
 from corc.cli.parsers.network.vcn import vcn_identity_group, vcn_config_group
 
@@ -40,10 +42,12 @@ def stop_instance_groups(parser):
 
 def get_instance_groups(parser):
     instance_identity_group(parser)
+    instance_get_group(parser)
 
     provider_groups = [PROFILE]
     argument_groups = [INSTANCE]
-    return provider_groups, argument_groups
+    none_config_groups = [DETAILS]
+    return provider_groups, argument_groups, none_config_groups
 
 
 def list_instance_groups(parser):
