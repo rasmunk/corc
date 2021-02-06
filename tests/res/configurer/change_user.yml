@@ -1,0 +1,38 @@
+- hosts: all
+  vars:
+    ansible_user: opc
+    ansible_become: yes
+    ansible_become_method: sudo
+    ansible_ssh_private_key_file: "/home/rasmus/corc/ssh/id_rsa"
+    verbosity: 4
+
+    new_user: rasmus
+    new_user_groups:
+      - users
+      - adm
+
+  tasks:
+    - name: "add the user {{ new_user }}"
+      user:
+        name: "{{ new_user }}"
+        groups: "{{ new_user_groups }}"
+
+    - name: "copy {{ ansible_user }} home to {{ new_user }}"
+      command:
+        cmd: "cp -r /home/{{ ansible_user }} /home/{{ new_user }}"
+
+    # - name: "copy the old user: {{ ansible_user }} to {{ new_user }}"
+    #   file:
+    #     state: directory
+    #     path: "/home/{{ ansible_user }}"
+    #     owner: "{{ new_user }}"
+    #     group: "{{ new_user }}"
+    #     mode: '0775'
+    #   become: yes
+
+    # - name: "remove the old user {{ ansible_user }} home"
+    #   file:
+    #     state: absent
+    #     path: "/home/{{ ansible_user }}"
+    #     mode: '0775'
+    #   become: yes
