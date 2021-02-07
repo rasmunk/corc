@@ -436,6 +436,9 @@ class OCIInstanceOrchestrator(Orchestrator):
         if "shape_config" in resource_config:
             options["instance"]["shape_config"] = resource_config["shape_config"]
 
+        if "display_name" in resource_config:
+            options["instance"]["display_name"] = resource_config["display_name"]
+
         if "instance_metadata" not in options:
             options["instance_metadata"] = {}
 
@@ -511,16 +514,15 @@ class OCIInstanceOrchestrator(Orchestrator):
         )
 
         instance = None
-        if "display_name" in options["instance"]:
-            instance = get_instance_by_name(
-                self.compute_client,
-                options["profile"]["compartment_id"],
-                options["instance"]["display_name"],
-                kwargs={
-                    "availability_domain": options["instance"]["availability_domain"]
-                },
-            )
+        if "display_name" not in options["instance"]:
+            raise RuntimeError("Missing required unique value to create the resource")
 
+        instance = get_instance_by_name(
+            self.compute_client,
+            options["profile"]["compartment_id"],
+            options["instance"]["display_name"],
+            kwargs={"availability_domain": options["instance"]["availability_domain"]},
+        )
         if not instance:
             self._is_ready = False
             instance = create_instance(
@@ -684,6 +686,9 @@ class OCIInstanceOrchestrator(Orchestrator):
             provider_profile["compartment_id"],
             availability_domain=availability_domain,
         )
+        # Override the name that is assigned to the instance
+        if "display_name" in provider_kwargs:
+            resource_config["display_name"] = provider_kwargs["display_name"]
 
         # Subset selection
         if cpu:

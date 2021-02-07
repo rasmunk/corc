@@ -1,5 +1,6 @@
 from corc.defaults import default_host_key_order
 from corc.io import exists
+from corc.helpers import recursive_format
 from ansible.config.manager import ConfigManager
 from ansible.parsing.dataloader import DataLoader
 from ansible.inventory.manager import InventoryManager
@@ -76,6 +77,42 @@ class AnsibleConfigurer:
         configuration["apply_kwargs"] = {}
         if "apply_kwargs" in options and isinstance(options["apply_kwargs"], dict):
             configuration["apply_kwargs"].update(options["apply_kwargs"])
+        return configuration
+
+    def format_configuration(self, configuration, kwargs=None):
+        if not kwargs:
+            kwargs = {}
+
+        host_variables_kwargs = {
+            k: v
+            for k, v in configuration["host_variables"].items()
+            if isinstance(v, str) or isinstance(v, list) or isinstance(v, dict)
+        }
+
+        host_settings_kwargs = {
+            k: v
+            for k, v in configuration["host_settings"].items()
+            if isinstance(v, str) or isinstance(v, list) or isinstance(v, dict)
+        }
+
+        apply_kwargs = {
+            k: v
+            for k, v in configuration["apply_kwargs"].items()
+            if isinstance(v, str) or isinstance(v, list) or isinstance(v, dict)
+        }
+
+        # Format with kwargs
+        for key, value in kwargs.items():
+            try:
+                recursive_format(host_variables_kwargs, {key: value})
+                recursive_format(host_settings_kwargs, {key: value})
+                recursive_format(apply_kwargs, {key: value})
+            except TypeError:
+                pass
+
+        configuration["host_variables"].update(host_variables_kwargs)
+        configuration["host_settings"].update(host_settings_kwargs)
+        configuration["apply_kwargs"].update(apply_kwargs)
         return configuration
 
     def apply(self, host, configuration=None, credentials=None):
