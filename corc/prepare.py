@@ -45,7 +45,7 @@ if __name__ == "__main__":
     # After being started -> run ansible playbook (wagstaff)
     # Load playbook
     pb = Playbook.load(
-        args.playbook_path, variable_manager=variable_manager, loader=loader
+        args.playbook_paths, variable_manager=variable_manager, loader=loader
     )
     plays = pb.get_plays()
 

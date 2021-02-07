@@ -22,7 +22,7 @@ default_configurer_config = {}
 default_configurers_config = {ANSIBLE: default_configurer_config}
 
 valid_configurer_config = {
-    ANSIBLE: {"root_path": str, "playbook_path": str, "inventory_path": str,}
+    ANSIBLE: {"root_path": str, "playbook_paths": str, "inventory_path": str,}
 }
 
 default_job_meta_config = {

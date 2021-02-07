@@ -131,36 +131,36 @@ class AnsibleConfigurer:
         for k, v in configuration["host_variables"].items():
             self.variable_manager.set_host_variable(host, k, v)
 
-        if "playbook_path" not in configuration["apply_kwargs"]:
+        if "playbook_paths" not in configuration["apply_kwargs"]:
             return False
 
-        if not exists(configuration["apply_kwargs"]["playbook_path"]):
-            print(
-                "The playbook_path: {} does not exist".format(
-                    configuration["apply_kwargs"]["playbook_path"]
+        if not isinstance(configuration["apply_kwargs"]["playbook_paths"]):
+            return False
+
+        for playbook_path in configuration["apply_kwargs"]["playbook_paths"]:
+            if not exists(playbook_path):
+                print("The playbook_path: {} does not exist".format(playbook_path))
+                return False
+
+            if credentials:
+                self.variable_manager.set_host_variable(
+                    host, "ansible_ssh_private_key_file", credentials.private_key_file
                 )
-            )
-            return False
 
-        if credentials:
-            self.variable_manager.set_host_variable(
-                host, "ansible_ssh_private_key_file", credentials.private_key_file
-            )
-
-        playbook = Playbook.load(
-            configuration["apply_kwargs"]["playbook_path"],
-            variable_manager=self.variable_manager,
-            loader=self.loader,
-        )
-
-        plays = playbook.get_plays()
-        for play in plays:
-            run_playbook(
-                play,
+            playbook = Playbook.load(
+                playbook_path,
                 variable_manager=self.variable_manager,
-                inventory_manager=self.inventory_manager,
                 loader=self.loader,
             )
+
+            plays = playbook.get_plays()
+            for play in plays:
+                run_playbook(
+                    play,
+                    variable_manager=self.variable_manager,
+                    inventory_manager=self.inventory_manager,
+                    loader=self.loader,
+                )
         return True
 
     @classmethod

@@ -138,7 +138,7 @@ class TestInstanceConfigurer(unittest.TestCase):
                 verbosity=4,
             ),
             host_settings=dict(group="compute", port="22"),
-            apply_kwargs=dict(playbook_path=playbook_hostname),
+            apply_kwargs=dict(playbook_paths=[playbook_hostname]),
         )
 
         configurer = AnsibleConfigurer()
@@ -169,7 +169,7 @@ class TestInstanceConfigurer(unittest.TestCase):
                 remove_users=[dict(name="opc")],
             ),
             host_settings=dict(group="compute", port="22"),
-            apply_kwargs=dict(playbook_path=playbook_change_user),
+            apply_kwargs=dict(playbook_paths=[playbook_change_user]),
         )
 
         configurer = AnsibleConfigurer()
