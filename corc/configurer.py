@@ -134,7 +134,7 @@ class AnsibleConfigurer:
         if "playbook_paths" not in configuration["apply_kwargs"]:
             return False
 
-        if not isinstance(configuration["apply_kwargs"]["playbook_paths"]):
+        if not isinstance(configuration["apply_kwargs"]["playbook_paths"], (list, set)):
             return False
 
         for playbook_path in configuration["apply_kwargs"]["playbook_paths"]:
