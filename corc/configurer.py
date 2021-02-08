@@ -18,7 +18,7 @@ def load_playbook_source(path):
 def run_playbook(
     play, variable_manager=None, inventory_manager=None, loader=None, passwords=None
 ):
-    tqm = None
+    result = -1
     try:
         tqm = TaskQueueManager(
             inventory=inventory_manager,
@@ -26,12 +26,15 @@ def run_playbook(
             loader=loader,
             passwords=passwords,
         )
-        tqm.run(play)
+        result = tqm.run(play)
     finally:
         if tqm is not None:
             tqm.cleanup()
         if loader:
             loader.cleanup_all_tmp_files()
+    if result == 0:
+        return True
+    return False
 
 
 class AnsibleConfigurer:
@@ -155,12 +158,13 @@ class AnsibleConfigurer:
 
             plays = playbook.get_plays()
             for play in plays:
-                run_playbook(
+                if not run_playbook(
                     play,
                     variable_manager=self.variable_manager,
                     inventory_manager=self.inventory_manager,
                     loader=self.loader,
-                )
+                ):
+                    return False
         return True
 
     @classmethod
