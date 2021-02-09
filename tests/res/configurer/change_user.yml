@@ -50,7 +50,7 @@
       when: item.sudoer
       with_items: "{{ users }}"
 
-    - name: remove the original user
+    - name: remove users
       user:
         name: "{{ item.name }}"
         state: absent

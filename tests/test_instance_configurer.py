@@ -163,10 +163,8 @@ class TestInstanceConfigurer(unittest.TestCase):
                         name="new_user",
                         sudoer="yes",
                         auth_key=self.authenticator.credentials.public_key,
-                        group=["adm", "wheel"],
                     )
                 ],
-                remove_users=[dict(name="opc")],
             ),
             host_settings=dict(group="compute", port="22"),
             apply_kwargs=dict(playbook_paths=[playbook_change_user]),
