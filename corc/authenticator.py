@@ -25,6 +25,29 @@ def make_certificate(identity, private_key_path, public_key_path):
     return False
 
 
+def ssh_credentials_exists(ssh_dir_path=default_ssh_path,
+                           key_name="id_rsa",
+                           check_certificate=False):
+
+    corc_ssh_path = get_corc_path(path=ssh_dir_path, env_postfix="SSH_PATH")
+    if not os.path.exists(corc_ssh_path):
+        return False
+
+    private_key_file = os.path.join(corc_ssh_path, key_name)
+    if not os.path.exists(private_key_file):
+        return False
+
+    public_key_file = os.path.join(corc_ssh_path, "{}.pub".format(key_name))
+    if not os.path.exists(public_key_file):
+        return False
+
+    if check_certificate:
+        certificate_file = os.path.join(corc_ssh_path, "{}-cert.pub".format(key_name))
+        if not os.path.exists(certificate_file):
+            return False
+    return True
+
+
 def gen_rsa_ssh_key_pair(size=2048):
     rsa_key = paramiko.RSAKey.generate(size)
     string_io_obj = StringIO()
@@ -173,6 +196,10 @@ class SSHCredentials:
                 return False
         return True
 
+    @staticmethod
+    def exists(ssh_dir_path=default_ssh_path, key_name="id_rsa", check_certificate=False):
+        return ssh_credentials_exists(ssh_dir_path=ssh_dir_path, key_name=key_name, check_certificate=check_certificate)
+
 
 class SSHAuthenticator:
     # TODO, make independent known_hosts file path inside the corc directory
@@ -291,3 +318,7 @@ class SSHAuthenticator:
 
     def remove_credentials(self):
         return self.credentials.remove()
+
+    @staticmethod
+    def existing_credentials(**kwargs):
+        return SSHCredentials.exists(**kwargs)
