@@ -25,9 +25,9 @@ def make_certificate(identity, private_key_path, public_key_path):
     return False
 
 
-def ssh_credentials_exists(ssh_dir_path=default_ssh_path,
-                           key_name="id_rsa",
-                           check_certificate=False):
+def ssh_credentials_exists(
+    ssh_dir_path=default_ssh_path, key_name="id_rsa", check_certificate=False
+):
 
     corc_ssh_path = get_corc_path(path=ssh_dir_path, env_postfix="SSH_PATH")
     if not os.path.exists(corc_ssh_path):
@@ -197,8 +197,14 @@ class SSHCredentials:
         return True
 
     @staticmethod
-    def exists(ssh_dir_path=default_ssh_path, key_name="id_rsa", check_certificate=False):
-        return ssh_credentials_exists(ssh_dir_path=ssh_dir_path, key_name=key_name, check_certificate=check_certificate)
+    def exists(
+        ssh_dir_path=default_ssh_path, key_name="id_rsa", check_certificate=False
+    ):
+        return ssh_credentials_exists(
+            ssh_dir_path=ssh_dir_path,
+            key_name=key_name,
+            check_certificate=check_certificate,
+        )
 
 
 class SSHAuthenticator:

@@ -13,7 +13,6 @@ from corc.defaults import (
 )
 
 
-
 valid_cluster_node_config = {
     "id": str,
     "name": str,
