@@ -141,6 +141,8 @@ class AnsibleConfigurer:
             return False
 
         for playbook_path in configuration["apply_kwargs"]["playbook_paths"]:
+            # Expand the playbook path if it is using relative paths
+            playbook_path = os.path.expanduser(playbook_path)
             if not exists(playbook_path):
                 print("The playbook_path: {} does not exist".format(playbook_path))
                 return False
