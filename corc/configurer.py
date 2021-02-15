@@ -1,3 +1,4 @@
+import os
 from corc.defaults import default_host_key_order
 from corc.io import exists
 from corc.helpers import recursive_format
