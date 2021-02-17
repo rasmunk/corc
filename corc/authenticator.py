@@ -132,6 +132,7 @@ def gen_ssh_credentials(
     size=2048,
     create_certificate=False,
     certificate_kwargs=None,
+    **kwargs
 ):
     if not certificate_kwargs:
         certificate_kwargs = {}
