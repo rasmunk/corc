@@ -37,7 +37,7 @@ def make_certificate(identity, private_key_path, public_key_path):
 
 
 def ssh_credentials_exists(
-    ssh_dir_path=default_ssh_path, key_name="id_rsa", check_certificate=False
+    ssh_dir_path=default_ssh_path, key_name="id_rsa", check_certificate=False, **kwargs
 ):
     corc_ssh_path = get_corc_path(path=ssh_dir_path, env_postfix="SSH_PATH")
     if not os.path.exists(corc_ssh_path):
@@ -97,6 +97,7 @@ def load_ssh_credentials(
         ssh_dir_path=ssh_dir_path,
         key_name=key_name,
         check_certificate=check_certificate,
+        **kwargs
     ):
         return None
 
@@ -299,7 +300,10 @@ class SSHCredentials:
 
     @staticmethod
     def exists(
-        ssh_dir_path=default_ssh_path, key_name="id_rsa", check_certificate=False
+        ssh_dir_path=default_ssh_path,
+        key_name="id_rsa",
+        check_certificate=False,
+        **kwargs
     ):
         return ssh_credentials_exists(
             ssh_dir_path=ssh_dir_path,
@@ -311,13 +315,9 @@ class SSHCredentials:
 class SSHAuthenticator:
     # TODO, make independent known_hosts file path inside the corc directory
 
-    def __init__(self, try_load_existing=False, **kwargs):
-        if try_load_existing:
-            credentials = load_ssh_credentials(**kwargs)
-            if not credentials:
-                self._credentials = gen_ssh_credentials(**kwargs)
-            else:
-                self._credentials = credentials
+    def __init__(self, load_existing=False, **kwargs):
+        if load_existing and SSHAuthenticator.existing_credentials(**kwargs):
+            self._credentials = load_ssh_credentials(**kwargs)
         else:
             self._credentials = gen_ssh_credentials(**kwargs)
         self._is_prepared = False
