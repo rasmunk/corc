@@ -87,7 +87,11 @@ def gen_rsa_ssh_key_pair(size=2048):
 
 
 def load_ssh_credentials(
-    ssh_dir_path=default_ssh_path, key_name="id_rsa", check_certificate=False, size=2048
+    ssh_dir_path=default_ssh_path,
+    key_name="id_rsa",
+    check_certificate=False,
+    size=2048,
+    **kwargs
 ):
     if not ssh_credentials_exists(
         ssh_dir_path=ssh_dir_path,
@@ -307,9 +311,13 @@ class SSHCredentials:
 class SSHAuthenticator:
     # TODO, make independent known_hosts file path inside the corc directory
 
-    def __init__(self, load_existing=False, **kwargs):
-        if load_existing:
-            self._credentials = load_ssh_credentials(**kwargs)
+    def __init__(self, try_load_existing=False, **kwargs):
+        if try_load_existing:
+            credentials = load_ssh_credentials(**kwargs)
+            if not credentials:
+                self._credentials = gen_ssh_credentials(**kwargs)
+            else:
+                self._credentials = credentials
         else:
             self._credentials = gen_ssh_credentials(**kwargs)
         self._is_prepared = False
