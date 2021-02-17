@@ -95,6 +95,8 @@ def gen_ssh_credentials(
         ):
             credential_kwargs["certificate_file"] = certificate_file
             credential_kwargs["certificate"] = fileload(certificate_file)
+            credentials.certificate = credential_kwargs["certificate"]
+            credentials.certificate_file = credential_kwargs["certificate_file"]
         else:
             print("Failed to create certificate file: {}".format(certificate_file))
     return credentials
@@ -128,33 +130,65 @@ class SSHCredentials:
     def user(self):
         return self._user
 
+    @user.setter
+    def user(self, user):
+        self._user = user
+
     @property
     def password(self):
         return self._password
+
+    @password.setter
+    def password(self, password):
+        self._password = password
 
     @property
     def private_key(self):
         return self._private_key
 
+    @private_key.setter
+    def private_key(self, private_key):
+        self._private_key = private_key
+
     @property
     def private_key_file(self):
         return self._private_key_file
+
+    @private_key_file.setter
+    def private_key_file(self, private_key_file):
+        self._private_key_file = private_key_file
 
     @property
     def public_key(self):
         return self._public_key
 
+    @public_key.setter
+    def public_key(self, public_key):
+        self._public_key = public_key
+
     @property
     def public_key_file(self):
         return self._public_key_file
+
+    @public_key_file.setter
+    def public_key_file(self, public_key_file):
+        self._public_key_file = public_key_file
 
     @property
     def certificate(self):
         return self._certificate
 
+    @certificate.setter
+    def certificate(self, certificate):
+        self._certificate = certificate
+
     @property
     def certificate_file(self):
         return self._certificate_file
+
+    @certificate_file.setter
+    def certificate_file(self, certificate_file):
+        self._certificate_file = certificate_file
 
     def store(self):
         if self.private_key_file and self.private_key:
