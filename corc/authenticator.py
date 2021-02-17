@@ -12,6 +12,17 @@ from corc.defaults import default_base_path, default_host_key_order
 default_ssh_path = os.path.join(default_base_path, "ssh")
 
 
+def load_certificate(ssh_dir_path=default_ssh_path, key_name="id_rsa"):
+    corc_ssh_path = get_corc_path(path=ssh_dir_path, env_postfix="SSH_PATH")
+    if not os.path.exists(corc_ssh_path):
+        return False
+
+    certificate_file = os.path.join(corc_ssh_path, "{}-cert.pub".format(key_name))
+    if os.path.exists(certificate_file):
+        return fileload(certificate_file)
+    return False
+
+
 def make_certificate(identity, private_key_path, public_key_path):
     result = subprocess.run(
         ["ssh-keygen", "-s", private_key_path, "-I", identity, public_key_path],
@@ -28,7 +39,6 @@ def make_certificate(identity, private_key_path, public_key_path):
 def ssh_credentials_exists(
     ssh_dir_path=default_ssh_path, key_name="id_rsa", check_certificate=False
 ):
-
     corc_ssh_path = get_corc_path(path=ssh_dir_path, env_postfix="SSH_PATH")
     if not os.path.exists(corc_ssh_path):
         return False
@@ -48,6 +58,24 @@ def ssh_credentials_exists(
     return True
 
 
+def load_rsa_key_pair(ssh_dir_path=default_ssh_path, key_name="id_rsa"):
+
+    corc_ssh_path = get_corc_path(path=ssh_dir_path, env_postfix="SSH_PATH")
+    if not os.path.exists(corc_ssh_path):
+        return False, False
+
+    private_key_file = os.path.join(corc_ssh_path, key_name)
+    if not os.path.exists(private_key_file):
+        return False, False
+    private_key = fileload(private_key_file)
+
+    public_key_file = os.path.join(corc_ssh_path, "{}.pub".format(key_name))
+    if not os.path.exists(public_key_file):
+        return False, False
+    public_key = fileload(public_key_file)
+    return private_key, public_key
+
+
 def gen_rsa_ssh_key_pair(size=2048):
     rsa_key = paramiko.RSAKey.generate(size)
     string_io_obj = StringIO()
@@ -56,6 +84,41 @@ def gen_rsa_ssh_key_pair(size=2048):
     private_key = string_io_obj.getvalue()
     public_key = ("ssh-rsa %s" % (rsa_key.get_base64())).strip()
     return private_key, public_key
+
+
+def load_ssh_credentials(
+    ssh_dir_path=default_ssh_path, key_name="id_rsa", check_certificate=False, size=2048
+):
+    if not ssh_credentials_exists(
+        ssh_dir_path=ssh_dir_path,
+        key_name=key_name,
+        check_certificate=check_certificate,
+    ):
+        return None
+
+    corc_ssh_path = get_corc_path(path=ssh_dir_path, env_postfix="SSH_PATH")
+    private_key, public_key = load_rsa_key_pair(
+        ssh_dir_path=corc_ssh_path, key_name=key_name
+    )
+    private_key_file = os.path.join(corc_ssh_path, key_name)
+    public_key_file = os.path.join(corc_ssh_path, "{}.pub".format(key_name))
+
+    credential_kwargs = dict(
+        private_key=private_key,
+        private_key_file=private_key_file,
+        public_key=public_key,
+        public_key_file=public_key_file,
+    )
+
+    if check_certificate:
+        certificate_file = os.path.join(corc_ssh_path, "{}-cert.pub".format(key_name))
+        certificate = load_certificate(certificate_file)
+        if certificate:
+            credential_kwargs.update(
+                {"certificate_file": certificate_file, "certificate": certificate}
+            )
+
+    return SSHCredentials(**credential_kwargs)
 
 
 def gen_ssh_credentials(
@@ -244,11 +307,11 @@ class SSHCredentials:
 class SSHAuthenticator:
     # TODO, make independent known_hosts file path inside the corc directory
 
-    def __init__(self, credentials=None, **kwargs):
-        if not credentials:
-            self._credentials = gen_ssh_credentials(**kwargs)
+    def __init__(self, load_existing=False, **kwargs):
+        if load_existing:
+            self._credentials = load_ssh_credentials(**kwargs)
         else:
-            self._credentials = credentials
+            self._credentials = gen_ssh_credentials(**kwargs)
         self._is_prepared = False
 
     @property

@@ -3,7 +3,7 @@ import time
 import unittest
 
 # from corc.providers.types import get_orchestrator, CONTAINER, LOCAL
-from corc.authenticator import SSHAuthenticator, gen_ssh_credentials
+from corc.authenticator import SSHAuthenticator
 from corc.config import load_from_env_or_config, gen_config_provider_prefix
 from corc.configurer import AnsibleConfigurer
 from corc.providers.oci.instance import OCIInstanceOrchestrator
@@ -57,10 +57,9 @@ class TestInstanceConfigurer(unittest.TestCase):
             display_name=node_name,
         )
 
-        credentials = gen_ssh_credentials(
+        self.authenticator = SSHAuthenticator(
             ssh_dir_path=os.path.join(self.test_dir, "ssh")
         )
-        self.authenticator = SSHAuthenticator(credentials=credentials)
         self.authenticator.store_credentials()
 
         instance_metadata_options = dict(
