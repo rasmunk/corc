@@ -1,6 +1,8 @@
 from corc.defaults import PROFILE, CLUSTER
-from corc.cli.parsers.cluster.cluster import cluster_identity_group
-from corc.cli.parsers.providers.ec2.cluster import start_cluster_group
+from corc.cli.parsers.providers.ec2.cluster import (
+    start_cluster_group,
+    cluster_identity_group,
+)
 
 
 def start_cluster_groups(parser):
