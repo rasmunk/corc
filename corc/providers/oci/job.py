@@ -221,9 +221,7 @@ def run(provider, provider_kwargs, cluster=None, job=None, storage=None):
             # S3 storage
             # Look for s3 credentials and config files
             s3_config = load_aws_config(
-                s3["config_file"],
-                credentials_file=s3["credentials_file"],
-                name=s3["name"],
+                s3["config_file"], s3["credentials_file"], profile_name=s3["name"],
             )
             s3_config["endpoint_url"] = storage["endpoint"]
 
@@ -462,7 +460,7 @@ def _required_get_result_arguments(job, storage, s3):
     validate_dict_values(s3, required_s3_fields, verbose=True, throw=True)
 
 
-def get_results(job={}, storage={}):
+def get_results(provider, provider_kwargs, job={}, storage={}):
     # TODO, temp fix
     s3 = storage["s3"]
     _validate_fields(job=job, storage=storage, s3=s3)
@@ -473,7 +471,7 @@ def get_results(job={}, storage={}):
     # S3 storage
     # Look for s3 credentials and config files
     s3_config = load_aws_config(
-        s3["config_file"], s3["credentials_file"], name=s3["name"],
+        s3["config_file"], s3["credentials_file"], profile_name=s3["name"],
     )
     s3_config["endpoint_url"] = storage["endpoint"]
 
@@ -535,7 +533,7 @@ def delete_results(job={}, storage={}):
     # S3 storage
     # Look for s3 credentials and config files
     s3_config = load_aws_config(
-        s3["config_file"], s3["credentials_file"], name=s3["name"],
+        s3["config_file"], s3["credentials_file"], profile_name=s3["name"],
     )
     s3_config["endpoint_url"] = storage["endpoint"]
 
@@ -594,7 +592,7 @@ def list_results(job={}, storage={}):
     # S3 storage
     # Look for s3 credentials and config files
     s3_config = load_aws_config(
-        s3["config_file"], s3["credentials_file"], name=s3["name"],
+        s3["config_file"], s3["credentials_file"], profile_name=s3["name"],
     )
     s3_config["endpoint_url"] = storage["endpoint"]
 
