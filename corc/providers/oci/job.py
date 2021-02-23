@@ -96,7 +96,7 @@ def _required_run_arguments(provider_kwargs, cluster, job, storage, s3):
     # Storage and Staging are not required to execute a job, only if enabled
 
 
-def run(provider_kwargs, cluster={}, job={}, storage={}):
+def run(provider, provider_kwargs, cluster=None, job=None, storage=None):
     # TODO, temp fix
     s3 = storage["s3"]
     _validate_fields(
