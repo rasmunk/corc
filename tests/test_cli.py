@@ -110,7 +110,9 @@ class TestCLI(unittest.TestCase):
         self.assertTrue(hasattr(result, "returncode"))
         self.assertEqual(result.returncode, 0)
         content = json.loads(result.stdout.decode("utf-8"))
-        self.assertIn("instances", content)
+        self.assertIn(
+            "instances", content, "{}: did not have instances".format(content)
+        )
 
         # Start an instance
         result = subprocess.run(start_args, capture_output=True)
@@ -118,7 +120,7 @@ class TestCLI(unittest.TestCase):
         self.assertTrue(hasattr(result, "returncode"))
         self.assertEqual(result.returncode, 0, result.stderr)
         content = json.loads(result.stdout.decode("utf-8"))
-        self.assertIn("id", content)
+        self.assertIn("id", content, "id is missing from {}".format(content))
         assigned_id = content["id"]
         self.assertIsNotNone(assigned_id)
 
@@ -129,7 +131,7 @@ class TestCLI(unittest.TestCase):
         self.assertTrue(hasattr(result, "returncode"))
         self.assertEqual(result.returncode, 0)
         content = json.loads(result.stdout.decode("utf-8"))
-        self.assertIn("id", content)
+        self.assertIn("id", content, "id is missing from {}".format(content))
         self.assertEqual(content["id"], assigned_id)
 
         # Stop the instance
@@ -139,7 +141,7 @@ class TestCLI(unittest.TestCase):
         self.assertTrue(hasattr(result, "returncode"))
         self.assertEqual(result.returncode, 0)
         content = json.loads(result.stdout.decode("utf-8"))
-        self.assertIn("id", content)
+        self.assertIn("id", content, "id is missing from {}".format(content))
 
         # List args (should be empty)
         result = subprocess.run(get_args, capture_output=True)
@@ -148,9 +150,9 @@ class TestCLI(unittest.TestCase):
         self.assertEqual(result.returncode, 0)
         content = json.loads(result.stdout.decode("utf-8"))
         # Assure that it is terminating
-        self.assertIn("id", content)
+        self.assertIn("id", content, "id is missing from {}".format(content))
         self.assertEqual(content["id"], assigned_id)
-        self.assertIn("instance", content)
+        self.assertIn("instance", content, "{}: did not have instance".format(content))
         state = content["instance"][0]["lifecycle_state"]
         self.assertIn(state, ["TERMINATING", "TERMINATED"])
 
