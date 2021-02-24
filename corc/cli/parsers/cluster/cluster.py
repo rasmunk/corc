@@ -12,8 +12,8 @@ from corc.cli.parsers.providers.oci.cluster import (
 
 
 def valid_cluster_group(parser):
-    cluster_schedule_group(parser)
     cluster_identity_group(parser)
+    cluster_schedule_group(parser)
     oci_start_cluster(parser)
     oci_start_node_cluster(parser)
     ec2_start_cluster(parser)
@@ -23,4 +23,3 @@ def valid_cluster_group(parser):
 def cluster_identity_group(parser):
     cluster_group = parser.add_argument_group(title="Cluster Identity arguments")
     cluster_group.add_argument("--cluster-id", default="")
-    cluster_group.add_argument("--cluster-name", default="")

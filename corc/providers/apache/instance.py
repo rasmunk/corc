@@ -35,9 +35,9 @@ def client_get_instance(provider, provider_kwargs, format_return=False, instance
     found_instance = get_instance(client, instance["uuid"])
     if found_instance:
         if format_return:
-            return str(found_instance), ""
-        return found_instance, ""
-    return None, "Failed to find an instance with: {} details".format(instance)
+            return found_instance.uuid, str(found_instance), ""
+        return found_instance.uuid, found_instance, ""
+    return None, None, "Failed to find an instance with: {} details".format(instance)
 
 
 def get_instance(client, instance_uuid, *args, **kwargs):

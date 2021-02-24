@@ -3,6 +3,7 @@ import flatten_dict
 import os
 import yaml
 from corc.defaults import (
+    PACKAGE_NAME,
     default_base_path,
     ANSIBLE,
     EC2,
@@ -31,6 +32,10 @@ default_job_meta_config = {
     "env_override": True,
     "num_jobs": 1,
     "num_parallel": 1,
+    "min_cores": 1,
+    "max_cores": 128,
+    "min_memory": 1,
+    "max_memory": 128,
 }
 
 valid_job_meta_config = {
@@ -54,6 +59,10 @@ valid_job_config = {
     "capture": bool,
     "output_path": str,
     "working_dir": str,
+    "min_cores": int,
+    "max_cores": int,
+    "min_memory": int,
+    "max_memory": int,
 }
 
 default_providers_config = {EC2: {}, OCI_LOWER: {}}
@@ -106,7 +115,7 @@ valid_storage_config = {
 
 
 default_corc_config = {
-    "corc": {
+    PACKAGE_NAME: {
         "job": default_job_config,
         "storage": default_storage_config,
         "configurers": {ANSIBLE: default_configurer_config},
@@ -249,10 +258,12 @@ def valid_config(config, verbose=False):
     if not isinstance(config, dict):
         return False
 
-    if "corc" not in config:
+    if PACKAGE_NAME not in config:
         return False
 
-    return recursive_check_config(config["corc"], valid_corc_config, verbose=verbose)
+    return recursive_check_config(
+        config[PACKAGE_NAME], valid_corc_config, verbose=verbose
+    )
 
 
 def load_from_env_or_config(
@@ -357,5 +368,7 @@ def gen_config_provider_prefix(provider):
     return gen_config_prefix(("providers",)) + provider
 
 
-def gen_config_prefix(prefix):
-    return ("corc",) + prefix
+def gen_config_prefix(prefix=None):
+    if prefix:
+        return (PACKAGE_NAME,) + prefix
+    return (PACKAGE_NAME,)

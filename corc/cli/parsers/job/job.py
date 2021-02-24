@@ -16,8 +16,8 @@ def job_meta_group(parser):
     job_group = parser.add_argument_group(title="Job Meta arguments")
     job_group.add_argument("--job-meta-debug", action="store_true")
     job_group.add_argument("--job-meta-env-override", action="store_true")
-    job_group.add_argument("--job-meta-num-jobs", type=int, default=1)
-    job_group.add_argument("--job-meta-num-parallel", type=int, default=1)
+    job_group.add_argument("--job-meta-num-jobs", type=int)
+    job_group.add_argument("--job-meta-num-parallel", type=int)
 
 
 def job_group(parser):
@@ -26,3 +26,7 @@ def job_group(parser):
     job_group.add_argument("--job-capture", action="store_true")
     job_group.add_argument("--job-output-path", type=str, default="")
     job_group.add_argument("--job-working-dir", type=str, default="")
+    job_group.add_argument("--job-min-cores", type=int)
+    job_group.add_argument("--job-max-cores", type=int)
+    job_group.add_argument("--job-min-memory", type=int)
+    job_group.add_argument("--job-max-memory", type=int)

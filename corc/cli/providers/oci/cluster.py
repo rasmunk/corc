@@ -7,8 +7,8 @@ from corc.defaults import (
     VCN_SUBNET,
     VCN,
 )
-from corc.cli.parsers.cluster.cluster import cluster_identity_group
 from corc.cli.parsers.providers.oci.cluster import (
+    cluster_identity_group,
     start_cluster_group,
     start_cluster_node_group,
 )

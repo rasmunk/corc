@@ -225,23 +225,23 @@ def client_delete_cluster(provider, provider_kwargs, cluster=None):
     if cluster["id"]:
         cluster_id = cluster["id"]
     else:
-        _object = get_cluster_by_name(
+        cluster_object = get_cluster_by_name(
             compute_client,
             provider_kwargs["profile"]["compartment_id"],
             cluster["name"],
         )
-        if not _object:
+        if not cluster_object:
             return (
                 False,
                 "Failed to find a cluster with display-name: {}".format(
-                    _object["name"]
+                    cluster_object["name"]
                 ),
             )
 
-        cluster_id = _object.id
+        cluster_id = cluster_object.id
 
     deleted = delete_cluster(compute_client, cluster_id)
-    return deleted, cluster_id
+    return cluster_id, deleted
 
 
 def delete_cluster(container_engine_client, cluster_id, **kwargs):
@@ -257,11 +257,11 @@ def delete_cluster(container_engine_client, cluster_id, **kwargs):
 def client_get_cluster(provider, provider_kwargs, format_return=False, cluster=None):
     if "id" not in cluster and "name" not in cluster:
         msg = "Either the id or name of the cluster must be set"
-        return False, msg
+        return None, False, msg
 
     if not cluster["id"] and not cluster["name"]:
         msg = "Either the id or name for the cluster must have a value"
-        return False, msg
+        return None, False, msg
 
     client = new_container_engine_client(name=provider_kwargs["profile"]["name"])
     found_cluster = None
@@ -276,9 +276,9 @@ def client_get_cluster(provider, provider_kwargs, format_return=False, cluster=N
         )
     if found_cluster:
         if format_return:
-            return to_dict(cluster), ""
-        return cluster, ""
-    return None, "Failed to find a cluster with details: {}".format(cluster)
+            return found_cluster.id, to_dict(found_cluster), ""
+        return found_cluster.id, found_cluster, ""
+    return None, None, "Failed to find a cluster with details: {}".format(cluster)
 
 
 def get_cluster(compute_client, compartment_id, cluster_id, kwargs=None):
@@ -611,7 +611,10 @@ class OCIClusterOrchestrator(Orchestrator):
                 cluster_details["create_node_pool"],
             )
             if valid_cluster_stack(cluster_stack):
-                self.cluster_stack = cluster_stack
+                self.resource_id, self.cluster_stack = (
+                    cluster_stack["id"],
+                    cluster_stack,
+                )
             else:
                 raise ValueError(
                     "The new cluster stack: {} is not valid".format(cluster_stack)
@@ -634,9 +637,12 @@ class OCIClusterOrchestrator(Orchestrator):
                     cluster_stack["node_pools"].append(node_pool)
 
             if valid_cluster_stack(cluster_stack):
-                self.cluster_stack = cluster_stack
+                self.resource_id, self.cluster_stack = (
+                    cluster_stack["id"],
+                    cluster_stack,
+                )
 
-        if self.cluster_stack:
+        if self.cluster_stack and self.resource_id:
             self._is_ready = True
 
     def tear_down(self):

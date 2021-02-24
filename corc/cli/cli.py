@@ -18,8 +18,8 @@ from corc.cli.parsers.job.job import (
     job_group,
     job_meta_group,
 )
+from corc.cli.parsers.providers.oci.cluster import cluster_identity_group
 from corc.cli.parsers.cluster.cluster import (
-    cluster_identity_group,
     valid_cluster_group,
     cluster_schedule_group,
 )

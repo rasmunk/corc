@@ -20,6 +20,9 @@ class Orchestrator:
     def endpoints(self, select=None):
         raise NotImplementedError
 
+    def get_resource(self):
+        raise NotImplementedError
+
     def poll(self):
         raise NotImplementedError
 
@@ -28,9 +31,6 @@ class Orchestrator:
 
     def resource_id(self):
         return self._resource_id
-
-    def get_resource(self):
-        raise NotImplementedError
 
     def tear_down(self):
         raise NotImplementedError

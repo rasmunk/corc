@@ -328,6 +328,21 @@ def run(provider, provider_kwargs, cluster=None, job=None, storage=None):
     if "working_dir" in job:
         container_spec.update({"working_dir": job["working_dir"]})
 
+    # If the container requires a specific set of resources
+    resources = {}
+    if "min_cores" in job:
+        resources["requests"] = {"cpu": job["min_cores"]}
+    if "max_cores" in job:
+        resources["limits"] = {"cpu": job["max_cores"]}
+    if "min_memory" in job:
+        resources["requests"].update({"memory": job["min_memory"]})
+    if "max_memory" in job:
+        resources["limits"].update({"memory": job["max_memory"]})
+
+    if resources:
+        resource_req = client.V1ResourceRequirements(**resources)
+        container_spec.update({"resources": resource_req})
+
     # args=jobio_args,
     pod_spec = dict(node_name=node.metadata.name, volumes=volumes, dns_policy="Default")
 

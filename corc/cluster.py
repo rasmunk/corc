@@ -16,17 +16,16 @@ def start_cluster(provider, provider_kwargs, **kwargs):
     orchestrator = orchestrator_klass(options)
     orchestrator.setup(credentials=credentials)
     orchestrator.poll()
+    response["id"] = orchestrator.resource_id
     if not orchestrator.is_ready():
         response["msg"] = "The cluster is not ready"
         return False, response
 
     if not orchestrator.is_reachable():
-        endpoint = orchestrator.endpoint()
-        response[
-            "msg"
-        ] = "The cluster is ready at endpoint: {} but not reachable".format(endpoint)
-        return False, response
+        response["msg"] = "The cluster is ready but not yet reachable"
+        return True, response
     else:
+        response["msg"] = "The cluster is ready and reachable"
         return True, response
     return False, response
 
@@ -42,7 +41,6 @@ def stop_cluster(provider, provider_kwargs, cluster={}):
     response["msg"] = msg
     if not deleted_id:
         return False, response
-
     response["id"] = deleted_id
     return True, response
 
@@ -65,9 +63,10 @@ def get_cluster(provider, provider_kwargs, cluster={}):
         "corc.providers.{}.cluster".format(provider), "cluster", "client_get_cluster"
     )
 
-    cluster, msg = provider_func(
+    cluster_id, cluster, msg = provider_func(
         provider, provider_kwargs, format_return=True, cluster=cluster
     )
+    response["id"] = cluster_id
     response["msg"] = msg
     if cluster:
         response["cluster"] = cluster
