@@ -108,7 +108,7 @@ class TestCLI(unittest.TestCase):
         result = subprocess.run(list_args, capture_output=True)
         self.assertIsNotNone(result)
         self.assertTrue(hasattr(result, "returncode"))
-        self.assertEqual(result.returncode, 0)
+        self.assertEqual(result.returncode, 0, result.stderr)
         content = json.loads(result.stdout.decode("utf-8"))
         self.assertIn(
             "instances", content, "{}: did not have instances".format(content)
@@ -129,7 +129,7 @@ class TestCLI(unittest.TestCase):
         result = subprocess.run(get_args, capture_output=True)
         self.assertIsNotNone(result)
         self.assertTrue(hasattr(result, "returncode"))
-        self.assertEqual(result.returncode, 0)
+        self.assertEqual(result.returncode, 0, result.stderr)
         content = json.loads(result.stdout.decode("utf-8"))
         self.assertIn("id", content, "id is missing from {}".format(content))
         self.assertEqual(content["id"], assigned_id)
@@ -139,7 +139,7 @@ class TestCLI(unittest.TestCase):
         result = subprocess.run(stop_args, capture_output=True)
         self.assertIsNotNone(result)
         self.assertTrue(hasattr(result, "returncode"))
-        self.assertEqual(result.returncode, 0)
+        self.assertEqual(result.returncode, 0, result.stderr)
         content = json.loads(result.stdout.decode("utf-8"))
         self.assertIn("id", content, "id is missing from {}".format(content))
 
@@ -147,7 +147,7 @@ class TestCLI(unittest.TestCase):
         result = subprocess.run(get_args, capture_output=True)
         self.assertIsNotNone(result)
         self.assertTrue(hasattr(result, "returncode"))
-        self.assertEqual(result.returncode, 0)
+        self.assertEqual(result.returncode, 0, result.stderr)
         content = json.loads(result.stdout.decode("utf-8"))
         # Assure that it is terminating
         self.assertIn("id", content, "id is missing from {}".format(content))
@@ -175,9 +175,9 @@ class TestCLI(unittest.TestCase):
         result = subprocess.run(list_args, capture_output=True)
         self.assertIsNotNone(result)
         self.assertTrue(hasattr(result, "returncode"))
-        self.assertEqual(result.returncode, 0)
+        self.assertEqual(result.returncode, 0, result.stderr)
         content = json.loads(result.stdout.decode("utf-8"))
-        self.assertIn("clusters", content)
+        self.assertIn("clusters", content, "{}: did not have clusters".format(content))
 
         # Start an instance
         result = subprocess.run(start_args, capture_output=True)
@@ -185,7 +185,7 @@ class TestCLI(unittest.TestCase):
         self.assertTrue(hasattr(result, "returncode"))
         self.assertEqual(result.returncode, 0, result.stderr)
         content = json.loads(result.stdout.decode("utf-8"))
-        self.assertIn("id", content)
+        self.assertIn("id", content, "{}: did not have id".format(content))
         assigned_id = content["id"]
         self.assertIsNotNone(assigned_id)
 
@@ -194,9 +194,9 @@ class TestCLI(unittest.TestCase):
         result = subprocess.run(get_args, capture_output=True)
         self.assertIsNotNone(result)
         self.assertTrue(hasattr(result, "returncode"))
-        self.assertEqual(result.returncode, 0)
+        self.assertEqual(result.returncode, 0, result.stderr)
         content = json.loads(result.stdout.decode("utf-8"))
-        self.assertIn("id", content)
+        self.assertIn("id", content, "{}: did not have id".format(content))
         self.assertEqual(content["id"], assigned_id)
 
         # Stop the instance
@@ -204,21 +204,21 @@ class TestCLI(unittest.TestCase):
         result = subprocess.run(stop_args, capture_output=True)
         self.assertIsNotNone(result)
         self.assertTrue(hasattr(result, "returncode"))
-        self.assertEqual(result.returncode, 0)
+        self.assertEqual(result.returncode, 0, result.stderr)
         content = json.loads(result.stdout.decode("utf-8"))
-        self.assertIn("id", content)
+        self.assertIn("id", content, "{}: did not have id".format(content))
         self.assertEqual(content["id"], assigned_id)
 
         # List args (should be empty)
         result = subprocess.run(get_args, capture_output=True)
         self.assertIsNotNone(result)
         self.assertTrue(hasattr(result, "returncode"))
-        self.assertEqual(result.returncode, 0)
+        self.assertEqual(result.returncode, 0, result.stderr)
         content = json.loads(result.stdout.decode("utf-8"))
         # Assure that it is terminating
-        self.assertIn("id", content)
+        self.assertIn("id", content, "{}: did not have id".format(content))
         self.assertEqual(content["id"], assigned_id)
-        self.assertIn("cluster", content)
+        self.assertIn("cluster", content, "{}: did not have cluster".format(content))
         state = content["cluster"][0]["lifecycle_state"]
         self.assertIn(state, ["DELETED", "DELETING"])
 
