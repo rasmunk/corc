@@ -24,7 +24,7 @@ class TestCLI(unittest.TestCase):
             self.cluster_name += test_id
 
         # Install the cli
-        args = ["pip3", "install", "."]
+        args = ["pip3", "install", ".", "-q"]
         result = subprocess.run(args)
         self.assertIsNotNone(result)
         self.assertTrue(hasattr(result, "returncode"))
