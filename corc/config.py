@@ -365,7 +365,7 @@ def load_from_config(
 
 
 def gen_config_provider_prefix(provider):
-    return gen_config_prefix(("providers",)) + provider
+    return gen_config_prefix(prefix=("providers",)) + provider
 
 
 def gen_config_prefix(prefix=None):
