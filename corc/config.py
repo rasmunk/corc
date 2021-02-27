@@ -59,10 +59,10 @@ valid_job_config = {
     "capture": bool,
     "output_path": str,
     "working_dir": str,
-    "min_cores": int,
-    "max_cores": int,
-    "min_memory": int,
-    "max_memory": int,
+    "min_cores": (int, str),
+    "max_cores": (int, str),
+    "min_memory": (int, str),
+    "max_memory": (int, str),
 }
 
 default_providers_config = {EC2: {}, OCI_LOWER: {}}
