@@ -80,7 +80,7 @@ class ApacheContainerOrchestrator(Orchestrator):
     def poll(self):
         raise NotImplementedError
 
-    def setup(self, resource_config=None):
+    def setup(self, resource_config=None, credentials=None):
         if not resource_config:
             resource_config = {}
 
