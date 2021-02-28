@@ -13,7 +13,7 @@ class TestLocalContainerOrchestrator(unittest.TestCase):
 
         ClusterOrchestrator, options = get_orchestrator(CONTAINER, LOCAL)
         options["container"] = container_options
-        options["driver"]["kwargs"] = dict(port=2345)
+        options["driver"]["kwargs"] = dict(port=2375)
         # If we don't set the command, libcloud will set it to None (ehhh)
         options["container"]["kwargs"] = dict(command="start-notebook.sh")
         self.options = options

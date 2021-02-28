@@ -46,7 +46,7 @@ class Orchestrator:
         raise NotImplementedError
 
     @classmethod
-    def make_resource_config(cls, **kwargs):
+    def make_resource_config(cls, provider, **kwargs):
         return None
 
     @classmethod

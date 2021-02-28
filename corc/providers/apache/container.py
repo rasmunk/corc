@@ -133,7 +133,7 @@ class ApacheContainerOrchestrator(Orchestrator):
             self._is_ready = False
 
     @classmethod
-    def make_resource_config(cls, **kwargs):
+    def make_resource_config(cls, provider, **kwargs):
         resource_config = {}
         return resource_config
 

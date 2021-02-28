@@ -27,7 +27,7 @@ ORCHESTRATORS = {
             "options": {
                 "driver": {
                     "provider": ContainerProvider.DOCKER,
-                    "kwargs": {"port": "2345"},
+                    "kwargs": {"port": "2375"},
                 },
             },
         }
@@ -59,6 +59,7 @@ ORCHESTRATORS = {
 }
 
 RESOURCE_CREATION_IDENTIFERS = {
+    LOCAL: {CONTAINER: "name"},
     OCI: {VIRTUAL_MACHINE: "display_name", CONTAINER_CLUSTER: "name",},
     EC2: {VIRTUAL_MACHINE: "name"},
 }
