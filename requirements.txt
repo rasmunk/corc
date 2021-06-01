@@ -4,7 +4,7 @@ cryptography==3.2.1
 pyOpenSSL==19.1.0
 PyYAML==5.1.2
 six==1.14.0
-ansible==2.10.5
+ansible==2.10.7
 apache-libcloud==3.1.0
 kubernetes==11.0.0
 boto3==1.14.56
