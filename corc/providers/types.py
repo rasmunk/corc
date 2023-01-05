@@ -6,6 +6,7 @@ from corc.providers.defaults import (
     CONTAINER,
     DOCKER,
     EC2,
+    LIBVIRT,
     LOCAL,
     KUBERNETES,
     OCI,
@@ -54,6 +55,9 @@ ORCHESTRATORS = {
             "klass": ApacheInstanceOrchestrator,
             "options": {"driver": {"provider": ComputeProvider.EC2}},
         },
+        LIBVIRT: {
+            "klass": ApacheInstanceOrchestrator,
+            "options": {"driver": {"provider": ComputeProvider.LIBVIRT}}}
     },
     BARE_METAL: {LOCAL: {"klass": LocalOrchestrator},},
 }

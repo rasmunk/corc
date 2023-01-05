@@ -102,7 +102,7 @@ def load_aws_config(config_path, credentials_path, profile_name="default"):
             "Failed to load aws credentials config: {}".format(credentials_path)
         )
     (
-        aws_access_key,
+        aws_access_key, 
         aws_secret_key,
         aws_token,
     ) = aws_creds_config.get_frozen_credentials()
