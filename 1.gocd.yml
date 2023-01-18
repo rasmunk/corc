@@ -13,7 +13,7 @@ pipelines:
         # says about type of material and url at once
         git: https://github.com/rasmunk/corc.git
         branch: master
-        destination: corc_main
+        destination: corc
       publish_python_git:
         git: https://github.com/rasmunk/publish-python-scripts.git
         branch: main
@@ -22,7 +22,7 @@ pipelines:
         destination: publish-python-scripts
     parameters:
       ARGS: ''
-      SRC_DIRECTORY: corc_main
-      TEST_DIRECTORY: corc_main
+      SRC_DIRECTORY: corc
+      TEST_DIRECTORY: corc
       PUSH_DIRECTORY: publish-python-scripts
     template: pypi_package
