@@ -1,3 +1,4 @@
+from corc.defaults import PACKAGE_NAME
 from corc.config import (
     config_exists,
     get_config_path,
@@ -43,7 +44,7 @@ def init_config(provider, provider_kwargs, config=None, **kwargs):
         return False, response
 
     # Update with user arguments
-    _config["corc"]["providers"].update(provider_config)
+    _config[PACKAGE_NAME]["providers"].update(provider_config)
 
     if not save_config(_config, path=path):
         response["msg"] = "Failed to save new config"

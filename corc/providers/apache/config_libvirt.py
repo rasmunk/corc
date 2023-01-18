@@ -5,8 +5,7 @@ default_config_path = os.path.join("~", ".libvirt", "config")
 
 default_profile_config = {
     "name": "default",
-    "config_file": default_config_path,
-    "hypervisor": "qemu"
+    "config_file": default_config_path
 }
 
 valid_profile_config = {"name": str, "config_file": str}

@@ -10,7 +10,7 @@ from corc.config import (
     gen_config_provider_prefix,
 )
 from corc.helpers import import_from_module
-from corc.defaults import PROVIDERS_LOWER
+from corc.defaults import PROVIDERS
 from corc.util import missing_fields
 from corc.providers.config import get_provider_config_groups
 
@@ -69,7 +69,7 @@ def prepare_none_config_kwargs(args, skip_config_groups_groups):
 
 
 def prepare_provider_kwargs(args, namespace_wrap=False):
-    providers = vars(extract_arguments(args, PROVIDERS_LOWER, strip_group_prefix=False))
+    providers = vars(extract_arguments(args, PROVIDERS, strip_group_prefix=False))
     provider = select_provider(providers, default_fallback=True, verbose=True)
     provider_kwargs = vars(extract_arguments(args, [provider]))
     # remove the provider flag

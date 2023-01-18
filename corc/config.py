@@ -7,7 +7,8 @@ from corc.defaults import (
     default_base_path,
     ANSIBLE,
     EC2,
-    OCI_LOWER,
+    LIBVIRT,
+    OCI,
     PROVIDER,
     JOB,
     JOB_META,
@@ -65,9 +66,9 @@ valid_job_config = {
     "max_memory": (int, str),
 }
 
-default_providers_config = {EC2: {}, OCI_LOWER: {}}
+default_providers_config = {EC2: {}, LIBVIRT: {}, OCI: {}}
 
-valid_providers_config = {EC2: dict, OCI_LOWER: dict}
+valid_providers_config = {EC2: dict, LIBVIRT: dict, OCI: dict}
 
 
 default_s3_storage_config = {
@@ -119,7 +120,7 @@ default_corc_config = {
         "job": default_job_config,
         "storage": default_storage_config,
         "configurers": {ANSIBLE: default_configurer_config},
-        "providers": {EC2: {}, OCI_LOWER: {},},
+        "providers": {EC2: {}, OCI: {},},
     }
 }
 

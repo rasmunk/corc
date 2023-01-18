@@ -1,22 +1,13 @@
 import os
 
-from corc.providers.defaults import EC2, LIBVIRT
+from corc.providers.defaults import EC2, LIBVIRT, OCI
 
 # Package name
 PACKAGE_NAME = "corc"
 
-# Providers
-# AWS = "AWS"
-AWS_LOWER = "aws"
-
-OCI = "OCI"
-OCI_LOWER = "oci"
-
 PROVIDER = "PROVIDER"
-DEFAULT_PROVIDER = OCI
-DEFAULT_PROVIDER_LOWER = OCI_LOWER
+DEFAULT_PROVIDER = LIBVIRT
 PROVIDERS = [LIBVIRT, EC2, OCI]
-PROVIDERS_LOWER = [LIBVIRT, EC2, OCI_LOWER]
 
 PROFILE = "PROFILE"
 

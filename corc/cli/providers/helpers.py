@@ -1,4 +1,4 @@
-from corc.defaults import PROVIDERS_LOWER, DEFAULT_PROVIDER_LOWER
+from corc.defaults import PROVIDERS, DEFAULT_PROVIDER
 
 
 def select_provider(provider_kwargs=None, default_fallback=False, verbose=False):
@@ -8,12 +8,12 @@ def select_provider(provider_kwargs=None, default_fallback=False, verbose=False)
     # Find the activated one
     selected_provider = [
         provider
-        for provider in PROVIDERS_LOWER
+        for provider in PROVIDERS
         if provider in provider_kwargs and provider_kwargs[provider]
     ]
 
     if not selected_provider and default_fallback:
-        return DEFAULT_PROVIDER_LOWER
+        return DEFAULT_PROVIDER
 
     if not selected_provider and not default_fallback:
         if verbose:
@@ -30,7 +30,7 @@ def select_provider(provider_kwargs=None, default_fallback=False, verbose=False)
             return False
 
     provider = selected_provider[0]
-    if provider not in PROVIDERS_LOWER:
+    if provider not in PROVIDERS:
         return False
 
     # Return the

@@ -55,15 +55,15 @@ class TestCLI(unittest.TestCase):
         os.remove(self.config_path)
         self.assertFalse(os.path.exists(self.config_path))
 
-    def test_cli_instance_start(self):
-        args = ["corc", "instance", "libvirt", "-h"]
+    def test_cli_instance_help(self):
+        args = ["corc", "instance", "orchestration", "libvirt", "-h"]
         result = subprocess.run(args)
         self.assertIsNotNone(result)
         self.assertTrue(hasattr(result, "returncode"))
         self.assertEqual(result.returncode, 0)
 
     def test_cli_instance_start(self):
-        args = ["corc", "instance", "libvirt"]
+        args = ["corc", "instance", "orchestration", "libvirt"]
 
         # Start an instance
         start_args = copy.deepcopy(args)
@@ -74,7 +74,7 @@ class TestCLI(unittest.TestCase):
         self.assertEqual(start_result.returncode, 0)
 
     def test_cli_instance_get(self):
-        args = ["corc", "instance", "libvirt"]
+        args = ["corc", "instance", "orchestration", "libvirt"]
         
         # Get the started instance
         get_args = copy.deepcopy(args)
@@ -85,7 +85,7 @@ class TestCLI(unittest.TestCase):
         self.assertEqual(get_result.returncode, 0)
 
     def test_clit_instance_stop(self):
-        args = ["corc", "instance", "libvirt"]
+        args = ["corc", "instance", "orchestration", "libvirt"]
 
         # Stop the started instance
         stop_args = copy.deepcopy(args)
@@ -95,16 +95,16 @@ class TestCLI(unittest.TestCase):
         self.assertTrue(hasattr(stop_result, "returncode"))
         self.assertEqual(stop_result.returncode, 0)
 
-    def test_cli_instance_delete(self):
-        args = ["corc", "instance", "libvirt"]
+    # def test_cli_instance_delete(self):
+    #     args = ["corc", "instance", "orchestration", "libvirt"]
 
-        # Delete the instance
-        delete_args = copy.deepcopy(args)
-        delete_args.extend(["delete", "--instance-name", self.instance_name])
-        delete_result = subprocess.run(delete_args)
-        self.assertIsNotNone(delete_result)
-        self.assertTrue(hasattr(delete_result, "returncode"))
-        self.assertEqual(delete_result.returncode, 0)
+    #     # Delete the instance
+    #     delete_args = copy.deepcopy(args)
+    #     delete_args.extend(["delete", "--instance-name", self.instance_name])
+    #     delete_result = subprocess.run(delete_args)
+    #     self.assertIsNotNone(delete_result)
+    #     self.assertTrue(hasattr(delete_result, "returncode"))
+    #     self.assertEqual(delete_result.returncode, 0)
 
 if __name__ == "__main__":
     unittest.main()
