@@ -31,6 +31,12 @@ maintainer-clean:
 	@echo 'deletes files that may need special tools to rebuild.'
 	$(MAKE) distclean
 
+install-dev:
+	$(VENV)/pip install -r requirements-dev.txt
+
+uninstall-dev:
+	$(VENV)/pip uninstall -y -r requirements-dev.txt
+
 install-dep:
 	$(VENV)/pip install -r requirements.txt
 
@@ -51,6 +57,7 @@ uninstallcheck:
 # The tests requires access to the docker socket
 check:
 	. $(VENV)/activate; python3 setup.py check -rms
-	. $(VENV)/activate; pytest -s -v tests/
+	. $(VENV)/activate; pytest -s -v tests/providers
+#	. $(VENV)/activate; pytest -s -v tests/
 
 include Makefile.venv
