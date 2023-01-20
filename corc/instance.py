@@ -37,7 +37,7 @@ def start_instance(provider, provider_kwargs, **kwargs):
     return False, response
 
 
-def stop_instance(provider, provider_kwargs, instance={}):
+def stop_instance(provider, provider_kwargs, instance=None):
     response = {}
     provider_func = import_from_module(
         "corc.providers.{}.instance".format(provider),
@@ -66,18 +66,14 @@ def list_instances(provider, provider_kwargs, **kwargs):
     return False, response
 
 
-def get_instance(provider, provider_kwargs, instance={}, details={}):
+def get_instance(provider, provider_kwargs, instance=None, **kwargs):
     response = {}
     provider_func = import_from_module(
         "corc.providers.{}.instance".format(provider), "instance", "client_get_instance"
     )
 
     instance_id, instance, msg = provider_func(
-        provider,
-        provider_kwargs,
-        format_return=True,
-        instance=instance,
-        details=details,
+        provider, provider_kwargs, format_return=True, instance=instance, **kwargs
     )
     response["id"] = instance_id
     response["msg"] = msg

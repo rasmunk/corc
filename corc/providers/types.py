@@ -57,7 +57,8 @@ ORCHESTRATORS = {
         },
         LIBVIRT: {
             "klass": ApacheInstanceOrchestrator,
-            "options": {"driver": {"provider": ComputeProvider.LIBVIRT}}}
+            "options": {"driver": {"provider": ComputeProvider.LIBVIRT}},
+        },
     },
     BARE_METAL: {LOCAL: {"klass": LocalOrchestrator},},
 }

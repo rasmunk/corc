@@ -37,21 +37,24 @@ def cli_exec(args):
 
     provider, provider_kwargs = prepare_provider_kwargs(args, namespace_wrap=True)
     if provider:
+        # Load the specific provider config module
         module_path = module_path.format(provider=provider)
-        # load missing provider kwargs from config
-        provider_configuration = prepare_kwargs_configurations(
-            provider, provider_kwargs, provider_groups, strip_group_prefix=False
+        # Find the missing cli provider kwargs
+        provider_kwargs_configuration = prepare_kwargs_configurations(
+            provider_kwargs,
+            provider_groups,
+            provider=provider,
+            strip_group_prefix=False,
         )
-        provider_kwargs = load_missing_action_kwargs(provider_configuration)
+        # Load the missing cli provider kwargs from the config
+        provider_kwargs = load_missing_action_kwargs(provider_kwargs_configuration)
 
     func = import_from_module(module_path, module_name, func_name)
     if not func:
         return False
 
-    # Extract config kwargs from args
-    kwargs_configuration = prepare_kwargs_configurations(
-        provider, args, argument_groups
-    )
+    # Extract the general required cli arguments from the config
+    kwargs_configuration = prepare_kwargs_configurations(args, argument_groups)
     # Load config and fill in missing values
     action_kwargs = load_missing_action_kwargs(kwargs_configuration)
 
@@ -69,18 +72,27 @@ def prepare_none_config_kwargs(args, skip_config_groups_groups):
 
 
 def prepare_provider_kwargs(args, namespace_wrap=False):
+    """ Prepare and extract the arguments that are associated with the selected
+    provider """
+    # Extract the arguments in the args that are associated with a provider
+    # as indicated by their --providername-arg flags.
     providers = vars(extract_arguments(args, PROVIDERS, strip_group_prefix=False))
+    # Select the provider used (For now this is singular)
     provider = select_provider(providers, default_fallback=True, verbose=True)
-    provider_kwargs = vars(extract_arguments(args, [provider]))
-    # remove the provider flag
-    provider_kwargs.pop(provider)
+
+    provider_kwargs = {}
+    if provider:
+        # Extract only the selected provider
+        provider_kwargs = vars(extract_arguments(args, [provider]))
+        # remove the provider flag
+        provider_kwargs.pop(provider)
     if namespace_wrap:
         provider_kwargs = Namespace(**provider_kwargs)
     return provider, provider_kwargs
 
 
 def prepare_kwargs_configurations(
-    provider, args, argument_groups, strip_group_prefix=True
+    args, argument_groups, provider=False, strip_group_prefix=True
 ):
     """ Used to load missing arguments from the configuration file """
     # Try to find all available args
@@ -119,13 +131,14 @@ def prepare_kwargs_configurations(
             flat_group_kwargs_config[prefix_action_config] = valid_action_config
             flat_group_kwargs_config[prefix_config_prefix] = config_prefix
 
-        provider_groups = get_provider_config_groups(provider)
-        if group in provider_groups:
-            valid_action_config = provider_groups[group]
-            prefix = (provider,) + prefix
-            config_prefix = gen_config_provider_prefix(prefix)
-            flat_group_kwargs_config[prefix_action_config] = valid_action_config
-            flat_group_kwargs_config[prefix_config_prefix] = config_prefix
+        if provider:
+            provider_groups = get_provider_config_groups(provider)
+            if group in provider_groups:
+                valid_action_config = provider_groups[group]
+                prefix = (provider,) + prefix
+                config_prefix = gen_config_provider_prefix(prefix)
+                flat_group_kwargs_config[prefix_action_config] = valid_action_config
+                flat_group_kwargs_config[prefix_config_prefix] = config_prefix
 
         if (
             prefix_action_config in flat_group_kwargs_config

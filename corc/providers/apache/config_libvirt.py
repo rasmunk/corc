@@ -3,10 +3,7 @@ from corc.defaults import PROFILE, INSTANCE, LIBVIRT
 
 default_config_path = os.path.join("~", ".libvirt", "config")
 
-default_profile_config = {
-    "name": "default",
-    "config_file": default_config_path
-}
+default_profile_config = {"name": "default", "config_file": default_config_path}
 
 valid_profile_config = {"name": str, "config_file": str}
 
@@ -31,7 +28,10 @@ default_config = {
 
 libvirt_default_config = {LIBVIRT: default_config}
 
-libvirt_valid_config = {"profile": valid_profile_config, "instance": valid_instance_config}
+libvirt_valid_config = {
+    "profile": valid_profile_config,
+    "instance": valid_instance_config,
+}
 
 libvirt_config_groups = {PROFILE: valid_profile_config, INSTANCE: valid_instance_config}
 

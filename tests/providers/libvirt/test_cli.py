@@ -43,7 +43,14 @@ class TestCLI(unittest.TestCase):
         self.assertEqual(result.returncode, 0)
 
     def test_cli_libvirt_config_generate(self):
-        args = ["corc", "config", "libvirt", "generate", "--config-path", self.config_path]
+        args = [
+            "corc",
+            "config",
+            "libvirt",
+            "generate",
+            "--config-path",
+            self.config_path,
+        ]
         result = subprocess.run(args)
         self.assertIsNotNone(result)
         self.assertTrue(hasattr(result, "returncode"))
@@ -75,7 +82,7 @@ class TestCLI(unittest.TestCase):
 
     def test_cli_instance_get(self):
         args = ["corc", "instance", "orchestration", "libvirt"]
-        
+
         # Get the started instance
         get_args = copy.deepcopy(args)
         get_args.extend(["get", "--instance-name", self.instance_name])
@@ -105,6 +112,7 @@ class TestCLI(unittest.TestCase):
     #     self.assertIsNotNone(delete_result)
     #     self.assertTrue(hasattr(delete_result, "returncode"))
     #     self.assertEqual(delete_result.returncode, 0)
+
 
 if __name__ == "__main__":
     unittest.main()

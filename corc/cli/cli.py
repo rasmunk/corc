@@ -35,9 +35,7 @@ from corc.cli.parsers.storage.storage import (
     select_storage,
 )
 from corc.cli.parsers.storage.s3 import add_s3_group, s3_config_group, s3_extra
-from corc.cli.parsers.providers.ec2.profile import add_ec2_group
-from corc.cli.parsers.providers.libvirt.profile import add_libvirt_group
-from corc.cli.parsers.providers.oci.profile import add_oci_group
+from corc.cli.providers.profile import add_provider_parse_profile_groups
 from corc.cli.helpers import cli_exec, import_from_module
 from corc.util import eprint
 
@@ -59,17 +57,15 @@ def run():
 
     # EC2
     # ec2_parser = commands.add_parser(EC2)
-    # add_ec2_group(ec2_parser)
     # ec2_commands = ec2_parser.add_subparsers(title="COMMAND")
     # ec2_orchestration_parser = ec2_commands.add_parser("orchestration")
     # orchestration_cli(EC2, ec2_orchestration_parser)
 
-    #ec2_job_parser = ec2_commands.add_parser("job")
-    #job_cli(ec2_job_parser)
+    # ec2_job_parser = ec2_commands.add_parser("job")
+    # job_cli(ec2_job_parser)
 
     # OCI
     # oci_parser = commands.add_parser(OCI)
-    # add_oci_group(oci_parser)
     # oci_commands = oci_parser.add_subparsers(title="COMMAND")
     # oci_orchestration_parser = oci_commands.add_parser("orchestration")
     # orchestration_cli(OCI, oci_orchestration_parser)
@@ -106,7 +102,9 @@ def compute_cli(parser):
     for provider in PROVIDERS:
         # Provider commands
         provider_compute_parser = compute_commands.add_parser(provider)
-        provider_compute_commands = provider_compute_parser.add_subparsers(title="COMMAND")
+        provider_compute_commands = provider_compute_parser.add_subparsers(
+            title="COMMAND"
+        )
 
         run_parser = provider_compute_commands.add_parser("run")
         job_meta_group(run_parser)
@@ -148,8 +146,8 @@ def compute_cli(parser):
             func_name="list_job",
         )
 
-        result_parser = provider_compute_commands.add_parser("result")
-        result_commands = result_parser.add_subparsers(title="COMMAND")
+        # result_parser = provider_compute_commands.add_parser("result")
+        # result_commands = result_parser.add_subparsers(title="COMMAND")
 
         get_parser = provider_compute_commands.add_parser("get")
         select_job_group(get_parser)
@@ -196,9 +194,9 @@ def compute_cli(parser):
 def config_cli(parser):
     config_commands = parser.add_subparsers(title="COMMAND")
 
+    # TODO, wrap in providers for loop
     # Libvirt
     libvirt_parser = config_commands.add_parser(LIBVIRT)
-    add_libvirt_group(libvirt_parser)
     libvirt_commands = libvirt_parser.add_subparsers(title="COMMAND")
     libvirt_generate_parser = libvirt_commands.add_parser("generate")
 
@@ -214,7 +212,6 @@ def config_cli(parser):
 
     # EC2
     ec2_parser = config_commands.add_parser(EC2)
-    add_ec2_group(ec2_parser)
     ec2_commands = ec2_parser.add_subparsers(title="COMMAND")
     ec2_generate_parser = ec2_commands.add_parser("generate")
 
@@ -230,7 +227,6 @@ def config_cli(parser):
 
     # OCI
     oci_parser = config_commands.add_parser(OCI)
-    add_oci_group(oci_parser)
     oci_commands = oci_parser.add_subparsers(title="COMMAND")
     oci_generate_parser = oci_commands.add_parser("generate")
 
@@ -327,9 +323,17 @@ def instance_cli(parser):
     # Add each provider type to the instance parsers
     # Libvirt
     for provider in PROVIDERS:
+
         # Provider commands
         provider_instance_parser = orchestration_commands.add_parser(provider)
-        provider_instance_commands = provider_instance_parser.add_subparsers(title="COMMAND")
+        provider_instance_commands = provider_instance_parser.add_subparsers(
+            title="COMMAND"
+        )
+
+        # Add the global provider
+        # global_provider_args = import_from_module
+        # TODO, simplify the import here, don't need the double abstraction
+        add_provider_parse_profile_groups(provider_instance_parser, provider)
 
         # Start Command
         start_parser = provider_instance_commands.add_parser("start")
@@ -338,7 +342,10 @@ def instance_cli(parser):
             "instance",
             "start_instance_groups",
         )
-        start_provider_groups, start_argument_groups = start_instance_groups(start_parser)
+        start_provider_groups, start_argument_groups = start_instance_groups(
+            start_parser
+        )
+
         start_parser.set_defaults(
             func=cli_exec,
             module_path="corc.instance",
@@ -405,7 +412,8 @@ def instance_cli(parser):
         )
 
         # Delete Command
-        #delete_parser = orchestration_parser.add_parser("delete")
+        # delete_parser = orchestration_parser.add_parser("delete")
+
 
 if __name__ == "__main__":
     arguments = run()

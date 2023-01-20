@@ -1,6 +1,9 @@
 from corc.defaults import PROVIDERS, DEFAULT_PROVIDER
 
 
+# TODO, might not be nessesary
+# Look at deprecating the cli requirement for
+# stating the provider
 def valid_providers_group(parser):
     add_provider_group(parser)
 

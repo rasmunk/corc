@@ -1,18 +1,7 @@
-import copy
-import os
 import unittest
-from corc.config import (
-    load_from_env_or_config,
-    gen_config_provider_prefix,
-    generate_default_config,
-    save_config,
-    remove_config,
-)
-from corc.providers.defaults import EC2, LIBVIRT, VIRTUAL_MACHINE
-from corc.providers.oci.network import get_subnet_in_vcn_stack
-from corc.providers.oci.config import generate_oci_config
-from corc.providers.oci.instance import OCIInstanceOrchestrator
+from corc.providers.defaults import LIBVIRT, VIRTUAL_MACHINE
 from corc.providers.types import get_orchestrator
+
 
 class TestLibvirtInstanceOrchestrator(unittest.TestCase):
     def setUp(self):
@@ -53,6 +42,7 @@ class TestLibvirtInstanceOrchestrator(unittest.TestCase):
         self.assertFalse(self.orchestrator.is_ready())
         self.orchestrator.tear_down()
         self.assertFalse(self.orchestrator.is_ready())
+
 
 if __name__ == "__main__":
     unittest.main()
