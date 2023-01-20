@@ -323,7 +323,6 @@ def instance_cli(parser):
     # Add each provider type to the instance parsers
     # Libvirt
     for provider in PROVIDERS:
-
         # Provider commands
         provider_instance_parser = orchestration_commands.add_parser(provider)
         provider_instance_commands = provider_instance_parser.add_subparsers(

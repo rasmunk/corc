@@ -5,12 +5,12 @@ import copy
 from corc.config import load_from_env_or_config, gen_config_prefix
 
 
-class TestCLILibvirt(unittest.TestCase):
+class TestCLIOCI(unittest.TestCase):
     def setUp(self):
         self.test_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tmp")
         self.config_path = os.path.join(self.test_dir, "config")
 
-        self.provider_name = "Libvirt_"
+        self.provider_name = "OCI_"
         self.test_name = self.provider_name + "Test_CLI"
         self.instance_name = self.test_name + "_Instance"
         self.cluster_name = self.test_name + "_Cluster"
@@ -35,18 +35,18 @@ class TestCLILibvirt(unittest.TestCase):
             os.remove(self.config_path)
         self.assertFalse(os.path.exists(self.config_path))
 
-    def test_cli_config_libvirt_help(self):
-        args = ["corc", "config", "libvirt", "-h"]
+    def test_cli_config_oci_help(self):
+        args = ["corc", "config", "oci", "-h"]
         result = subprocess.run(args)
         self.assertIsNotNone(result)
         self.assertTrue(hasattr(result, "returncode"))
         self.assertEqual(result.returncode, 0)
 
-    def test_cli_config_libvirt_generate(self):
+    def test_cli_config_oci_generate(self):
         args = [
             "corc",
             "config",
-            "libvirt",
+            "oci",
             "generate",
             "--config-path",
             self.config_path,
@@ -62,15 +62,15 @@ class TestCLILibvirt(unittest.TestCase):
         os.remove(self.config_path)
         self.assertFalse(os.path.exists(self.config_path))
 
-    def test_cli_instance_libvirt_help(self):
-        args = ["corc", "instance", "orchestration", "libvirt", "-h"]
+    def test_cli_instance_oci_help(self):
+        args = ["corc", "instance", "orchestration", "oci", "-h"]
         result = subprocess.run(args)
         self.assertIsNotNone(result)
         self.assertTrue(hasattr(result, "returncode"))
         self.assertEqual(result.returncode, 0)
 
-    def test_cli_instance_libvirt_start(self):
-        args = ["corc", "instance", "orchestration", "libvirt"]
+    def test_cli_instance_oci_start(self):
+        args = ["corc", "instance", "orchestration", "oci"]
 
         # Start an instance
         start_args = copy.deepcopy(args)
@@ -80,8 +80,8 @@ class TestCLILibvirt(unittest.TestCase):
         self.assertTrue(hasattr(start_result, "returncode"))
         self.assertEqual(start_result.returncode, 0)
 
-    def test_cli_instance_libvirt_get(self):
-        args = ["corc", "instance", "orchestration", "libvirt"]
+    def test_cli_instance_oci_get(self):
+        args = ["corc", "instance", "orchestration", "oci"]
 
         # Get the started instance
         get_args = copy.deepcopy(args)
@@ -91,8 +91,8 @@ class TestCLILibvirt(unittest.TestCase):
         self.assertTrue(hasattr(get_result, "returncode"))
         self.assertEqual(get_result.returncode, 0)
 
-    def test_clit_instance_libvirt_stop(self):
-        args = ["corc", "instance", "orchestration", "libvirt"]
+    def test_clit_instance_oci_stop(self):
+        args = ["corc", "instance", "orchestration", "oci"]
 
         # Stop the started instance
         stop_args = copy.deepcopy(args)
@@ -102,8 +102,8 @@ class TestCLILibvirt(unittest.TestCase):
         self.assertTrue(hasattr(stop_result, "returncode"))
         self.assertEqual(stop_result.returncode, 0)
 
-    # def test_cli_instance_libvirt_delete(self):
-    #     args = ["corc", "instance", "orchestration", "libvirt"]
+    # def test_cli_instance_oci_delete(self):
+    #     args = ["corc", "instance", "orchestration", "oci"]
 
     #     # Delete the instance
     #     delete_args = copy.deepcopy(args)
