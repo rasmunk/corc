@@ -26,7 +26,7 @@ from corc.cli.parsers.cluster.cluster import (
     valid_cluster_group,
     cluster_schedule_group,
 )
-from corc.cli.parsers.config.config import add_config_group
+from corc.cli.parsers.config.config import add_config_groups
 from corc.cli.parsers.job.job import select_job_group
 from corc.cli.parsers.storage.storage import (
     add_storage_group,
@@ -48,6 +48,8 @@ def to_str(o):
 def run():
     parser = argparse.ArgumentParser(prog=PACKAGE_NAME)
     commands = parser.add_subparsers(title="COMMAND")
+    
+    # Config
     config_parser = commands.add_parser("config")
     config_cli(config_parser)
 
@@ -194,53 +196,25 @@ def compute_cli(parser):
 def config_cli(parser):
     config_commands = parser.add_subparsers(title="COMMAND")
 
-    # TODO, wrap in providers for loop
-    # Libvirt
-    libvirt_parser = config_commands.add_parser(LIBVIRT)
-    libvirt_commands = libvirt_parser.add_subparsers(title="COMMAND")
-    libvirt_generate_parser = libvirt_commands.add_parser("generate")
+    for provider in PROVIDERS:
+        config_provider_parser = config_commands.add_parser(provider)
+        provider_commands = config_provider_parser.add_subparsers(title="COMMAND")
+        config_provider_generate_parser = provider_commands.add_parser("generate")
 
-    add_config_group(libvirt_generate_parser)
-    libvirt_generate_parser.set_defaults(
-        func=cli_exec,
-        module_path="corc.cli.config",
-        module_name="config",
-        func_name="init_config",
-        provider_groups=[PROFILE],
-        skip_config_groups=[CONFIG],
-    )
+        # Allow the general config groups to be added
+        config_provider_groups, config_argument_groups = add_config_groups(
+            config_provider_generate_parser
+        )
 
-    # EC2
-    ec2_parser = config_commands.add_parser(EC2)
-    ec2_commands = ec2_parser.add_subparsers(title="COMMAND")
-    ec2_generate_parser = ec2_commands.add_parser("generate")
-
-    add_config_group(ec2_generate_parser)
-    ec2_generate_parser.set_defaults(
-        func=cli_exec,
-        module_path="corc.cli.config",
-        module_name="config",
-        func_name="init_config",
-        provider_groups=[PROFILE],
-        skip_config_groups=[CONFIG],
-    )
-
-    # OCI
-    oci_parser = config_commands.add_parser(OCI)
-    oci_commands = oci_parser.add_subparsers(title="COMMAND")
-    oci_generate_parser = oci_commands.add_parser("generate")
-
-    add_config_group(oci_generate_parser)
-    valid_cluster_group(oci_generate_parser)
-    oci_generate_parser.set_defaults(
-        func=cli_exec,
-        module_path="corc.cli.config",
-        module_name="config",
-        func_name="init_config",
-        provider_groups=[PROFILE],
-        argument_groups=[CLUSTER_NODE, CLUSTER, VCN_SUBNET, VCN],
-        skip_config_groups=[CONFIG],
-    )
+        config_provider_generate_parser.set_defaults(
+            func=cli_exec,
+            module_path="corc.cli.config",
+            module_name="config",
+            func_name="init_config",
+            provider_groups=config_provider_groups,
+            argument_groups=config_argument_groups,
+            skip_config_groups=[CONFIG]
+        )
 
 
 def cluster_cli(provider, parser):

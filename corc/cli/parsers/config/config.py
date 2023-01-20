@@ -1,7 +1,7 @@
 from corc.config import get_config_path
 
 
-def valid_config_group(parser):
+def add_config_groups(parser):
     add_config_group(parser)
 
 

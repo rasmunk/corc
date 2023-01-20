@@ -1,11 +1,11 @@
-from corc.providers.config import generate_config, valid_config
+from corc.defaults import PROFILE, CONFIG
+from corc.cli.parsers.providers.libvirt.profile import (
+    profile_group
+)
 
+def profile_groups(parser):
+    profile_group(parser)
 
-def prepare_config(provider, provider_kwargs, **kwargs):
-    # Expects that the default corc config is present
-    config = {provider: {}}
-    config[provider].update(provider_kwargs)
-    config = generate_config(provider, **kwargs)
-    if not valid_config(provider, config, verbose=True):
-        return False
-    return config
+    provider_groups = [PROFILE]
+    argument_groups = []
+    return provider_groups, argument_groups
