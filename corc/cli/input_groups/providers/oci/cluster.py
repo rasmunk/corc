@@ -13,7 +13,6 @@ from corc.cli.parsers.providers.oci.cluster import (
     start_cluster_node_group,
 )
 
-
 def start_cluster_groups(parser):
     start_cluster_group(parser)
     start_cluster_node_group(parser)
