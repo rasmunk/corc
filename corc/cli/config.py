@@ -7,14 +7,20 @@ from corc.config import (
     generate_default_config,
     valid_config,
 )
-from corc.helpers import import_from_module
+from corc.providers.config import generate_config, valid_config
+
+
+def prepare_config(provider, provider_kwargs, **kwargs):
+    # Expects that the default corc config is present
+    config = {provider: {}}
+    config[provider].update(provider_kwargs)
+    config = generate_config(provider, **kwargs)
+    if not valid_config(provider, config, verbose=True):
+        return False
+    return config
 
 
 def prepare_provider_config(provider, provider_kwargs, **kwargs):
-    prepare_config = import_from_module(
-        "corc.cli.providers.{}.config".format(provider), "config", "prepare_config"
-    )
-
     return prepare_config(provider, provider_kwargs, **kwargs)
 
 
@@ -50,7 +56,7 @@ def init_config(provider, provider_kwargs, config=None, **kwargs):
         response["msg"] = "Failed to save new config"
         return False, response
 
-    if not valid_config(_config, verbose=True):
+    if not valid_config(provider, _config, verbose=True):
         response["msg"] = "The generated config is invalid"
         return False, response
 

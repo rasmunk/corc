@@ -80,7 +80,7 @@ def load_default_config(provider):
 
 
 def load_valid_config(provider):
-    valid_config = import_from_module(
+    valid_config_loader = import_from_module(
         "corc.providers.{}.config".format(provider), "config", "load_valid_config"
     )
-    return valid_config(provider=provider)
+    return valid_config_loader(provider=provider)

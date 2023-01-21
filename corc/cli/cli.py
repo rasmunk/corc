@@ -26,7 +26,8 @@ from corc.cli.parsers.cluster.cluster import (
     valid_cluster_group,
     cluster_schedule_group,
 )
-from corc.cli.parsers.config.config import add_config_groups
+from corc.cli.input_groups.config import config_input_groups
+from corc.cli.input_groups.providers.profile import profile_input_groups
 from corc.cli.parsers.job.job import select_job_group
 from corc.cli.parsers.storage.storage import (
     add_storage_group,
@@ -48,7 +49,7 @@ def to_str(o):
 def run():
     parser = argparse.ArgumentParser(prog=PACKAGE_NAME)
     commands = parser.add_subparsers(title="COMMAND")
-    
+
     # Config
     config_parser = commands.add_parser("config")
     config_cli(config_parser)
@@ -201,8 +202,13 @@ def config_cli(parser):
         provider_commands = config_provider_parser.add_subparsers(title="COMMAND")
         config_provider_generate_parser = provider_commands.add_parser("generate")
 
+        # Add the provider profile input arguments
+        _, _ = profile_input_groups(
+            config_provider_generate_parser, provider
+        )
+
         # Allow the general config groups to be added
-        config_provider_groups, config_argument_groups = add_config_groups(
+        config_provider_groups, config_argument_groups = config_input_groups(
             config_provider_generate_parser
         )
 
@@ -213,7 +219,7 @@ def config_cli(parser):
             func_name="init_config",
             provider_groups=config_provider_groups,
             argument_groups=config_argument_groups,
-            skip_config_groups=[CONFIG]
+            skip_config_groups=[CONFIG],
         )
 
 
