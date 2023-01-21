@@ -1,6 +1,7 @@
 import flatten_dict
 from corc.config import recursive_check_config
 from corc.defaults import (
+    OCI,
     CLUSTER,
     CLUSTER_NODE,
     INSTANCE,
@@ -150,9 +151,9 @@ default_config = {
     "profile": default_profile_config,
 }
 
-default_oci_config = {"oci": default_config}
+oci_default_config = {OCI: default_config}
 
-valid_full_oci_config = {
+oci_valid_config = {
     "cluster": valid_cluster_config,
     "instance": valid_instance_config,
     "vcn": valid_vcn_config,
@@ -193,8 +194,19 @@ def valid_oci_config(config, verbose=False):
     if "oci" not in config:
         return False
 
-    return recursive_check_config(config["oci"], valid_full_oci_config, verbose=verbose)
+    return recursive_check_config(
+        config["oci"],
+        valid_full_oci_config,
+        verbose=verbose)
 
 
 def load_config_groups(**kwargs):
     return oci_config_groups
+
+
+def load_default_config(**kwargs):
+    return oci_default_config
+
+
+def load_valid_config(**kwargs):
+    return oci_valid_config
