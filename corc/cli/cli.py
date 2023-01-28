@@ -36,7 +36,7 @@ from corc.cli.parsers.storage.storage import (
     select_storage,
 )
 from corc.cli.parsers.storage.s3 import add_s3_group, s3_config_group, s3_extra
-from corc.cli.input_groups.providers.profile import add_provider_parse_profile_groups
+from corc.cli.input_groups.providers.profile import profile_input_groups
 from corc.cli.helpers import cli_exec, import_from_module
 from corc.util import eprint
 
@@ -312,7 +312,7 @@ def instance_cli(parser):
         # Add the global provider
         # global_provider_args = import_from_module
         # TODO, simplify the import here, don't need the double abstraction
-        add_provider_parse_profile_groups(provider_instance_parser, provider)
+        profile_input_groups(provider_instance_parser, provider)
 
         # Start Command
         start_parser = provider_instance_commands.add_parser("start")
