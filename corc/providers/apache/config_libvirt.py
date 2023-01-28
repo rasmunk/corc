@@ -43,17 +43,27 @@ def load_driver_options(
     profile_name="default",
     **kwargs
 ):
+    driver_args = []
+    driver_kwargs = {}
 
-    hypervisor = None
+    driver_uri = None
+    driver_key = None
+    driver_secret = None
+
     if "profile" in provider_kwargs:
-        if "name" in provider_kwargs["profile"]:
-            profile_name = provider_kwargs["profile"]["name"]
+        if "driver" in provider_kwargs["profile"]:
+            provider_kwargs_driver = provider_kwargs["profile"]["driver"]
+            if "uri" in provider_kwargs_driver:
+                driver_uri = provider_kwargs_driver["uri"]
 
-        if "hypervisor" in provider_kwargs["profile"]:
-            hypervisor = provider_kwargs["profile"]["hypervisor"]
+            if "key" in provider_kwargs_driver:
+                driver_key = provider_kwargs_driver["key"]
 
-    libvirt_config = {}
-    if "hypervisor" not in libvirt_config and hypervisor:
-        libvirt_config["hypervisor"] = hypervisor
+            if "secret" in provider_kwargs_driver:
+                driver_secret = provider_kwargs_driver["secret"]
 
-    return [], libvirt_config
+    driver_args.append(driver_uri)
+    driver_kwargs["key"] = driver_key
+    driver_kwargs["secret"] = driver_secret
+
+    return driver_args, driver_kwargs

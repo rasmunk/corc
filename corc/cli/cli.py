@@ -203,9 +203,7 @@ def config_cli(parser):
         config_provider_generate_parser = provider_commands.add_parser("generate")
 
         # Add the provider profile input arguments
-        _, _ = profile_input_groups(
-            config_provider_generate_parser, provider
-        )
+        _, _ = profile_input_groups(config_provider_generate_parser, provider)
 
         # Allow the general config groups to be added
         config_provider_groups, config_argument_groups = config_input_groups(
@@ -229,7 +227,7 @@ def cluster_cli(provider, parser):
     # Start Command
     start_parser = cluster_commands.add_parser("start")
     start_cluster_groups = import_from_module(
-        "corc.cli.providers.{}.cluster".format(provider),
+        "corc.cli.input_groups.providers.{}.cluster".format(provider),
         "cluster",
         "start_cluster_groups",
     )
@@ -246,7 +244,7 @@ def cluster_cli(provider, parser):
     # Stop Command
     stop_parser = cluster_commands.add_parser("stop")
     stop_cluster_groups = import_from_module(
-        "corc.cli.providers.{}.cluster".format(provider),
+        "corc.cli.input_groups.providers.{}.cluster".format(provider),
         "cluster",
         "stop_cluster_groups",
     )
@@ -263,7 +261,7 @@ def cluster_cli(provider, parser):
     # Get Command
     get_parser = cluster_commands.add_parser("get")
     get_cluster_groups = import_from_module(
-        "corc.cli.providers.{}.cluster".format(provider),
+        "corc.cli.input_groups.providers.{}.cluster".format(provider),
         "cluster",
         "get_cluster_groups",
     )
@@ -280,7 +278,7 @@ def cluster_cli(provider, parser):
     # List Command
     list_parser = cluster_commands.add_parser("list")
     list_cluster_groups = import_from_module(
-        "corc.cli.providers.{}.cluster".format(provider),
+        "corc.cli.input_groups.providers.{}.cluster".format(provider),
         "cluster",
         "list_cluster_groups",
     )
@@ -317,7 +315,7 @@ def instance_cli(parser):
         # Start Command
         start_parser = provider_instance_commands.add_parser("start")
         start_instance_groups = import_from_module(
-            "corc.cli.providers.{}.instance".format(provider),
+            "corc.cli.input_groups.providers.{}.instance".format(provider),
             "instance",
             "start_instance_groups",
         )
@@ -337,7 +335,7 @@ def instance_cli(parser):
         # Stop Command
         stop_parser = provider_instance_commands.add_parser("stop")
         stop_instance_groups = import_from_module(
-            "corc.cli.providers.{}.instance".format(provider),
+            "corc.cli.input_groups.providers.{}.instance".format(provider),
             "instance",
             "stop_instance_groups",
         )
@@ -354,7 +352,7 @@ def instance_cli(parser):
         # Get Command
         get_parser = provider_instance_commands.add_parser("get")
         get_instance_groups = import_from_module(
-            "corc.cli.providers.{}.instance".format(provider),
+            "corc.cli.input_groups.providers.{}.instance".format(provider),
             "instance",
             "get_instance_groups",
         )
@@ -376,7 +374,7 @@ def instance_cli(parser):
         # List Command
         list_parser = provider_instance_commands.add_parser("list")
         list_instance_groups = import_from_module(
-            "corc.cli.providers.{}.instance".format(provider),
+            "corc.cli.input_groups.providers.{}.instance".format(provider),
             "instance",
             "list_instance_groups",
         )
