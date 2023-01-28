@@ -3,7 +3,7 @@ from corc.defaults import PROFILE, INSTANCE, LIBVIRT
 
 default_config_path = os.path.join("~", ".libvirt", "config")
 
-default_driver_config = {"uri": "qemu:///system", "key": None, "secret": None}
+default_driver_config = {"uri": "test:///default", "key": None, "secret": None}
 
 valid_driver_config = {"uri": str, "key": str, "secret": str}
 
