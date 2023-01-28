@@ -1,6 +1,6 @@
 from corc.defaults import CLUSTER, OCI, JOB, META, S3, STORAGE, PROVIDER
 from corc.cli.args import extract_arguments
-from corc.cli.providers.helpers import select_provider
+from corc.cli.input_groups.providers.helpers import select_provider
 from corc.cli.job import (
     run as api_run,
     get_results as api_get_results,

@@ -2,7 +2,7 @@ from argparse import Namespace
 import copy
 import flatten_dict
 from corc.cli.args import extract_arguments, wrap_extract_arguments
-from corc.cli.providers.helpers import select_provider
+from corc.cli.input_groups.providers.helpers import select_provider
 from corc.config import (
     load_from_config,
     corc_config_groups,

@@ -36,7 +36,7 @@ from corc.cli.parsers.storage.storage import (
     select_storage,
 )
 from corc.cli.parsers.storage.s3 import add_s3_group, s3_config_group, s3_extra
-from corc.cli.providers.profile import add_provider_parse_profile_groups
+from corc.cli.input_groups.providers.profile import add_provider_parse_profile_groups
 from corc.cli.helpers import cli_exec, import_from_module
 from corc.util import eprint
 
