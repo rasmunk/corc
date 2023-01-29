@@ -1,5 +1,5 @@
 import os
-from corc.defaults import PROFILE, INSTANCE, LIBVIRT
+from corc.defaults import DRIVER, PROFILE_DRIVER, PROFILE, INSTANCE, LIBVIRT
 
 default_config_path = os.path.join("~", ".libvirt", "config")
 
@@ -13,7 +13,7 @@ default_profile_config = {
     "driver": default_driver_config,
 }
 
-valid_profile_config = {"name": str, "config_file": str, "driver": valid_driver_config}
+valid_profile_config = {"name": str, "config_file": str, "driver": dict}
 
 
 default_instance_config = {
@@ -42,7 +42,11 @@ libvirt_valid_config = {
     "instance": valid_instance_config,
 }
 
-libvirt_config_groups = {PROFILE: valid_profile_config, INSTANCE: valid_instance_config}
+libvirt_config_groups = {
+    PROFILE: valid_profile_config,
+    PROFILE_DRIVER: valid_driver_config,
+    INSTANCE: valid_instance_config
+}
 
 
 def load_driver_options(

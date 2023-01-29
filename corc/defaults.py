@@ -9,7 +9,10 @@ PROVIDER = "PROVIDER"
 DEFAULT_PROVIDER = LIBVIRT
 PROVIDERS = [LIBVIRT, EC2, OCI]
 
+# Profile group defaults
 PROFILE = "PROFILE"
+DRIVER = "DRIVER"
+PROFILE_DRIVER = "{}_{}".format(PROFILE, DRIVER)
 
 # Argument group defaults
 ANSIBLE = "ANSIBLE"
