@@ -66,13 +66,13 @@ def load_driver_options(
     if "profile" in provider_kwargs:
         if "driver" in provider_kwargs["profile"]:
             provider_kwargs_driver = provider_kwargs["profile"]["driver"]
-            if "uri" in provider_kwargs_driver:
+            if "uri" in provider_kwargs_driver and provider_kwargs_driver["uri"]:
                 driver_uri = provider_kwargs_driver["uri"]
 
-            if "key" in provider_kwargs_driver:
+            if "key" in provider_kwargs_driver and provider_kwargs_driver["key"]:
                 driver_key = provider_kwargs_driver["key"]
 
-            if "secret" in provider_kwargs_driver:
+            if "secret" in provider_kwargs_driver and provider_kwargs_driver["secret"]:
                 driver_secret = provider_kwargs_driver["secret"]
 
     driver_args.append(driver_uri)
