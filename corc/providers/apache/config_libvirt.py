@@ -59,7 +59,7 @@ def load_driver_options(
     driver_args = []
     driver_kwargs = {}
 
-    driver_uri = None
+    driver_uri = ""
     driver_key = None
     driver_secret = None
 
