@@ -53,12 +53,16 @@ def cli_exec(args):
     if not func:
         return False
 
-    # Extract the general required cli arguments from the config
+    # Prepare both the arguments provided for the given group
+    # and mark the arguments that are missing and that should be
+    # loaded from the config file
     kwargs_configuration = prepare_kwargs_configurations(args, argument_groups)
     # Load config and fill in missing values
     action_kwargs = load_missing_action_kwargs(kwargs_configuration)
 
-    # Extract none config kwargs from args
+    # Combine the provided kwargs with the missing loaded kwargs
+
+    # Extract the remaining skipped config groups into the extra_action_kwargs
     extra_action_kwargs = prepare_none_config_kwargs(args, skip_config_groups)
 
     if provider:
@@ -94,40 +98,52 @@ def prepare_provider_kwargs(args, namespace_wrap=False):
 def prepare_kwargs_configurations(
     args, argument_groups, provider=False, strip_group_prefix=True
 ):
-    """ Used to load missing arguments from the configuration file """
-    # Try to find all available args
+    """ Discover which arguments are required for the given argument group and
+        designate which needs to be loaded from the underlying configuration
+        file and which have already been provided on the CLI.
+        This prepares the kwargs_configuration dictionary that is subsequently 
+        used by load_missing_action_kwargs to load the values that are required
+        by the given action from a configuration file. 
+    """
+    # Try to find all available args for the given argument_group
     kwargs_configurations = []
     for group in argument_groups:
         group_kwargs_config = {}
-        name = group.lower()
+        group_name = group.lower()
         # Flat group_kwargs_config to do direct indexing
-        if "_" in name:
-            prefix = tuple(name.split("_"))
-            group_kwargs_config = create_sub_dictionaries(group_kwargs_config, prefix)
+        if "_" in group_name:
+            group_prefix = tuple(group_name.split("_"))
+            group_kwargs_config = create_sub_dictionaries(
+                group_kwargs_config, group_prefix
+            )
         else:
-            prefix = (name,)
-            group_kwargs_config[name] = {}
+            group_prefix = (group_name,)
+            group_kwargs_config[group_name] = {}
 
-        prefix_action_kwargs = prefix + ("action_kwargs",)
-        prefix_action_config = prefix + ("valid_action_config",)
-        prefix_config_prefix = prefix + ("config_prefix",)
+        # arguments provided on the CLI
+        prefix_action_kwargs = group_prefix + ("action_kwargs",)
+        prefix_action_config = group_prefix + ("valid_action_config",)
+        prefix_config_prefix = group_prefix + ("config_prefix",)
 
         flat_group_kwargs_config = flatten_dict.flatten(
             group_kwargs_config, keep_empty_types=(dict,)
         )
-        # TODO, subname on split prefix
+        # TODO, subname on split group_prefix
         action_kwargs = vars(extract_arguments(args, [group]))
         if action_kwargs:
-            # remove claimed action_kwargs from args
-            args = remove_arguments(args, action_kwargs.keys(), prefix=name + "_")
+            # Remove already claimed action_kwargs from args
+            # since we don't need to load them from the configuration since they are
+            # already present
+            args = remove_arguments(args, action_kwargs.keys(), prefix=group_name + "_")
             flat_group_kwargs_config[prefix_action_kwargs] = action_kwargs
         else:
             flat_group_kwargs_config[prefix_action_kwargs] = {}
 
         if group in corc_config_groups:
             valid_action_config = corc_config_groups[group]
-            # gen config prefix
-            config_prefix = gen_config_prefix(prefix)
+            # Extract the PACKAGE_NAME prefix at which the group_name should evntually be
+            # extracted from a configuration file
+            config_prefix = gen_config_prefix(group_prefix)
             flat_group_kwargs_config[prefix_action_config] = valid_action_config
             flat_group_kwargs_config[prefix_config_prefix] = config_prefix
 
@@ -135,8 +151,8 @@ def prepare_kwargs_configurations(
             provider_groups = get_provider_config_groups(provider)
             if group in provider_groups:
                 valid_action_config = provider_groups[group]
-                prefix = (provider,) + prefix
-                config_prefix = gen_config_provider_prefix(prefix)
+                provider_prefix = (provider,) + group_prefix
+                config_prefix = gen_config_provider_prefix(provider_prefix)
                 flat_group_kwargs_config[prefix_action_config] = valid_action_config
                 flat_group_kwargs_config[prefix_config_prefix] = config_prefix
 
@@ -144,10 +160,10 @@ def prepare_kwargs_configurations(
             prefix_action_config in flat_group_kwargs_config
             and flat_group_kwargs_config[prefix_action_config]
         ):
-            unflat_group_group_kwargs_config = flatten_dict.unflatten(
+            unflatten_group_kwargs_config = flatten_dict.unflatten(
                 flat_group_kwargs_config
             )
-            kwargs_configurations.append(unflat_group_group_kwargs_config)
+            kwargs_configurations.append(unflatten_group_kwargs_config)
     return kwargs_configurations
 
 
@@ -160,8 +176,11 @@ def load_missing_action_kwargs(kwargs_configurations):
             if kwargs_path not in flat_action_kwargs:
                 flat_action_kwargs[kwargs_path] = {}
 
+            # Extract the arguments provided by the CLI
             input_dict = find_value_in_dict(args, key="action_kwargs")
+            # Find the required arguments that are valid_action_config values
             required_fields = find_value_in_dict(args, key="valid_action_config")
+            # Determine and define which arguments are missing
             missing_dict = missing_fields(input_dict, required_fields)
             action_kwargs_flat_path = get_dict_path(
                 args, key="action_kwargs", truncate=True
@@ -178,7 +197,7 @@ def load_missing_action_kwargs(kwargs_configurations):
             flat_action_kwargs[kwargs_path] = input_dict
 
             config_prefix = find_value_in_dict(args, key="config_prefix")
-            # Update with missing arguments from config
+            # Update the missing arguments with the values from the config
             loaded_from_config = load_from_config(missing_dict, prefix=config_prefix)
             flat_action_kwargs[kwargs_path].update(loaded_from_config)
 

@@ -1,13 +1,9 @@
 import os
 
-from corc.providers.defaults import EC2, LIBVIRT, OCI
-
 # Package name
 PACKAGE_NAME = "corc"
 
 PROVIDER = "PROVIDER"
-DEFAULT_PROVIDER = LIBVIRT
-PROVIDERS = [LIBVIRT, EC2, OCI]
 
 # Profile group defaults
 PROFILE = "PROFILE"
@@ -44,6 +40,13 @@ VCN_ROUTETABLE_ROUTERULES = "{}_{}".format(VCN_ROUTETABLE, ROUTERULES)
 # To get extra information about an entity
 DETAILS = "DETAILS"
 
+CONFIGURE = "CONFIGURE"
+ORCHESTRATION = "ORCHESTRATION"
+COMPUTE = "COMPUTE"
+
+# List of functionality that corc supports
+CORC_FUNCTIONS = [CONFIGURE, ORCHESTRATION, COMPUTE, STORAGE]
+
 # Action groups
 ACTION_GROUPS = [
     ANSIBLE,
@@ -59,7 +62,6 @@ ACTION_GROUPS = [
     S3,
     VCN,
 ]
-
 
 # Storage credentials secret name
 STORAGE_CREDENTIALS_NAME = "storage-credentials"

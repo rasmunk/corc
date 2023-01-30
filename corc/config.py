@@ -6,10 +6,6 @@ from corc.defaults import (
     PACKAGE_NAME,
     default_base_path,
     ANSIBLE,
-    EC2,
-    LIBVIRT,
-    OCI,
-    PROVIDER,
     JOB,
     JOB_META,
     STORAGE,
@@ -66,10 +62,6 @@ valid_job_config = {
     "max_memory": (int, str),
 }
 
-default_providers_config = {EC2: {}, LIBVIRT: {}, OCI: {}}
-
-valid_providers_config = {EC2: dict, LIBVIRT: dict, OCI: dict}
-
 
 default_s3_storage_config = {
     "config_file": "~/.aws/config",
@@ -120,7 +112,6 @@ default_corc_config = {
         "job": default_job_config,
         "storage": default_storage_config,
         "configurers": {ANSIBLE: default_configurer_config},
-        "providers": {EC2: {}, OCI: {},},
     }
 }
 
@@ -128,7 +119,6 @@ valid_corc_config = {
     "job": valid_job_config,
     "storage": valid_storage_config,
     "configurers": valid_configurer_config,
-    "providers": valid_providers_config,
 }
 
 
@@ -137,7 +127,6 @@ corc_config_groups = {
     JOB_META: valid_job_meta_config,
     STORAGE: valid_storage_config,
     STORAGE_S3: valid_s3_config,
-    PROVIDER: valid_providers_config,
 }
 
 default_config_path = os.path.join(default_base_path, "config")

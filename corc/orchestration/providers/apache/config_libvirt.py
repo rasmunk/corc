@@ -45,7 +45,7 @@ libvirt_valid_config = {
 libvirt_config_groups = {
     PROFILE: valid_profile_config,
     PROFILE_DRIVER: valid_driver_config,
-    INSTANCE: valid_instance_config
+    INSTANCE: valid_instance_config,
 }
 
 
