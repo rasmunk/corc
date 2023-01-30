@@ -24,7 +24,7 @@ def select_provider(provider_kwargs=None, default_fallback=False, verbose=False)
         if verbose:
             print(
                 "Only a single provider must be selected, you selected: {}".format(
-                    select_provider
+                    selected_provider
                 )
             )
             return False

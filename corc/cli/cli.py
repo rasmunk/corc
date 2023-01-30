@@ -34,7 +34,6 @@ from corc.cli.parsers.storage.storage import (
     select_storage,
 )
 from corc.cli.parsers.storage.s3 import add_s3_group, s3_config_group, s3_extra
-from corc.cli.input_groups.providers.profile import profile_input_groups
 from corc.cli.helpers import cli_exec, import_from_module
 from corc.util import eprint
 
@@ -48,6 +47,42 @@ def run():
     parser = argparse.ArgumentParser(prog=PACKAGE_NAME)
     commands = parser.add_subparsers(title="COMMAND")
 
+    # Add corc functions to the CLI
+    functions_cli(commands)
+
+    # Instance
+    # instance_parser = commands.add_parser("instance")
+    # instance_cli(instance_parser)
+
+    # Compute
+    # compute_parser = commands.add_parser("compute")
+    # compute_cli(compute_parser)
+
+    args = parser.parse_args()
+    # Execute default function
+    if hasattr(args, "func"):
+        success, response = args.func(args)
+        output = ""
+        if success:
+            response["status"] = "success"
+        else:
+            response["status"] = "failed"
+
+        try:
+            output = json.dumps(response, indent=4, sort_keys=True, default=to_str)
+        except Exception as err:
+            eprint("Failed to format: {}, err: {}".format(output, err))
+        if success:
+            print(output)
+        else:
+            eprint(output)
+    return None
+
+
+def functions_cli(commands):
+    """
+    Add the functions that corc supports to the CLI.
+    """
     # Add corc functions
     for corc_function in CORC_FUNCTIONS:
         corc_function_name = corc_function.lower()
@@ -80,34 +115,6 @@ def run():
         remove_provider_groups, remove_argument_groups = remove_provider_input_groups(
             remove_function_parser
         )
-
-    # Instance
-    # instance_parser = commands.add_parser("instance")
-    # instance_cli(instance_parser)
-
-    # Compute
-    # compute_parser = commands.add_parser("compute")
-    # compute_cli(compute_parser)
-
-    args = parser.parse_args()
-    # Execute default function
-    if hasattr(args, "func"):
-        success, response = args.func(args)
-        output = ""
-        if success:
-            response["status"] = "success"
-        else:
-            response["status"] = "failed"
-
-        try:
-            output = json.dumps(response, indent=4, sort_keys=True, default=to_str)
-        except Exception as err:
-            eprint("Failed to format: {}, err: {}".format(output, err))
-        if success:
-            print(output)
-        else:
-            eprint(output)
-    return None
 
 
 # def compute_cli(parser):
@@ -208,10 +215,6 @@ def run():
 
 # def config_cli(parser):
 #     config_commands = parser.add_subparsers(title="COMMAND")
-
-#     for corc_function in CORC_FUNCTIONS:
-#         config_function_provider = config_commands.add_parser(corc_function)
-#         function_commands = config_function_provider.add_subparsers(title="COMMAND")
 
 #     for provider in PROVIDERS:
 #         config_provider_parser = config_commands.add_parser(provider)

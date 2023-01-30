@@ -20,14 +20,6 @@ ORCHESTRATORS = {
             "klass": ApacheClusterOrchestrator,
             "options": {"driver": {"provider": ContainerProvider.ECS}},
         },
-        KUBERNETES: {
-            "klass": ApacheClusterOrchestrator,
-            "options": {"driver": {"provider": ContainerProvider.KUBERNETES}},
-        },
-        DOCKER: {
-            "klass": ApacheClusterOrchestrator,
-            "options": {"driver": {"provider": ContainerProvider.DOCKER}},
-        },
     },
     VIRTUAL_MACHINE: {
         OCI: {"klass": OCIInstanceOrchestrator},

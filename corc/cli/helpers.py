@@ -2,7 +2,8 @@ from argparse import Namespace
 import copy
 import flatten_dict
 from corc.cli.args import extract_arguments, wrap_extract_arguments
-from corc.cli.input_groups.providers.helpers import select_provider
+
+# from corc.cli.input_groups.providers.helpers import select_provider
 from corc.config import (
     load_from_config,
     corc_config_groups,
@@ -10,7 +11,6 @@ from corc.config import (
     gen_config_provider_prefix,
 )
 from corc.helpers import import_from_module
-from corc.defaults import PROVIDERS
 from corc.util import missing_fields
 from corc.providers.config import get_provider_config_groups
 
@@ -35,19 +35,18 @@ def cli_exec(args):
     else:
         skip_config_groups = []
 
-    provider, provider_kwargs = prepare_provider_kwargs(args, namespace_wrap=True)
-    if provider:
-        # Load the specific provider config module
-        module_path = module_path.format(provider=provider)
-        # Find the missing cli provider kwargs
-        provider_kwargs_configuration = prepare_kwargs_configurations(
-            provider_kwargs,
-            provider_groups,
-            provider=provider,
-            strip_group_prefix=False,
-        )
-        # Load the missing cli provider kwargs from the config
-        provider_kwargs = load_missing_action_kwargs(provider_kwargs_configuration)
+    # provider, provider_kwargs = prepare_provider_kwargs(args, namespace_wrap=True)
+    # if provider:
+    #     # Load the specific provider config module
+    #     module_path = module_path.format(provider=provider)
+    #     # Find the missing cli provider kwargs
+    #     provider_kwargs_configuration = prepare_kwargs_configurations(
+    #         provider_kwargs,
+    #         provider_groups,
+    #         provider=provider,
+    #         strip_group_prefix=False)
+    # # Load the missing cli provider kwargs from the config
+    # provider_kwargs = load_missing_action_kwargs(provider_kwargs_configuration)
 
     func = import_from_module(module_path, module_name, func_name)
     if not func:
@@ -64,9 +63,8 @@ def cli_exec(args):
 
     # Extract the remaining skipped config groups into the extra_action_kwargs
     extra_action_kwargs = prepare_none_config_kwargs(args, skip_config_groups)
-
-    if provider:
-        return func(provider, provider_kwargs, **action_kwargs, **extra_action_kwargs)
+    # if provider:
+    #     return func(provider, provider_kwargs, **action_kwargs, **extra_action_kwargs)
     return func(**action_kwargs, **extra_action_kwargs)
 
 
@@ -75,12 +73,15 @@ def prepare_none_config_kwargs(args, skip_config_groups_groups):
     return kwargs
 
 
-def prepare_provider_kwargs(args, namespace_wrap=False):
+def prepare_provider_kwargs(args, providers=None, namespace_wrap=False):
     """ Prepare and extract the arguments that are associated with the selected
     provider """
+    if not providers:
+        providers = []
+
     # Extract the arguments in the args that are associated with a provider
     # as indicated by their --providername-arg flags.
-    providers = vars(extract_arguments(args, PROVIDERS, strip_group_prefix=False))
+    providers = vars(extract_arguments(args, providers, strip_group_prefix=False))
     # Select the provider used (For now this is singular)
     provider = select_provider(providers, default_fallback=True, verbose=True)
 
