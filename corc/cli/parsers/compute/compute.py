@@ -1,4 +1,4 @@
-from corc.configurer.defaults import SUPPORTED_CONFIGURER_PROVIDERS
+from corc.compute.defaults import SUPPORTED_COMPUTE_PROVIDERS
 
 
 def add_provider_group(parser):
@@ -7,8 +7,8 @@ def add_provider_group(parser):
     )
     providers = provider_group.add_argument_group(title="test")
 
-    for configurer_provider in SUPPORTED_CONFIGURER_PROVIDERS:
-        providers.add_argument(configurer_provider)
+    for compute_provider in SUPPORTED_COMPUTE_PROVIDERS:
+        providers.add_argument(compute_provider)
 
 
 def remove_provider_group(parser):
@@ -18,5 +18,5 @@ def remove_provider_group(parser):
     providers = provider_group.add_argument_group(title="test")
 
     # TODO, only list the providers that are actually installed
-    for configurer_provider in SUPPORTED_CONFIGURER_PROVIDERS:
-        providers.add_argument(configurer_provider)
+    for compute_provider in SUPPORTED_COMPUTE_PROVIDERS:
+        providers.add_argument(compute_provider)

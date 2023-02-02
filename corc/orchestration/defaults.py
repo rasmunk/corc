@@ -1,6 +1,8 @@
 import os
 from corc.config import default_base_path
 
+ORCHESTRATION_PROVIDER = "ORCHESTRATION_PROVIDER"
+
 # Supported providers
 LIBVIRT = "libvirt"
 OCI = "oci"

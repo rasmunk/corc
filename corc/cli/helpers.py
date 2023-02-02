@@ -20,20 +20,30 @@ def cli_exec(args):
     module_path = args.module_path
     module_name = args.module_name
     func_name = args.func_name
-    if hasattr(args, "provider_groups"):
-        provider_groups = args.provider_groups
-    else:
-        provider_groups = []
-
     if hasattr(args, "argument_groups"):
         argument_groups = args.argument_groups
     else:
         argument_groups = []
 
-    if hasattr(args, "skip_config_groups"):
-        skip_config_groups = args.skip_config_groups
+    if hasattr(args, "provider_groups"):
+        provider_groups = args.provider_groups
     else:
-        skip_config_groups = []
+        provider_groups = []
+
+    func = import_from_module(module_path, module_name, func_name)
+    if not func:
+        return False
+
+    action_kwargs = get_action_kwargs(args, argument_groups)
+
+    provider_kwargs = get_provider_kwargs(args, provider_groups)
+
+    extra_action_kwargs = get_extra_action_kwargs(args, skip_groups=[argument_groups, provider_groups])
+    # get_action_kwargs()
+
+    # get_provider_kwargs()
+
+    # get_extra_action_kwargs()
 
     # provider, provider_kwargs = prepare_provider_kwargs(args, namespace_wrap=True)
     # if provider:
@@ -48,24 +58,26 @@ def cli_exec(args):
     # # Load the missing cli provider kwargs from the config
     # provider_kwargs = load_missing_action_kwargs(provider_kwargs_configuration)
 
-    func = import_from_module(module_path, module_name, func_name)
-    if not func:
-        return False
 
     # Prepare both the arguments provided for the given group
     # and mark the arguments that are missing and that should be
     # loaded from the config file
-    kwargs_configuration = prepare_kwargs_configurations(args, argument_groups)
+    # kwargs_configuration = prepare_kwargs_configurations(args, argument_groups)
     # Load config and fill in missing values
-    action_kwargs = load_missing_action_kwargs(kwargs_configuration)
+    # action_kwargs = load_missing_action_kwargs(kwargs_configuration)
 
     # Combine the provided kwargs with the missing loaded kwargs
 
     # Extract the remaining skipped config groups into the extra_action_kwargs
-    extra_action_kwargs = prepare_none_config_kwargs(args, skip_config_groups)
+    #extra_action_kwargs = prepare_none_config_kwargs(args, skip_config_groups)
     # if provider:
     #     return func(provider, provider_kwargs, **action_kwargs, **extra_action_kwargs)
     return func(**action_kwargs, **extra_action_kwargs)
+
+
+def get_action_kwargs(arguments, groups=None):
+    if not groups:
+
 
 
 def prepare_none_config_kwargs(args, skip_config_groups_groups):

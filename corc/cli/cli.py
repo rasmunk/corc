@@ -103,6 +103,14 @@ def functions_cli(commands):
             add_function_parser
         )
 
+        add_function_parser.set_defaults(
+            func=cli_exec,
+            module_path="corc.orchestration.orchestrator",
+            module_name="orchestrator",
+            func_name="add_orchestration_provider",
+            argument_groups=add_argument_groups,
+        )
+
         # Remove a function provider
         remove_function_parser = function_commands.add_parser(
             "remove", help="remove {} provider".format(corc_function_name)
