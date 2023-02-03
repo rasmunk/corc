@@ -11,8 +11,7 @@ from corc.core.io import write, makedirs, exists
 from corc.core.helpers import import_from_module
 
 
-
-def add_provider(provider_type, name):
+def add_provider(provider_type=None, provider_name=None):
     """ Add a particular provider to corc. """
     # Make the provider configuration directory
     provider_config_dir = os.path.join(default_base_path, provider_type)
@@ -25,6 +24,5 @@ def add_provider(provider_type, name):
     # TODO, load from the plugin
     # Find every module that defines the corc.plugins entrypoint
     discovered_plugins = entry_points("corc.plugins")
-    print(discovered_plugins)
 
     return True

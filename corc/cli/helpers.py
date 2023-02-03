@@ -39,18 +39,13 @@ def cli_exec(args):
     if not func:
         return False
 
-    action_kwargs = get_action_kwargs(args, argument_groups)
+    provider_kwargs = get_provider_kwargs(args, groups=provider_groups)
 
-    provider_kwargs = get_provider_kwargs(args, provider_groups)
+    action_kwargs = get_action_kwargs(args, groups=argument_groups)
 
     extra_action_kwargs = get_extra_action_kwargs(
         args, skip_groups=[argument_groups, provider_groups]
     )
-    # get_action_kwargs()
-
-    # get_provider_kwargs()
-
-    # get_extra_action_kwargs()
 
     # provider, provider_kwargs = prepare_provider_kwargs(args, namespace_wrap=True)
     # if provider:
@@ -84,6 +79,19 @@ def cli_exec(args):
 def get_action_kwargs(arguments, groups=None):
     if not groups:
         groups = []
+    return {}
+
+
+def get_provider_kwargs(arguments, groups=None):
+    if not groups:
+        groups = []
+    return {}
+
+
+def get_extra_action_kwargs(arguments, skip_groups=None):
+    if not skip_groups:
+        skip_groups = []
+    return {}
 
 
 def prepare_none_config_kwargs(args, skip_config_groups_groups):
