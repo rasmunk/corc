@@ -1,4 +1,4 @@
-from corc.defaults import PROFILE
+from corc.core.defaults import PROFILE
 from corc.cli.helpers import import_from_module
 
 

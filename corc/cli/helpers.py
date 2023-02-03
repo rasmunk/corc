@@ -4,15 +4,15 @@ import flatten_dict
 from corc.cli.args import extract_arguments, wrap_extract_arguments
 
 # from corc.cli.input_groups.providers.helpers import select_provider
-from corc.config import (
+from corc.core.config import (
     load_from_config,
     corc_config_groups,
     gen_config_prefix,
     gen_config_provider_prefix,
 )
-from corc.helpers import import_from_module
-from corc.util import missing_fields
-from corc.providers.config import get_provider_config_groups
+from corc.core.helpers import import_from_module
+from corc.core.util import missing_fields
+from corc.core.providers.config import get_provider_config_groups
 
 
 def cli_exec(args):
@@ -20,15 +20,20 @@ def cli_exec(args):
     module_path = args.module_path
     module_name = args.module_name
     func_name = args.func_name
+    if hasattr(args, "provider_groups"):
+        provider_groups = args.provider_groups
+    else:
+        provider_groups = []
+
     if hasattr(args, "argument_groups"):
         argument_groups = args.argument_groups
     else:
         argument_groups = []
 
-    if hasattr(args, "provider_groups"):
-        provider_groups = args.provider_groups
+    if hasattr(args, "skip_groups"):
+        skip_groups = args.skip_groups
     else:
-        provider_groups = []
+        skip_groups = []
 
     func = import_from_module(module_path, module_name, func_name)
     if not func:
@@ -38,7 +43,9 @@ def cli_exec(args):
 
     provider_kwargs = get_provider_kwargs(args, provider_groups)
 
-    extra_action_kwargs = get_extra_action_kwargs(args, skip_groups=[argument_groups, provider_groups])
+    extra_action_kwargs = get_extra_action_kwargs(
+        args, skip_groups=[argument_groups, provider_groups]
+    )
     # get_action_kwargs()
 
     # get_provider_kwargs()
@@ -58,7 +65,6 @@ def cli_exec(args):
     # # Load the missing cli provider kwargs from the config
     # provider_kwargs = load_missing_action_kwargs(provider_kwargs_configuration)
 
-
     # Prepare both the arguments provided for the given group
     # and mark the arguments that are missing and that should be
     # loaded from the config file
@@ -69,7 +75,7 @@ def cli_exec(args):
     # Combine the provided kwargs with the missing loaded kwargs
 
     # Extract the remaining skipped config groups into the extra_action_kwargs
-    #extra_action_kwargs = prepare_none_config_kwargs(args, skip_config_groups)
+    # extra_action_kwargs = prepare_none_config_kwargs(args, skip_config_groups)
     # if provider:
     #     return func(provider, provider_kwargs, **action_kwargs, **extra_action_kwargs)
     return func(**action_kwargs, **extra_action_kwargs)
@@ -77,7 +83,7 @@ def cli_exec(args):
 
 def get_action_kwargs(arguments, groups=None):
     if not groups:
-
+        groups = []
 
 
 def prepare_none_config_kwargs(args, skip_config_groups_groups):

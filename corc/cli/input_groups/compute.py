@@ -1,4 +1,4 @@
-from corc.defaults import PROVIDER, COMPUTE
+from corc.core.defaults import PROVIDER, COMPUTE
 from corc.cli.parsers.compute.compute import (
     add_provider_group,
     remove_provider_group,
@@ -10,7 +10,8 @@ def add_provider_groups(parser):
 
     provider_groups = [PROVIDER]
     argument_groups = [COMPUTE]
-    return provider_groups, argument_groups
+    skip_groups = []
+    return provider_groups, argument_groups, skip_groups
 
 
 def remove_provider_groups(parser):
@@ -18,4 +19,5 @@ def remove_provider_groups(parser):
 
     provider_groups = [PROVIDER]
     argument_groups = [COMPUTE]
-    return provider_groups, argument_groups
+    skip_groups = []
+    return provider_groups, argument_groups, skip_groups

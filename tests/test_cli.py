@@ -1,7 +1,7 @@
 import os
 import subprocess
 import unittest
-from corc.config import load_from_env_or_config, gen_config_prefix
+from corc.core.config import load_from_env_or_config, gen_config_prefix
 
 
 class TestCLI(unittest.TestCase):

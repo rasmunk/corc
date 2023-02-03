@@ -1,5 +1,5 @@
-from corc.defaults import PACKAGE_NAME
-from corc.config import (
+from corc.core.defaults import PACKAGE_NAME
+from corc.core.config import (
     config_exists,
     get_config_path,
     load_config,
@@ -7,7 +7,7 @@ from corc.config import (
     generate_default_config,
     valid_config,
 )
-from corc.providers.config import generate_config, valid_config
+from corc.core.providers.config import generate_config, valid_config
 
 
 def prepare_config(provider, provider_kwargs, **kwargs):

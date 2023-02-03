@@ -1,8 +1,8 @@
 import argparse
 import datetime
 import json
-from corc.defaults import (
-    CORC_FUNCTIONS,
+from corc.core.defaults import (
+    CORC_CLI_STRUCTURE,
     CLUSTER,
     CLUSTER_NODE,
     CONFIG,
@@ -35,7 +35,7 @@ from corc.cli.parsers.storage.storage import (
 )
 from corc.cli.parsers.storage.s3 import add_s3_group, s3_config_group, s3_extra
 from corc.cli.helpers import cli_exec, import_from_module
-from corc.util import eprint
+from corc.core.util import eprint
 
 
 def to_str(o):
@@ -79,50 +79,105 @@ def run():
     return None
 
 
+def recursive_add_corc_operations(
+    corc_cli_type,
+    corc_cli_operations,
+    parser,
+    module_core_prefix="corc.core",
+    module_cli_prefix="corc.cli.input_groups",
+):
+    """This functions generates the corc cli interfaces for each operation type."""
+    for operation in corc_cli_operations:
+        if isinstance(operation, list):
+            return recursive_add_corc_operations(corc_cli_type, operation, parser)
+        if isinstance(operation, dict):
+            # Note, we only expect there to be one key here
+            operation_key = list(operation.keys())[0]
+            # We postfix the module path with the
+            # operation_key, such that loading will correctly occur once
+            # we get down to an operation that is a simple string
+            module_core_prefix = module_core_prefix + ".{}".format(operation_key)
+            module_cli_prefix = module_cli_prefix + ".{}".format(operation_key)
+
+            # Note, we expect the values to be a list that
+            # contains the underlying operations
+            operation_values = operation.values()
+            operation_parser = parser.add_parser(operation_key)
+
+            return recursive_add_corc_operations(
+                corc_cli_type, operation_values, parser
+            )
+        if isinstance(operation, str):
+            operation_parser = parser.add_parser(operation)
+            operation_input_groups_func = import_from_module(
+                "{}.{}".format(module_cli_prefix, corc_cli_type),
+                "{}".format(corc_cli_type),
+                "{}_groups".format(operation),
+            )
+
+            (
+                provider_groups,
+                arguments_groups,
+                skip_groups,
+            ) = operation_input_groups_func(operation_parser)
+
+            operation_parser.set_defaults(
+                func=cli_exec,
+                module_path="{}.{}.{}".format(module_core_prefix, corc_cli_type, operation),
+                module_name="{}".format(corc_cli_type),
+                func_name=operation,
+                provider_groups=provider_groups,
+                argument_groups=arguments_groups,
+                skip_groups=skip_groups,
+            )
+
+
 def functions_cli(commands):
     """
     Add the functions that corc supports to the CLI.
     """
     # Add corc functions
-    for corc_function in CORC_FUNCTIONS:
-        corc_function_name = corc_function.lower()
+    for corc_cli_structure in CORC_CLI_STRUCTURE:
+        for corc_cli_type, corc_cli_operations in corc_cli_structure.items():
+            function_provider = commands.add_parser(corc_cli_type)
+            function_parser = function_provider.add_subparsers(title="COMMAND")
+            recursive_add_corc_operations(
+                corc_cli_type, corc_cli_operations, function_parser
+            )
 
-        function_provider = commands.add_parser(corc_function_name)
-        function_commands = function_provider.add_subparsers(title="COMMAND")
+        # # Add a function provider
+        # add_function_parser = function_commands.add_parser(
+        #     "add", help="add {} provider".format(corc_function_name)
+        # )
+        # add_provider_input_groups = import_from_module(
+        #     "corc.cli.input_groups.{}".format(corc_function_name),
+        #     "{}".format(corc_function_name),
+        #     "add_provider_groups",
+        # )
+        # add_provider_groups, add_argument_groups = add_provider_input_groups(
+        #     add_function_parser
+        # )
 
-        # Add a function provider
-        add_function_parser = function_commands.add_parser(
-            "add", help="add {} provider".format(corc_function_name)
-        )
-        add_provider_input_groups = import_from_module(
-            "corc.cli.input_groups.{}".format(corc_function_name),
-            "{}".format(corc_function_name),
-            "add_provider_groups",
-        )
-        add_provider_groups, add_argument_groups = add_provider_input_groups(
-            add_function_parser
-        )
+        # add_function_parser.set_defaults(
+        #     func=cli_exec,
+        #     module_path="corc.orchestration.instance.orchestrator",
+        #     module_name="orchestrator",
+        #     func_name="add_orchestration_provider",
+        #     argument_groups=add_argument_groups,
+        # )
 
-        add_function_parser.set_defaults(
-            func=cli_exec,
-            module_path="corc.orchestration.orchestrator",
-            module_name="orchestrator",
-            func_name="add_orchestration_provider",
-            argument_groups=add_argument_groups,
-        )
-
-        # Remove a function provider
-        remove_function_parser = function_commands.add_parser(
-            "remove", help="remove {} provider".format(corc_function_name)
-        )
-        remove_provider_input_groups = import_from_module(
-            "corc.cli.input_groups.{}".format(corc_function_name),
-            "{}".format(corc_function_name),
-            "remove_provider_groups",
-        )
-        remove_provider_groups, remove_argument_groups = remove_provider_input_groups(
-            remove_function_parser
-        )
+        # # Remove a function provider
+        # remove_function_parser = function_commands.add_parser(
+        #     "remove", help="remove {} provider".format(corc_function_name)
+        # )
+        # remove_provider_input_groups = import_from_module(
+        #     "corc.cli.input_groups.{}".format(corc_function_name),
+        #     "{}".format(corc_function_name),
+        #     "remove_provider_groups",
+        # )
+        # remove_provider_groups, remove_argument_groups = remove_provider_input_groups(
+        #     remove_function_parser
+        # )
 
 
 # def compute_cli(parser):

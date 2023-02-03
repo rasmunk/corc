@@ -1,10 +1,12 @@
-from corc.storage.defaults import SUPPORTED_STORAGE_PROVIDERS
+from corc.core.storage.defaults import SUPPORTED_STORAGE_PROVIDERS
+
 
 def valid_storage_group(parser):
     add_storage_group(parser)
     delete_storage(parser)
     download_storage(parser)
     select_storage(parser)
+
 
 def add_provider_group(parser):
     provider_group = parser.add_argument_group(

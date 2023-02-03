@@ -1,6 +1,6 @@
 import unittest
-from corc.providers.defaults import LIBVIRT, VIRTUAL_MACHINE
-from corc.providers.types import get_orchestrator
+from corc.core.providers.defaults import LIBVIRT, VIRTUAL_MACHINE
+from corc.core.providers.types import get_orchestrator
 
 
 class TestLibvirtInstanceOrchestrator(unittest.TestCase):

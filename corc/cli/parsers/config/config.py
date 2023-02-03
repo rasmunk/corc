@@ -1,4 +1,4 @@
-from corc.config import get_config_path
+from corc.core.config import get_config_path
 
 
 def valid_config_args_groups(parser):

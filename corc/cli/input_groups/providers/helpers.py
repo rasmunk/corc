@@ -1,4 +1,4 @@
-from corc.defaults import PROVIDERS, DEFAULT_PROVIDER
+from corc.core.defaults import PROVIDERS, DEFAULT_PROVIDER
 
 
 def select_provider(provider_kwargs=None, default_fallback=False, verbose=False):

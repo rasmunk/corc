@@ -1,4 +1,4 @@
-from corc.defaults import CLUSTER, OCI, JOB, META, S3, STORAGE, PROVIDER
+from corc.core.defaults import CLUSTER, OCI, JOB, META, S3, STORAGE, PROVIDER
 from corc.cli.args import extract_arguments
 from corc.cli.job import (
     run as api_run,

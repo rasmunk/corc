@@ -1,4 +1,4 @@
-from corc.compute.defaults import SUPPORTED_COMPUTE_PROVIDERS
+from corc.core.compute.defaults import SUPPORTED_COMPUTE_PROVIDERS
 
 
 def add_provider_group(parser):

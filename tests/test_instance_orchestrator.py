@@ -1,18 +1,18 @@
 import copy
 import os
 import unittest
-from corc.config import (
+from corc.core.config import (
     load_from_env_or_config,
     gen_config_provider_prefix,
     generate_default_config,
     save_config,
     remove_config,
 )
-from corc.providers.defaults import EC2, LIBVIRT, VIRTUAL_MACHINE
-from corc.providers.oci.network import get_subnet_in_vcn_stack
-from corc.providers.oci.config import generate_oci_config
-from corc.providers.oci.instance import OCIInstanceOrchestrator
-from corc.providers.types import get_orchestrator
+from corc.core.providers.defaults import EC2, LIBVIRT, VIRTUAL_MACHINE
+from corc.core.providers.oci.network import get_subnet_in_vcn_stack
+from corc.core.providers.oci.config import generate_oci_config
+from corc.core.providers.oci.instance import OCIInstanceOrchestrator
+from corc.core.providers.types import get_orchestrator
 
 
 class TestInstanceOrchestrator(unittest.TestCase):

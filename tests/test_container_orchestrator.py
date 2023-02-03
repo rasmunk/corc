@@ -1,7 +1,7 @@
 import unittest
-from corc.providers.apache.container import ApacheContainerOrchestrator
-from corc.providers.defaults import CONTAINER, LOCAL
-from corc.providers.types import get_orchestrator
+from corc.core.providers.apache.container import ApacheContainerOrchestrator
+from corc.core.providers.defaults import CONTAINER, LOCAL
+from corc.core.providers.types import get_orchestrator
 
 
 class TestLocalContainerOrchestrator(unittest.TestCase):

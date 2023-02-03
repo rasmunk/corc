@@ -1,6 +1,6 @@
 import argparse
 from argparse import Namespace
-from corc.defaults import (
+from corc.core.defaults import (
     ANSIBLE,
     CLUSTER,
     CONFIG,

@@ -1,8 +1,13 @@
 import unittest
 from oci.core import VirtualNetworkClient, VirtualNetworkClientCompositeOperations
-from corc.config import load_from_env_or_config, gen_config_provider_prefix
-from corc.providers.oci.helpers import new_client, get, list_entities, stack_was_deleted
-from corc.providers.oci.network import (
+from corc.core.config import load_from_env_or_config, gen_config_provider_prefix
+from corc.core.providers.oci.helpers import (
+    new_client,
+    get,
+    list_entities,
+    stack_was_deleted,
+)
+from corc.core.providers.oci.network import (
     new_vcn_stack,
     delete_vcn_stack,
     ensure_vcn_stack,
