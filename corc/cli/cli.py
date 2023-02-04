@@ -115,19 +115,38 @@ def recursive_add_corc_operations(
                 "{}_groups".format(operation),
             )
 
-            (
-                provider_groups,
-                arguments_groups,
-                skip_groups,
-            ) = operation_input_groups_func(operation_parser)
+            provider_groups = []
+            argument_groups = []
+            skip_groups = []
+            input_groups = operation_input_groups_func(operation_parser)
+            if not input_groups:
+                raise RuntimeError(
+                    "No input groups were returned by the input group function: {}".format(
+                        operation_input_groups_func.func_name
+                    )
+                )
+
+            if len(input_groups) == 3:
+                provider_groups = input_groups[0]
+                argument_groups = input_groups[1]
+                skip_groups = input_groups[2]
+            elif len(input_groups) == 2:
+                provider_groups = input_groups[0]
+                argument_groups = input_groups[1]
+            else:
+                # Only a single datatype was returned
+                # and therefore should no longer be a tuple
+                provider_groups = input_groups
 
             operation_parser.set_defaults(
                 func=cli_exec,
-                module_path="{}.{}.{}".format(module_core_prefix, corc_cli_type, operation),
+                module_path="{}.{}.{}".format(
+                    module_core_prefix, corc_cli_type, operation
+                ),
                 module_name="{}".format(corc_cli_type),
                 func_name=operation,
                 provider_groups=provider_groups,
-                argument_groups=arguments_groups,
+                argument_groups=argument_groups,
                 skip_groups=skip_groups,
             )
 

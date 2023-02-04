@@ -39,13 +39,16 @@ def cli_exec(args):
     if not func:
         return False
 
-    provider_kwargs = get_provider_kwargs(args, groups=provider_groups)
-
-    action_kwargs = get_action_kwargs(args, groups=argument_groups)
-
-    extra_action_kwargs = get_extra_action_kwargs(
-        args, skip_groups=[argument_groups, provider_groups]
+    # Extract the arguments provided
+    provider_kwargs = get_argument_kwargs(args, groups=provider_groups)
+    action_kwargs = get_argument_kwargs(args, groups=argument_groups)
+    extra_action_kwargs = get_argument_kwargs(
+        args, groups=[argument_groups, provider_groups]
     )
+
+    # Prepare the function arguments
+    func_args = get_func_args()
+    func_kwargs = get_func_kwargs(provider_kwargs)
 
     # provider, provider_kwargs = prepare_provider_kwargs(args, namespace_wrap=True)
     # if provider:
@@ -76,22 +79,23 @@ def cli_exec(args):
     return func(**action_kwargs, **extra_action_kwargs)
 
 
-def get_action_kwargs(arguments, groups=None):
+def get_argument_kwargs(arguments, groups=None):
     if not groups:
         groups = []
-    return {}
+
+    argument_kwargs = {}
+    for group in groups:
+        if group in arguments:
+            argument_kwargs[group] = getattr(arguments, group)
+    return argument_kwargs
 
 
-def get_provider_kwargs(arguments, groups=None):
-    if not groups:
-        groups = []
-    return {}
+def get_func_args()
+
+def get_func_kwargs(kwargs, ):
 
 
-def get_extra_action_kwargs(arguments, skip_groups=None):
-    if not skip_groups:
-        skip_groups = []
-    return {}
+
 
 
 def prepare_none_config_kwargs(args, skip_config_groups_groups):
