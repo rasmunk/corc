@@ -5,6 +5,7 @@ from corc.core.orchestration.defaults import (
 
 
 def add_provider_group(parser):
+    # Add the general orchestration providers
     lower_supported_providers = (
         ",".join(SUPPORTED_ORCHESTRATION_PROVIDERS).lower().split(",")
     )

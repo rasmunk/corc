@@ -42,13 +42,11 @@ def cli_exec(args):
     # Extract the arguments provided
     provider_kwargs = get_argument_kwargs(args, groups=provider_groups)
     action_kwargs = get_argument_kwargs(args, groups=argument_groups)
-    extra_action_kwargs = get_argument_kwargs(
-        args, groups=[argument_groups, provider_groups]
-    )
+    extra_action_kwargs = get_argument_kwargs(args, groups=skip_groups)
 
     # Prepare the function arguments
-    func_args = get_func_args()
-    func_kwargs = get_func_kwargs(provider_kwargs)
+    # func_args = get_func_args()
+    # func_kwargs = get_func_kwargs(provider_kwargs)
 
     # provider, provider_kwargs = prepare_provider_kwargs(args, namespace_wrap=True)
     # if provider:
@@ -90,12 +88,15 @@ def get_argument_kwargs(arguments, groups=None):
     return argument_kwargs
 
 
-def get_func_args()
+def get_argument_args(arguments, groups=None):
+    if not groups:
+        groups = []
 
-def get_func_kwargs(kwargs, ):
-
-
-
+    args = []
+    for group in groups:
+        if group in arguments:
+            args.append(getattr(arguments, group))
+    return args
 
 
 def prepare_none_config_kwargs(args, skip_config_groups_groups):

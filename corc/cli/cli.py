@@ -155,7 +155,7 @@ def functions_cli(commands):
     """
     Add the functions that corc supports to the CLI.
     """
-    # Add corc functions
+    # Add the base corc CLI
     for corc_cli_structure in CORC_CLI_STRUCTURE:
         for corc_cli_type, corc_cli_operations in corc_cli_structure.items():
             function_provider = commands.add_parser(corc_cli_type)
