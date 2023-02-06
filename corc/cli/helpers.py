@@ -74,7 +74,7 @@ def cli_exec(args):
     # extra_action_kwargs = prepare_none_config_kwargs(args, skip_config_groups)
     # if provider:
     #     return func(provider, provider_kwargs, **action_kwargs, **extra_action_kwargs)
-    return func(**action_kwargs, **extra_action_kwargs)
+    return func(**provider_kwargs, **action_kwargs, **extra_action_kwargs)
 
 
 def get_argument_kwargs(arguments, groups=None):
