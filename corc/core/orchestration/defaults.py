@@ -2,7 +2,7 @@ import os
 from corc.core.config import default_base_path
 
 # Supported providers
-LIBVIRT = "libvirt"
+LIBVIRT = "libvirt_provider"
 OCI = "oci"
 EC2 = "ec2"
 SUPPORTED_ORCHESTRATION_PROVIDERS = [LIBVIRT, OCI, EC2]
