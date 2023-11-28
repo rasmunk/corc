@@ -10,7 +10,10 @@ from corc.core.config import (
 )
 from corc.core.config import default_corc_config
 from corc.core.providers.config import get_provider_profile, set_provider_profile
-from corc.core.providers.oci.config import generate_oci_config, valid_oci_config
+from corc.core.orchestration.providers.oci.config import (
+    generate_oci_config,
+    valid_oci_config,
+)
 
 
 class ConfigTest(unittest.TestCase):

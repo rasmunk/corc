@@ -8,10 +8,10 @@ from corc.core.config import (
     save_config,
     remove_config,
 )
-from corc.core.providers.defaults import EC2, LIBVIRT, VIRTUAL_MACHINE
-from corc.core.providers.oci.network import get_subnet_in_vcn_stack
-from corc.core.providers.oci.config import generate_oci_config
-from corc.core.providers.oci.instance import OCIInstanceOrchestrator
+from corc.core.orchestration.defaults import EC2, LIBVIRT, VIRTUAL_MACHINE
+from corc.core.orchestration.providers.oci.network import get_subnet_in_vcn_stack
+from corc.core.orchestration.providers.oci.config import generate_oci_config
+from corc.core.orchestration.providers.oci.instance import OCIInstanceOrchestrator
 from corc.core.providers.types import get_orchestrator
 
 

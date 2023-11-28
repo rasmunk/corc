@@ -5,6 +5,7 @@ from corc.core.config import default_base_path
 LIBVIRT = "libvirt_provider"
 OCI = "oci"
 EC2 = "ec2"
+LOCAL = "local"
 SUPPORTED_ORCHESTRATION_PROVIDERS = [LIBVIRT, OCI, EC2]
 
 # Orchestration provider variables

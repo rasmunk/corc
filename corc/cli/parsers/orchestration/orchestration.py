@@ -2,6 +2,7 @@ from corc.core.orchestration.defaults import (
     ORCHESTRATION_PROVIDER_NAME,
     SUPPORTED_ORCHESTRATION_PROVIDERS,
 )
+from corc.core.plugins.storage import load
 
 
 def add_provider_group(parser):
@@ -16,7 +17,13 @@ def remove_provider_group(parser):
     lower_supported_providers = (
         ",".join(SUPPORTED_ORCHESTRATION_PROVIDERS).lower().split(",")
     )
+
+    installed_providers = []
+    for provider in lower_supported_providers:
+        if load(provider):
+            installed_providers.append(provider)
+
     parser.add_argument(
         ORCHESTRATION_PROVIDER_NAME,
-        choices=lower_supported_providers,
+        choices=installed_providers,
     )

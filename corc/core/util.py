@@ -3,40 +3,6 @@ import sys
 import os
 import flatten_dict
 import platform
-import socket
-import subprocess
-import yaml
-
-
-def parse_yaml(data):
-    try:
-        parsed = yaml.safe_load(data)
-        return parsed
-    except yaml.reader.ReaderError as err:
-        print("Failed to parse yaml: {}".format(err))
-    return False
-
-
-def dump_yaml(path, data):
-    try:
-        with open(path, "w") as fh:
-            yaml.dump(data, fh)
-        return True
-    except IOError as err:
-        print("Failed to dump yaml: {} - {}".format(path, err))
-    return False
-
-
-def create_directory(dir_path):
-    if os.path.exists(dir_path):
-        return True
-
-    try:
-        os.makedirs(dir_path)
-        return True
-    except IOError as err:
-        print("Failed to create the directory path: {} - {}".format(dir_path, err))
-    return False
 
 
 def present_in(var, collection, verbose=False):
@@ -172,37 +138,6 @@ def validate_either_values(input_dict, either_values, verbose=False, throw=False
 def prepare_cls_kwargs(cls, **kwargs):
     cls_kwargs = {k: v for k, v in kwargs.items() if hasattr(cls, k)}
     return cls_kwargs
-
-
-def ping(host):
-    """
-    # https://stackoverflow.com/questions/2953462/pinging-servers-in-python
-    Returns True if host (str) responds to a ping request.
-    Remember that a host may not respond to a ping (ICMP)
-    request even if the host name is valid.
-    """
-
-    # Option for the number of packets as a function of
-    param = "-n" if platform.system().lower() == "windows" else "-c"
-
-    # Building the command. Ex: "ping -c 1 google.com"
-    command = ["ping", param, "1", host]
-
-    return subprocess.call(command) == 0
-
-
-def open_port(host="127.0.0.1", port=22):
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    result = sock.connect_ex((host, port))
-    sock.close()
-    if result == 0:
-        return True
-    else:
-        return False
-
-
-def eprint(*args, **kwargs):
-    print(*args, file=sys.stderr, **kwargs)
 
 
 def has_method(object_, method):

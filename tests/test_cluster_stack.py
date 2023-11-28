@@ -10,8 +10,12 @@ from oci.container_engine import (
     ContainerEngineClientCompositeOperations,
 )
 from corc.core.config import load_from_env_or_config, gen_config_provider_prefix
-from corc.core.providers.oci.helpers import new_client, get, get_kubernetes_version
-from corc.core.providers.oci.cluster import (
+from corc.core.orchestration.providers.oci.helpers import (
+    new_client,
+    get,
+    get_kubernetes_version,
+)
+from corc.core.orchestration.providers.oci.cluster import (
     new_cluster_stack,
     get_cluster_stack,
     get_cluster_by_name,
@@ -20,7 +24,7 @@ from corc.core.providers.oci.cluster import (
     gen_cluster_stack_details,
     list_entities,
 )
-from corc.core.providers.oci.network import (
+from corc.core.orchestration.providers.oci.network import (
     new_vcn_stack,
     delete_vcn_stack,
     valid_vcn_stack,

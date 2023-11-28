@@ -1,19 +1,21 @@
 from libcloud.compute.types import Provider as ComputeProvider
 from libcloud.container.types import Provider as ContainerProvider
 from corc.core.providers.defaults import (
-    BARE_METAL,
     CONTAINER_CLUSTER,
     CONTAINER,
     DOCKER,
+    KUBERNETES,
+)
+from corc.core.orchestration.defaults import (
+    BARE_METAL,
+    VIRTUAL_MACHINE,
+    OCI,
     EC2,
     LIBVIRT,
     LOCAL,
-    KUBERNETES,
-    OCI,
-    VIRTUAL_MACHINE,
 )
-from corc.core.providers.oci.instance import OCIInstanceOrchestrator
-from corc.core.providers.oci.cluster import OCIClusterOrchestrator
+from corc.core.orchestration.providers.oci.instance import OCIInstanceOrchestrator
+from corc.core.orchestration.providers.oci.cluster import OCIClusterOrchestrator
 from corc.core.providers.apache.cluster import ApacheClusterOrchestrator
 from corc.core.providers.apache.container import ApacheContainerOrchestrator
 from corc.core.providers.apache.instance import ApacheInstanceOrchestrator

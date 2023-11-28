@@ -2,15 +2,15 @@ import paramiko
 import os
 import subprocess
 from io import StringIO
-from corc.core.io import (
+from corc.utils.io import (
     write,
     chmod,
     acquire_lock,
     release_lock,
     remove_content_from_file,
 )
-from corc.core.io import load as fileload
-from corc.core.io import remove as fileremove
+from corc.utils.io import load as fileload
+from corc.utils.io import remove as fileremove
 from corc.core.helpers import get_corc_path
 from corc.core.defaults import default_base_path, default_host_key_order
 

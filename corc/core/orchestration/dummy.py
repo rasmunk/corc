@@ -1,7 +1,7 @@
 import uuid
 from corc.core.config import default_config_path
 from corc.core.orchestrator import Orchestrator
-from corc.core.util import ping
+from corc.utils.connect import ping
 
 
 class LocalOrchestrator(Orchestrator):

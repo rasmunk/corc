@@ -69,6 +69,16 @@ def remove(path):
     return False
 
 
+def removedirs(path, recursive=False):
+    try:
+        if os.path.exists(path):
+            os.removedirs(path)
+            return True
+    except Exception as err:
+        print("Failed to remove directory: {} - {}".format(path, err))
+    return False
+
+
 def remove_content_from_file(path, content):
     if not os.path.exists(path):
         return False
@@ -97,3 +107,31 @@ def chmod(path, mode, **kwargs):
         print("Failed to set permissions: {} on: {} - {}".format(mode, path, err))
         return False
     return True
+
+
+def parse_yaml(data):
+    try:
+        parsed = yaml.safe_load(data)
+        return parsed
+    except yaml.reader.ReaderError as err:
+        print("Failed to parse yaml: {}".format(err))
+    return False
+
+
+def dump_yaml(path, data):
+    try:
+        with open(path, "w") as fh:
+            yaml.dump(data, fh)
+        return True
+    except IOError as err:
+        print("Failed to dump yaml: {} - {}".format(path, err))
+    return False
+
+
+def load_yaml(path):
+    try:
+        with open(path, "r") as fh:
+            return yaml.safe_load(fh)
+    except IOError as err:
+        print("Failed to load yaml: {} - {}".format(path, err))
+    return False

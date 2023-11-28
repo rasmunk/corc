@@ -1,6 +1,6 @@
 from oci.core import VirtualNetworkClient, VirtualNetworkClientCompositeOperations
-from corc.core.providers.oci.helpers import new_client
-from corc.core.providers.oci.network import new_vcn_stack
+from corc.core.orchestration.providers.oci.helpers import new_client
+from corc.core.orchestration.providers.oci.network import new_vcn_stack
 
 
 def prepare_options():

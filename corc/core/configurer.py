@@ -1,6 +1,6 @@
 import os
 from corc.core.defaults import default_host_key_order
-from corc.core.io import exists
+from corc.utils.io import exists
 from corc.core.helpers import recursive_format
 from ansible.config.manager import ConfigManager
 from ansible.parsing.dataloader import DataLoader

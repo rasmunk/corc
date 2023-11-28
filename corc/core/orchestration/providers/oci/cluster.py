@@ -7,7 +7,7 @@ from oci.container_engine.models import (
 )
 from oci.core.models import CreateSubnetDetails
 from oci.util import to_dict
-from corc.core.providers.oci.helpers import (
+from corc.core.orchestration.providers.oci.helpers import (
     new_compute_client,
     new_container_engine_client,
     new_network_client,
@@ -18,7 +18,7 @@ from corc.core.providers.oci.helpers import (
     get_kubernetes_version,
     prepare_details,
 )
-from corc.core.providers.oci.config import (
+from corc.core.orchestration.providers.oci.config import (
     valid_profile_config,
     valid_cluster_config,
     valid_cluster_node_config,
@@ -35,7 +35,7 @@ from corc.core.util import (
 )
 from corc.core.schedulers.kubernetes.config import save_kube_config, load_kube_config
 from corc.core.orchestrator import Orchestrator
-from corc.core.providers.oci.network import (
+from corc.core.orchestration.providers.oci.network import (
     create_subnet,
     delete_vcn_stack,
     ensure_vcn_stack,

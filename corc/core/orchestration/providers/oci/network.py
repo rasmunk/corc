@@ -18,9 +18,11 @@ from oci.core.models import NatGateway
 from oci.core.models import ServiceGateway
 from oci.core.models import Subnet, CreateSubnetDetails, UpdateSubnetDetails
 from oci.retry import DEFAULT_RETRY_STRATEGY
-from corc.cli.args import get_arguments, OCI, VCN
+from corc.cli.args import get_arguments
+from corc.core.defaults import VCN
+from corc.core.orchestration.defaults import OCI
 from corc.core.helpers import is_in, exists_in_dict, find_in_dict, unset_check
-from corc.core.providers.oci.helpers import (
+from corc.core.orchestration.providers.oci.helpers import (
     new_network_client,
     prepare_details,
     list_entities,

@@ -15,14 +15,14 @@ from oci.core.models import (
 from oci.util import to_dict
 from corc.core.authenticator import SSHCredentials
 from corc.core.orchestrator import Orchestrator
-from corc.core.util import open_port
+from corc.utils.connect import open_port
 from corc.core.config import (
     default_config_path,
     load_from_config,
     load_from_env_or_config,
     gen_config_provider_prefix,
 )
-from corc.core.providers.oci.helpers import (
+from corc.core.orchestration.providers.oci.helpers import (
     create,
     delete,
     get,
@@ -33,7 +33,7 @@ from corc.core.providers.oci.helpers import (
     stack_was_deleted,
     prepare_details,
 )
-from corc.core.providers.oci.network import (
+from corc.core.orchestration.providers.oci.network import (
     ensure_vcn_stack,
     new_vcn_stack,
     valid_vcn_stack,

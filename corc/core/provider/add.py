@@ -7,7 +7,7 @@ else:
     from importlib.metadata import entry_points
 
 from corc.core.defaults import default_base_path
-from corc.core.io import makedirs, exists
+from corc.utils.io import makedirs, exists
 
 
 def add_provider(provider_type, name):
@@ -28,5 +28,4 @@ def add_provider(provider_type, name):
     # Find every module that defines the corc.plugins entrypoint
     discovered_plugins = entry_points("corc.plugins")
     print(discovered_plugins)
-
     return True

@@ -1,4 +1,4 @@
-from corc.core.providers.oci.cluster import OCIClusterOrchestrator
+from corc.core.orchestration.providers.oci.cluster import OCIClusterOrchestrator
 
 
 def prepare_options():

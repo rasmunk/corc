@@ -2,6 +2,7 @@ import copy
 import flatten_dict
 import os
 import yaml
+from corc.utils.io import makedirs, exists, remove, dump_yaml, load_yaml
 from corc.core.defaults import (
     PACKAGE_NAME,
     default_base_path,
@@ -147,69 +148,40 @@ def get_config_path(path=default_config_path):
 def save_config(config, path=default_config_path):
     path = get_config_path(path)
     dir_path = os.path.dirname(path)
-    if not os.path.exists(dir_path):
-        try:
-            os.makedirs(os.path.dirname(path))
-        except Exception as err:
-            print("Failed to create config directory: {}".format(err))
-
+    if not exists(dir_path):
+        created = makedirs(dir_path)
+        if not created:
+            print("Failed to create config directory: {}".format(dir_path))
+            return False
     if not config:
         return False
-
-    try:
-        with open(path, "w") as fh:
-            yaml.safe_dump(config, fh)
-    except Exception as err:
-        print("Failed to save config: {}".format(err))
-        return False
-    return True
+    return dump_yaml(path, config)
 
 
 def update_config(config, path=default_config_path):
     path = get_config_path(path)
     if not config:
         return False
-
-    try:
-        with open(path, "w") as fh:
-            yaml.safe_dump(config, fh)
-    except Exception as err:
-        print("Failed to save config: {}".format(err))
-        return False
-    return True
+    return dump_yaml(path, config, safe=True)
 
 
 def load_config(path=default_config_path):
     path = get_config_path(path)
     if not os.path.exists(path):
         return False
-
-    config = {}
-    try:
-        with open(path, "r") as fh:
-            config = yaml.safe_load(fh)
-    except Exception as err:
-        print("Failed to load config: {}".format(err))
-    return config
+    return load_yaml(path)
 
 
 def config_exists(path=default_config_path):
     path = get_config_path(path)
-    if not path:
-        return False
-    return os.path.exists(path)
+    return exists(path)
 
 
 def remove_config(path=default_config_path):
     path = get_config_path(path=path)
     if not os.path.exists(path):
         return True
-    try:
-        os.remove(path)
-    except Exception as err:
-        print("Failed to remove config: {}".format(err))
-        return False
-    return True
+    return remove(path)
 
 
 def recursive_check_config(

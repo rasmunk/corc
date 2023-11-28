@@ -1,6 +1,6 @@
 import unittest
 from corc.core.config import load_from_env_or_config, gen_config_provider_prefix
-from corc.core.providers.oci.cluster import OCIClusterOrchestrator
+from corc.core.orchestration.providers.oci.cluster import OCIClusterOrchestrator
 
 # import json
 # from libcloud.container.types import Provider

@@ -42,9 +42,15 @@ from corc.core.storage.s3 import (
 )
 from corc.core.schedulers.kubernetes.nodes import NodeManager
 from corc.core.schedulers.kubernetes.scheduler import KubenetesScheduler
-from corc.core.providers.oci.cluster import get_cluster_by_name, refresh_kube_config
-from corc.core.providers.oci.helpers import new_client
-from corc.core.providers.oci.config import valid_profile_config, valid_cluster_config
+from corc.core.orchestration.providers.oci.cluster import (
+    get_cluster_by_name,
+    refresh_kube_config,
+)
+from corc.core.orchestration.providers.oci.helpers import new_client
+from corc.core.orchestration.providers.oci.config import (
+    valid_profile_config,
+    valid_cluster_config,
+)
 
 
 required_run_cluster_fields = {"name": str, "image": str}

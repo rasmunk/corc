@@ -6,7 +6,7 @@ from corc.core.config import (
     load_from_config,
     gen_config_provider_prefix,
 )
-from corc.core.util import eprint
+from corc.utils.format import eprint
 from corc.core.providers.apache.helpers import new_apache_client
 
 

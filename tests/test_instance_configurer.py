@@ -6,7 +6,7 @@ import unittest
 from corc.core.authenticator import SSHAuthenticator
 from corc.core.config import load_from_env_or_config, gen_config_provider_prefix
 from corc.core.configurer import AnsibleConfigurer
-from corc.core.providers.oci.instance import OCIInstanceOrchestrator
+from corc.core.orchestration.providers.oci.instance import OCIInstanceOrchestrator
 
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
