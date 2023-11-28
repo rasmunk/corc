@@ -94,7 +94,8 @@ def load_aws_config(config_path, credentials_path, profile_name="default"):
         raise RuntimeError("Failed to load config: {}".format(config_path))
 
     aws_creds_provider = SharedCredentialProvider(
-        credentials_path, profile_name=profile_name,
+        credentials_path,
+        profile_name=profile_name,
     )
     aws_creds_config = aws_creds_provider.load()
     if not aws_creds_config:
@@ -109,7 +110,8 @@ def load_aws_config(config_path, credentials_path, profile_name="default"):
 
     profile_attributes = aws_config["profiles"][profile_name]
     aws_config = dict(
-        aws_access_key_id=aws_access_key, aws_secret_access_key=aws_secret_key,
+        aws_access_key_id=aws_access_key,
+        aws_secret_access_key=aws_secret_key,
     )
     aws_config.update(profile_attributes)
     return aws_config

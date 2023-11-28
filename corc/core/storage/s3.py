@@ -105,7 +105,7 @@ def delete_objects(s3_resource, bucket_name, s3_prefix="", max_chunk_size=1000):
 
 # Accept parameters to
 def expand_s3_bucket(s3_resource, bucket_name, target_dir=None, s3_prefix="input"):
-    """ Expands the content of the specified bucket into the target_dir """
+    """Expands the content of the specified bucket into the target_dir"""
     bucket = s3_resource.Bucket(bucket_name)
     for obj in bucket.objects.filter(Prefix=s3_prefix):
         obj_path = copy.deepcopy(obj.key)

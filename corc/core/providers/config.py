@@ -32,7 +32,9 @@ def set_provider_profile(provider, profile, config_path=default_config_path):
 
 def generate_config(provider, overwrite_with_empty=False, **kwargs):
     load_default_config = import_from_module(
-        "corc.providers.{}.config".format(provider), "config", "load_default_config",
+        "corc.providers.{}.config".format(provider),
+        "config",
+        "load_default_config",
     )
 
     default_config = load_default_config(provider)

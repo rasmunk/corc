@@ -320,11 +320,17 @@ def _gen_instance_stack_details(vcn_id, subnet_id, images, shapes, **options):
 class OCIInstanceOrchestrator(Orchestrator):
     def __init__(self, options):
         super().__init__(options)
-        self.compute_client = new_compute_client(name=options["profile"]["name"],)
+        self.compute_client = new_compute_client(
+            name=options["profile"]["name"],
+        )
 
-        self.identity_client = new_identity_client(name=options["profile"]["name"],)
+        self.identity_client = new_identity_client(
+            name=options["profile"]["name"],
+        )
 
-        self.network_client = new_network_client(name=options["profile"]["name"],)
+        self.network_client = new_network_client(
+            name=options["profile"]["name"],
+        )
 
         self.port = 22
         self.instance = None

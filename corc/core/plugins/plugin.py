@@ -1,5 +1,5 @@
 class Plugin:
-    """ Contains the relevant plugin data for corc """
+    """Contains the relevant plugin data for corc"""
 
     def __init__(self, name, group, module):
         self.name = name

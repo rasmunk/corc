@@ -65,7 +65,6 @@ def ssh_credentials_exists(
 
 
 def load_rsa_key_pair(ssh_dir_path=default_ssh_path, key_name="id_rsa"):
-
     corc_ssh_path = get_corc_path(path=ssh_dir_path, env_postfix="SSH_PATH")
     if not os.path.exists(corc_ssh_path):
         return False, False
@@ -338,7 +337,10 @@ class SSHAuthenticator:
         return self._is_prepared
 
     def get_host_key(
-        self, endpoint, port=22, default_host_key_algos=default_host_key_order,
+        self,
+        endpoint,
+        port=22,
+        default_host_key_algos=default_host_key_order,
     ):
         transport = paramiko.transport.Transport("{}:{}".format(endpoint, port))
         transport.start_client()

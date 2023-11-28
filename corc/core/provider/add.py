@@ -11,7 +11,7 @@ from corc.core.io import makedirs, exists
 
 
 def add_provider(provider_type, name):
-    """ Add a particular provider to corc. """
+    """Add a particular provider to corc."""
     # Make the provider configuration directory
     provider_config_dir = os.path.join(default_base_path, provider_type)
     if not exists(provider_config_dir):

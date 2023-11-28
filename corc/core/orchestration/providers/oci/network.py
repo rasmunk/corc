@@ -135,7 +135,6 @@ def update_vcn_stack(
     route_table_kwargs=None,
     subnet_kwargs=None,
 ):
-
     if not vcn_kwargs:
         vcn_kwargs = {}
 
@@ -236,7 +235,10 @@ def update_vcn_stack(
             create_subnet_details = prepare_details(
                 CreateSubnetDetails, **subnet_kwargs
             )
-            subnet = create_subnet(network_client, create_subnet_details,)
+            subnet = create_subnet(
+                network_client,
+                create_subnet_details,
+            )
             if subnet:
                 stack["subnets"][subnet.id] = subnet
     return stack
@@ -250,7 +252,6 @@ def ensure_vcn_stack(
     route_table_kwargs=None,
     subnet_kwargs=None,
 ):
-
     if not vcn_kwargs:
         vcn_kwargs = {}
 
@@ -346,7 +347,7 @@ def refresh_vcn_stack(network_client, compartment_id, vcn_kwargs=None):
 
 
 def valid_vcn_stack(stack, required_vcn=None, required_igs=None, required_subnets=None):
-    """ Can be either """
+    """Can be either"""
     if not isinstance(stack, dict):
         raise TypeError("The VCN stack must be a dictionary to be valid")
 
@@ -390,7 +391,10 @@ def get_vcn_stack(network_client, compartment_id, vcn_id):
     gateways = {
         gateway.id: gateway
         for gateway in list_entities(
-            network_client, "list_internet_gateways", compartment_id, vcn_id=vcn.id,
+            network_client,
+            "list_internet_gateways",
+            compartment_id,
+            vcn_id=vcn.id,
         )
     }
     subnets = {
@@ -815,7 +819,6 @@ def create_subnet_stack(
     subnet_kwargs=None,
     use_default_route_table=False,
 ):
-
     if not internet_gateway_kwargs:
         internet_gateway_kwargs = {}
 
@@ -923,7 +926,9 @@ if __name__ == "__main__":
     vcn_args = get_arguments([VCN], strip_group_prefix=True)
     args = get_arguments([OCI], strip_group_prefix=True)
 
-    network_client = new_network_client(name=args.name,)
+    network_client = new_network_client(
+        name=args.name,
+    )
 
     removed_vcns = delete_compartment_vcns(network_client, args.compartment_id)
     print("Deleted vcns: {}".format(removed_vcns))

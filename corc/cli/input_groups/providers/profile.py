@@ -3,7 +3,7 @@ from corc.cli.helpers import import_from_module
 
 
 def profile_input_groups(parser, provider):
-    """ Import the providers parser profile directly """
+    """Import the providers parser profile directly"""
     valid_profile_group = import_from_module(
         "corc.cli.parsers.providers.{}.profile".format(provider),
         "profile",

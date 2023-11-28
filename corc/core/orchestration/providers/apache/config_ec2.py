@@ -47,7 +47,6 @@ def load_driver_options(
     profile_name="default",
     **kwargs
 ):
-
     aws_access_key_id, aws_secret_access_key, region = None, None, None
     if "profile" in provider_kwargs:
         if "name" in provider_kwargs["profile"]:

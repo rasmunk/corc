@@ -34,7 +34,9 @@ ORCHESTRATORS = {
             "options": {"driver": {"provider": ComputeProvider.LIBVIRT}},
         },
     },
-    BARE_METAL: {LOCAL: {"klass": LocalOrchestrator},},
+    BARE_METAL: {
+        LOCAL: {"klass": LocalOrchestrator},
+    },
 }
 
 
@@ -52,6 +54,6 @@ def get_orchestrator(resource_type, provider):
 
 # TODO, maybe more to a more sensible place
 def get_provider_resource_creation_id(provider, resource_type):
-    """ Returns the fields used to identify the resource type for a given provider """
+    """Returns the fields used to identify the resource type for a given provider"""
     creation_id = RESOURCE_CREATION_IDENTIFERS[provider][resource_type]
     return creation_id

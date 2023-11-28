@@ -107,6 +107,7 @@ def recursive_add_corc_operations(
             return recursive_add_corc_operations(
                 corc_cli_type, operation_values, parser
             )
+        # Dynamically import the different cli input groups
         if isinstance(operation, str):
             operation_parser = parser.add_parser(operation)
             operation_input_groups_func = import_from_module(
@@ -163,40 +164,41 @@ def functions_cli(commands):
             recursive_add_corc_operations(
                 corc_cli_type, corc_cli_operations, function_parser
             )
+    # Load in the plugins CLI
 
-        # # Add a function provider
-        # add_function_parser = function_commands.add_parser(
-        #     "add", help="add {} provider".format(corc_function_name)
-        # )
-        # add_provider_input_groups = import_from_module(
-        #     "corc.cli.input_groups.{}".format(corc_function_name),
-        #     "{}".format(corc_function_name),
-        #     "add_provider_groups",
-        # )
-        # add_provider_groups, add_argument_groups = add_provider_input_groups(
-        #     add_function_parser
-        # )
+    # # Add a function provider
+    # add_function_parser = function_commands.add_parser(
+    #     "add", help="add {} provider".format(corc_function_name)
+    # )
+    # add_provider_input_groups = import_from_module(
+    #     "corc.cli.input_groups.{}".format(corc_function_name),
+    #     "{}".format(corc_function_name),
+    #     "add_provider_groups",
+    # )
+    # add_provider_groups, add_argument_groups = add_provider_input_groups(
+    #     add_function_parser
+    # )
 
-        # add_function_parser.set_defaults(
-        #     func=cli_exec,
-        #     module_path="corc.orchestration.instance.orchestrator",
-        #     module_name="orchestrator",
-        #     func_name="add_orchestration_provider",
-        #     argument_groups=add_argument_groups,
-        # )
+    # add_function_parser.set_defaults(
+    #     func=cli_exec,
+    #     module_path="corc.orchestration.instance.orchestrator",
+    #     module_name="orchestrator",
+    #     func_name="add_orchestration_provider",
+    #     argument_groups=add_argument_groups,
+    # )
 
-        # # Remove a function provider
-        # remove_function_parser = function_commands.add_parser(
-        #     "remove", help="remove {} provider".format(corc_function_name)
-        # )
-        # remove_provider_input_groups = import_from_module(
-        #     "corc.cli.input_groups.{}".format(corc_function_name),
-        #     "{}".format(corc_function_name),
-        #     "remove_provider_groups",
-        # )
-        # remove_provider_groups, remove_argument_groups = remove_provider_input_groups(
-        #     remove_function_parser
-        # )
+    # # Remove a function provider
+    # remove_function_parser = function_commands.add_parser(
+    #     "remove", help="remove {} provider".format(corc_function_name)
+    # )
+    # remove_provider_input_groups = import_from_module(
+    #     "corc.cli.input_groups.{}".format(corc_function_name),
+    #     "{}".format(corc_function_name),
+    #     "remove_provider_groups",
+    # )
+    # remove_provider_groups, remove_argument_groups = remove_provider_input_groups(
+    #     remove_function_parser
+    # )
 
 
 # def compute_cli(parser):

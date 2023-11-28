@@ -118,7 +118,6 @@ def update_cluster_stack(
 def get_cluster_stack(
     container_engine_client, compartment_id, cluster_id, node_kwargs=None
 ):
-
     if not node_kwargs:
         node_kwargs = dict()
 
@@ -272,7 +271,9 @@ def client_get_cluster(provider, provider_kwargs, format_return=False, cluster=N
         )
     else:
         found_cluster = get_cluster_by_name(
-            client, provider_kwargs["profile"]["compartment_id"], cluster["name"],
+            client,
+            provider_kwargs["profile"]["compartment_id"],
+            cluster["name"],
         )
     if found_cluster:
         if format_return:
@@ -594,7 +595,10 @@ class OCIClusterOrchestrator(Orchestrator):
 
         image = available_images[0]
         cluster_details = gen_cluster_stack_details(
-            self.vcn_stack["id"], self.vcn_stack["subnets"], image, **self.options,
+            self.vcn_stack["id"],
+            self.vcn_stack["subnets"],
+            image,
+            **self.options,
         )
 
         cluster = get_cluster_by_name(
@@ -790,10 +794,16 @@ class OCIClusterOrchestrator(Orchestrator):
         if isinstance(options["routetable"]["routerules"], list):
             for route_rule in options["routetable"]["routerules"]:
                 validate_dict_fields(
-                    route_rule, valid_route_rule_config, verbose=True, throw=True,
+                    route_rule,
+                    valid_route_rule_config,
+                    verbose=True,
+                    throw=True,
                 )
                 validate_dict_values(
-                    route_rule, required_routerules_fields, verbose=True, throw=True,
+                    route_rule,
+                    required_routerules_fields,
+                    verbose=True,
+                    throw=True,
                 )
         else:
             validate_dict_fields(

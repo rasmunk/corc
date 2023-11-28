@@ -28,7 +28,9 @@ def _perform_client_func_action(client, func_name, *args, **kwargs):
 
 def new_compute_client(**kwargs):
     return new_client(
-        ComputeClient, composite_class=ComputeClientCompositeOperations, **kwargs,
+        ComputeClient,
+        composite_class=ComputeClientCompositeOperations,
+        **kwargs,
     )
 
 
@@ -50,7 +52,9 @@ def new_network_client(**kwargs):
 
 def new_identity_client(**kwargs):
     return new_client(
-        IdentityClient, composite_class=IdentityClientCompositeOperations, **kwargs,
+        IdentityClient,
+        composite_class=IdentityClientCompositeOperations,
+        **kwargs,
     )
 
 
@@ -86,7 +90,7 @@ def new_client(oci_client_class, composite_class=None, name="DEFAULT", **kwargs)
 
 
 def is_composite_client(client):
-    """ Composite clients have the 'client' attribute """
+    """Composite clients have the 'client' attribute"""
     return hasattr(client, "client")
 
 

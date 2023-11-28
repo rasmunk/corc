@@ -2,7 +2,6 @@ from kubernetes import client
 
 
 def prepare_job(container_kwargs=None, pod_spec_kwargs=None, job_spec_kwargs=None):
-
     if not container_kwargs:
         container_kwargs = {}
 

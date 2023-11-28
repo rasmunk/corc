@@ -16,7 +16,7 @@ PLUGIN_ENTRYPOINT_NAME = "{}.plugins".format(PACKAGE_NAME)
 
 
 def discover(plugin_name):
-    """ Discover whether a particular plugin is available on the system """
+    """Discover whether a particular plugin is available on the system"""
     installed_plugins = entry_points(group=PLUGIN_ENTRYPOINT_NAME)
     # Look through the installed modules to find the plugin
     # in question
@@ -45,7 +45,7 @@ def get_imported_plugin(plugin_name):
 
 
 def load(plugin_name):
-    """ Load a particular corc plugin """
+    """Load a particular corc plugin"""
     plugin = discover(plugin_name)
     if not plugin:
         return False
@@ -56,7 +56,7 @@ def load(plugin_name):
 
 
 def install(plugin_type, plugin_name, install_destination=default_plugins_dir):
-    """ Installs a particular plugin """
+    """Installs a particular plugin"""
     # Make the plugin configuration directory
     plugin = load(plugin_name)
     if not plugin:

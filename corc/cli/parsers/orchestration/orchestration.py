@@ -17,5 +17,6 @@ def remove_provider_group(parser):
         ",".join(SUPPORTED_ORCHESTRATION_PROVIDERS).lower().split(",")
     )
     parser.add_argument(
-        ORCHESTRATION_PROVIDER_NAME, choices=lower_supported_providers,
+        ORCHESTRATION_PROVIDER_NAME,
+        choices=lower_supported_providers,
     )

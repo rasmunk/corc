@@ -105,8 +105,8 @@ def prepare_none_config_kwargs(args, skip_config_groups_groups):
 
 
 def prepare_provider_kwargs(args, providers=None, namespace_wrap=False):
-    """ Prepare and extract the arguments that are associated with the selected
-    provider """
+    """Prepare and extract the arguments that are associated with the selected
+    provider"""
     if not providers:
         providers = []
 
@@ -130,12 +130,12 @@ def prepare_provider_kwargs(args, providers=None, namespace_wrap=False):
 def prepare_kwargs_configurations(
     args, argument_groups, provider=False, strip_group_prefix=True
 ):
-    """ Discover which arguments are required for the given argument group and
-        designate which needs to be loaded from the underlying configuration
-        file and which have already been provided on the CLI.
-        This prepares the kwargs_configuration dictionary that is subsequently 
-        used by load_missing_action_kwargs to load the values that are required
-        by the given action from a configuration file. 
+    """Discover which arguments are required for the given argument group and
+    designate which needs to be loaded from the underlying configuration
+    file and which have already been provided on the CLI.
+    This prepares the kwargs_configuration dictionary that is subsequently
+    used by load_missing_action_kwargs to load the values that are required
+    by the given action from a configuration file.
     """
     # Try to find all available args for the given argument_group
     kwargs_configurations = []
