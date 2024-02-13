@@ -1,5 +1,6 @@
 import os
 import fcntl
+import shutil
 
 
 def makedirs(path):
@@ -72,7 +73,10 @@ def remove(path):
 def removedirs(path, recursive=False):
     try:
         if os.path.exists(path):
-            os.removedirs(path)
+            if recursive:
+                shutil.rmtree(path)
+            else:
+                os.removedirs(path)
             return True
     except Exception as err:
         print("Failed to remove directory: {} - {}".format(path, err))
