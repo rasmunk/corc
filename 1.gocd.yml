@@ -1,7 +1,5 @@
 environments:
   pypi_package:
-    environments:
-      GIT_USER: "{{SECRET:[github][username]}}"
     pipelines:
       - corc
 pipelines:
@@ -17,8 +15,8 @@ pipelines:
       publish_python_git:
         git: https://github.com/rasmunk/publish-python-scripts.git
         branch: main
-        username: ${GIT_USER}
-        password: "{{SECRET:[github][access_token]}}"
+        username: "{{SECRET:[pypi][corc][username]}}"
+        password: "{{SECRET:[pypi][corc][password]}}"
         destination: publish-python-scripts
     parameters:
       ARGS: ''
