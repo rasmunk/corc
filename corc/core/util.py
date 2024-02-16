@@ -1,8 +1,5 @@
 from __future__ import print_function
-import sys
-import os
 import flatten_dict
-import platform
 
 
 def present_in(var, collection, verbose=False):

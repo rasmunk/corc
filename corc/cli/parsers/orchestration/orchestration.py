@@ -2,7 +2,7 @@ from corc.core.orchestration.defaults import (
     ORCHESTRATION_PROVIDER_NAME,
     SUPPORTED_ORCHESTRATION_PROVIDERS,
 )
-from corc.core.plugins.storage import load
+from corc.core.plugins.plugin import load
 
 
 def add_provider_group(parser):

@@ -43,37 +43,6 @@ def cli_exec(args):
     provider_kwargs = get_argument_kwargs(args, groups=provider_groups)
     action_kwargs = get_argument_kwargs(args, groups=argument_groups)
     extra_action_kwargs = get_argument_kwargs(args, groups=skip_groups)
-
-    # Prepare the function arguments
-    # func_args = get_func_args()
-    # func_kwargs = get_func_kwargs(provider_kwargs)
-
-    # provider, provider_kwargs = prepare_provider_kwargs(args, namespace_wrap=True)
-    # if provider:
-    #     # Load the specific provider config module
-    #     module_path = module_path.format(provider=provider)
-    #     # Find the missing cli provider kwargs
-    #     provider_kwargs_configuration = prepare_kwargs_configurations(
-    #         provider_kwargs,
-    #         provider_groups,
-    #         provider=provider,
-    #         strip_group_prefix=False)
-    # # Load the missing cli provider kwargs from the config
-    # provider_kwargs = load_missing_action_kwargs(provider_kwargs_configuration)
-
-    # Prepare both the arguments provided for the given group
-    # and mark the arguments that are missing and that should be
-    # loaded from the config file
-    # kwargs_configuration = prepare_kwargs_configurations(args, argument_groups)
-    # Load config and fill in missing values
-    # action_kwargs = load_missing_action_kwargs(kwargs_configuration)
-
-    # Combine the provided kwargs with the missing loaded kwargs
-
-    # Extract the remaining skipped config groups into the extra_action_kwargs
-    # extra_action_kwargs = prepare_none_config_kwargs(args, skip_config_groups)
-    # if provider:
-    #     return func(provider, provider_kwargs, **action_kwargs, **extra_action_kwargs)
     return func(**provider_kwargs, **action_kwargs, **extra_action_kwargs)
 
 

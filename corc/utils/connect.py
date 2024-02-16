@@ -1,6 +1,6 @@
 import subprocess
 import socket
-import yaml
+import platform
 
 
 def ping(host):

@@ -1,71 +1,10 @@
 import os
-import sys
-
-if sys.version_info < (3, 10):
-    from importlib_metadata import entry_points, import_module
-else:
-    from importlib.metadata import entry_points, import_module
-
 from corc.utils.io import makedirs, exists, removedirs
 from corc.utils.job import run
 from corc.core.defaults import PACKAGE_NAME
-from corc.core.config import config_exists, save_config
+from corc.core.config import config_exists, save_config, load_config
 from corc.core.plugins.defaults import default_plugins_dir
-from corc.core.plugins.plugin import Plugin
-
-PLUGIN_ENTRYPOINT_NAME = "{}.plugins".format(PACKAGE_NAME)
-
-
-def discover(plugin_name):
-    """Discover whether a particular plugin is available on the system"""
-    installed_plugins = entry_points(group=PLUGIN_ENTRYPOINT_NAME)
-    # Look through the installed modules to find the plugin
-    # in question
-    for installed_plugin in installed_plugins:
-        if plugin_name == installed_plugin.name:
-            return Plugin(
-                installed_plugin.name, installed_plugin.group, installed_plugin.module
-            )
-    print("Could not find plugin: {}".format(plugin_name))
-    return False
-
-
-def import_plugin(plugin_name, return_module=False):
-    imported_module = None
-    try:
-        imported_module = import_module(plugin_name)
-    except (ImportError, TypeError):
-        raise RuntimeError("Failed to load plugin: {}".format(plugin_name))
-    if return_module:
-        return imported_module
-    return True
-
-
-def remove_plugin(plugin_name):
-    """Remove a particular plugin module"""
-    plugin = discover(plugin_name)
-    if not plugin:
-        return True
-    if hasattr(plugin.module, "__file__"):
-        return removedirs(plugin.module.__file__)
-    if hasattr(plugin.module, "__path__"):
-        return removedirs(plugin.module.__path__)
-    return False
-
-
-def get_imported_plugin(plugin_name, return_module=True):
-    return import_plugin(plugin_name, return_module=return_module)
-
-
-def load(plugin_name):
-    """Load a particular corc plugin"""
-    plugin = discover(plugin_name)
-    if not plugin:
-        return False
-    # Import the discovered plugin
-    if not get_imported_plugin(plugin.name):
-        return False
-    return plugin
+from corc.core.plugins.plugin import import_plugin, discover
 
 
 def pip_install(plugin_name):
@@ -129,10 +68,28 @@ def install(plugin_type, plugin_name, plugin_directory=default_plugins_dir):
     if not config_exists(plugin_config_path):
         # Generate a new plugin configuration
         configuration_module_path = "{}.config".format(plugin_name)
-        imported_plugin_module = get_imported_plugin(configuration_module_path)
+        imported_plugin_module = import_plugin(
+            configuration_module_path, return_module=True
+        )
         default_plugin_config = imported_plugin_module.generate_default_config()
         return save_config(default_plugin_config, path=plugin_config_path)
     return True
+
+
+def load(plugin_type, plugin_name, plugin_directory=default_plugins_dir):
+    """Load a particular plugin"""
+    plugin = discover(plugin_name)
+    if not plugin:
+        return False
+    if not import_plugin(plugin.module):
+        return False
+    # Load plugin config
+    plugin_config_path = os.path.join(
+        plugin_directory, plugin_type, plugin_name, "config"
+    )
+    if config_exists(plugin_config_path):
+        plugin.config = load_config(plugin_config_path)
+    return plugin
 
 
 def remove(plugin_type, plugin_name, plugin_directory=default_plugins_dir):
