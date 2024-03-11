@@ -1,39 +1,7 @@
 import argparse
 import datetime
 import json
-from corc.core.defaults import (
-    CORC_CLI_STRUCTURE,
-    CLUSTER,
-    CLUSTER_NODE,
-    CONFIG,
-    JOB,
-    JOB_META,
-    PACKAGE_NAME,
-    PROFILE,
-    STORAGE,
-    STORAGE_S3,
-    VCN,
-    VCN_SUBNET,
-)
-from corc.cli.parsers.job.job import (
-    job_group,
-    job_meta_group,
-)
-from corc.cli.parsers.providers.oci.cluster import cluster_identity_group
-from corc.cli.parsers.cluster.cluster import (
-    valid_cluster_group,
-    cluster_schedule_group,
-)
-from corc.cli.input_groups.config import config_input_groups
-from corc.cli.input_groups.providers.profile import profile_input_groups
-from corc.cli.parsers.job.job import select_job_group
-from corc.cli.parsers.storage.storage import (
-    add_storage_group,
-    delete_storage,
-    download_storage,
-    select_storage,
-)
-from corc.cli.parsers.storage.s3 import add_s3_group, s3_config_group, s3_extra
+from corc.core.defaults import PACKAGE_NAME, CORC_CLI_STRUCTURE
 from corc.cli.helpers import cli_exec, import_from_module
 from corc.utils.format import eprint
 from corc.core.plugins.plugin import get_plugins, import_plugin, PLUGIN_ENTRYPOINT_BASE
@@ -41,6 +9,8 @@ from corc.core.plugins.storage import load
 
 
 def to_str(o):
+    if hasattr(o, "asdict"):
+        return o.asdict()
     if isinstance(o, datetime.datetime):
         return o.__str__()
 
@@ -52,10 +22,12 @@ def run():
     # Add corc functions to the CLI
     functions_cli(commands)
     args = parser.parse_args()
-
+    # Convert to a dictionary
+    arguments = vars(args)
     # Execute default function
-    if hasattr(args, "func"):
-        success, response = args.func(args)
+    if "func" in arguments:
+        func = arguments.pop("func")
+        success, response = func(arguments)
         output = ""
         if success:
             response["status"] = "success"
@@ -112,7 +84,6 @@ def recursive_add_corc_operations(
 
             provider_groups = []
             argument_groups = []
-            skip_groups = []
             input_groups = operation_input_groups_func(operation_parser)
             if not input_groups:
                 raise RuntimeError(
@@ -121,11 +92,7 @@ def recursive_add_corc_operations(
                     )
                 )
 
-            if len(input_groups) == 3:
-                provider_groups = input_groups[0]
-                argument_groups = input_groups[1]
-                skip_groups = input_groups[2]
-            elif len(input_groups) == 2:
+            if len(input_groups) == 2:
                 provider_groups = input_groups[0]
                 argument_groups = input_groups[1]
             else:
@@ -142,7 +109,6 @@ def recursive_add_corc_operations(
                 func_name=operation,
                 provider_groups=provider_groups,
                 argument_groups=argument_groups,
-                skip_groups=skip_groups,
             )
 
 

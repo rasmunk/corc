@@ -52,11 +52,21 @@ ORCHESTRATION = "orchestration"
 ORCHESTRATION_OPERATIONS = ["add_provider", "remove_provider"]
 ORCHESTRATION_CLI = {ORCHESTRATION: ORCHESTRATION_OPERATIONS}
 
+POOL = "pool"
+POOL_OPERATIONS = ["create", "remove", "show", "ls"]
+POOL_CLI = {POOL: POOL_OPERATIONS}
+
 STORAGE_OPERATIONS = ["add_provider", "remove_provider"]
 STORAGE_CLI = {STORAGE: STORAGE_OPERATIONS}
 
 # List of functionality that corc supports
-CORC_CLI_STRUCTURE = [CONFIGURER_CLI, COMPUTE_CLI, ORCHESTRATION_CLI, STORAGE_CLI]
+CORC_CLI_STRUCTURE = [
+    CONFIGURER_CLI,
+    COMPUTE_CLI,
+    ORCHESTRATION_CLI,
+    POOL_CLI,
+    STORAGE_CLI,
+]
 
 # Action groups
 ACTION_GROUPS = [

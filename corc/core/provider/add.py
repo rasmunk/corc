@@ -27,5 +27,4 @@ def add_provider(provider_type, name):
     # TODO, load from the plugin
     # Find every module that defines the corc.plugins entrypoint
     discovered_plugins = entry_points("corc.plugins")
-    print(discovered_plugins)
     return True
