@@ -1,7 +1,6 @@
 import copy
 import flatten_dict
 import os
-import yaml
 from corc.utils.io import makedirs, exists, remove, dump_yaml, load_yaml
 from corc.core.defaults import (
     PACKAGE_NAME,

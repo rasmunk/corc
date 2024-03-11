@@ -1,4 +1,4 @@
-from corc.core.defaults import POOL, PACKAGE_NAME
+from corc.core.defaults import POOL, NODE, PACKAGE_NAME
 from corc.cli.parsers.actions import PositionalArgumentsAction
 
 
@@ -26,7 +26,7 @@ def remove_group(parser):
     pool_group.add_argument(
         "name",
         action=PositionalArgumentsAction,
-        help="The name of the pool to be removed",
+        help="The name of the pool that should be removed.",
     )
 
 
@@ -35,9 +35,49 @@ def show_group(parser):
     pool_group.add_argument(
         "name",
         action=PositionalArgumentsAction,
-        help="The id of the pool to be shown",
+        help="The name of the pool.",
     )
 
 
 def ls_group(parser):
     pool_group = parser.add_argument_group(title="Pool list arguments")
+
+
+def add_node_group(parser):
+    node_group = parser.add_argument_group(title="Node arguments")
+    node_group.add_argument(
+        "pool_name",
+        action=PositionalArgumentsAction,
+        help="The name of the pool that the node should be added to.",
+    )
+    node_group.add_argument(
+        "name",
+        action=PositionalArgumentsAction,
+        help="The name of the node to be added.",
+    )
+    node_group.add_argument(
+        "-s",
+        "--state",
+        dest="{}_state".format(NODE),
+        help="The state of the node.",
+    )
+    node_group.add_argument(
+        "-c",
+        "--config",
+        dest="{}_config".format(NODE),
+        help="The config of the node.",
+    )
+
+
+def remove_node_group(parser):
+    node_group = parser.add_argument_group(title="Node arguments")
+    node_group.add_argument(
+        "pool_name",
+        action=PositionalArgumentsAction,
+        help="The name of the pool that the node should be removed from.",
+    )
+    node_group.add_argument(
+        "name",
+        action=PositionalArgumentsAction,
+        help="The name of the node.",
+    )

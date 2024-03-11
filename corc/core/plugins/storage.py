@@ -1,7 +1,6 @@
 import os
 from corc.utils.io import makedirs, exists, removedirs
 from corc.utils.job import run
-from corc.core.defaults import PACKAGE_NAME
 from corc.core.config import config_exists, save_config, load_config
 from corc.core.plugins.defaults import default_plugins_dir
 from corc.core.plugins.plugin import import_plugin, discover

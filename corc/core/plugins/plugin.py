@@ -36,7 +36,6 @@ def discover(plugin_name, plugin_type=PLUGIN_ENTRYPOINT_BASE):
     for installed_plugin in installed_plugins:
         if plugin_name == installed_plugin.name:
             return installed_plugin
-    print("Could not find plugin: {}".format(plugin_name))
     return False
 
 

@@ -46,13 +46,16 @@ def run():
 
 
 def recursive_add_corc_operations(
-    corc_cli_type,
-    corc_cli_operations,
+    corc_cli_type,  # orchestration
+    corc_cli_operations,  # [pool, add_provider, remove_provider]
     parser,
     module_core_prefix="corc.core",
     module_cli_prefix="corc.cli.input_groups",
 ):
     """This functions generates the corc cli interfaces for each operation type."""
+    # TODO, adjust to local pop of operations to make it truly recursive
+    # and such that later operations in corc_cli_operations doesn't get dropped
+    # if a dict structure is infront of them
     for operation in corc_cli_operations:
         if isinstance(operation, list):
             return recursive_add_corc_operations(corc_cli_type, operation, parser)
@@ -69,9 +72,10 @@ def recursive_add_corc_operations(
             # contains the underlying operations
             operation_values = operation.values()
             operation_parser = parser.add_parser(operation_key)
+            operation_subparser = operation_parser.add_subparsers(title="COMMAND")
 
             return recursive_add_corc_operations(
-                corc_cli_type, operation_values, parser
+                corc_cli_type, operation_values, operation_subparser
             )
         # Dynamically import the different cli input groups
         if isinstance(operation, str):
@@ -128,14 +132,14 @@ def functions_cli(commands):
             plugin_entrypoint_type = "{}.{}".format(
                 PLUGIN_ENTRYPOINT_BASE, corc_cli_type
             )
-            type_plugins = get_plugins(plugin_type=plugin_entrypoint_type)
-            for plugin in type_plugins:
-                function_provider = function_parser.add_parser(plugin.name)
-                function_cli_parser = function_provider.add_subparsers(title="COMMAND")
-                cli_module_path = "{}.{}.{}".format(plugin.name, "cli", "cli")
-                imported_cli_module = import_plugin(cli_module_path, return_module=True)
-                if imported_cli_module:
-                    imported_cli_module.functions_cli(function_cli_parser)
+            # type_plugins = get_plugins(plugin_type=plugin_entrypoint_type)
+            # for plugin in type_plugins:
+            #     function_provider = function_parser.add_parser(plugin.name)
+            #     function_cli_parser = function_provider.add_subparsers(title="COMMAND")
+            #     cli_module_path = "{}.{}.{}".format(plugin.name, "cli", "cli")
+            #     imported_cli_module = import_plugin(cli_module_path, return_module=True)
+            #     if imported_cli_module:
+            #         imported_cli_module.functions_cli(function_cli_parser)
 
 
 if __name__ == "__main__":

@@ -97,7 +97,7 @@ class Pool:
             return False
 
         try:
-            with shelve.open(self.name) as db:
+            with shelve.open(self.name) as _:
                 pass
         except Exception as err:
             print(err)
@@ -119,3 +119,29 @@ async def discover_pools(path):
             if file.endswith(".db"):
                 pools.append(file.replace(".db", ""))
     return pools
+
+
+class Node:
+    def __init__(self, name, **kwargs):
+        self.name = name
+        self.state = None
+        self.config = kwargs
+
+    def print_state(self):
+        print(
+            "Node name: {}, state: {}, config: {}".format(
+                self.name, self.state, self.config
+            )
+        )
+
+    def __str__(self):
+        return "Node name: {}, state: {}, config: {}".format(
+            self.name, self.state, self.config
+        )
+
+    def asdict(self):
+        return {
+            "name": self.name,
+            "state": self.state,
+            "config": self.config,
+        }

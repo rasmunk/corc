@@ -12,5 +12,5 @@ async def ls(*args, **kwargs):
         return True, response
 
     response["pools"] = pools
-    response["msg"] = "pools"
+    response["msg"] = "Found pools."
     return True, response

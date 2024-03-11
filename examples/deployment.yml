@@ -1,0 +1,31 @@
+name: test-stack
+pools:
+  pool01:
+    nodes:
+      - node01
+      - node02
+      - node03
+  pool02:
+    nodes:
+      - node01
+      - node05
+      - node06
+      - node07
+      - node08
+      - node09
+      - node10
+
+nodes:
+  node01:
+    provider: libvirt_provider
+    settings:
+      name: node01
+      memory: 2048mib
+      vcpus: 2
+
+  node[02-03]:
+    provider: libvirt_provider
+    settings:
+      name: "{{ node.name }}"
+      memory: 2048mib
+      vcpus: 2
