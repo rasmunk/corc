@@ -70,12 +70,17 @@ def recursive_add_corc_operations(
 
             # Note, we expect the values to be a list that
             # contains the underlying operations
+            # operation_cli_type = "{}.{}".format(corc_cli_type, operation_key)
             operation_values = operation.values()
             operation_parser = parser.add_parser(operation_key)
             operation_subparser = operation_parser.add_subparsers(title="COMMAND")
 
             return recursive_add_corc_operations(
-                corc_cli_type, operation_values, operation_subparser
+                operation_key,
+                operation_values,
+                operation_subparser,
+                module_core_prefix=module_core_prefix,
+                module_cli_prefix=module_cli_prefix,
             )
         # Dynamically import the different cli input groups
         if isinstance(operation, str):
@@ -126,7 +131,10 @@ def functions_cli(commands):
             function_provider = commands.add_parser(corc_cli_type)
             function_parser = function_provider.add_subparsers(title="COMMAND")
             recursive_add_corc_operations(
-                corc_cli_type, corc_cli_operations, function_parser
+                corc_cli_type,
+                corc_cli_operations,
+                function_parser,
+                module_cli_prefix="corc.cli.input_groups.{}".format(corc_cli_type),
             )
             # Load in the installed plugins and their CLIs
             plugin_entrypoint_type = "{}.{}".format(
