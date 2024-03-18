@@ -1,4 +1,5 @@
 import argparse
+import copy
 import datetime
 import json
 from corc.core.defaults import PACKAGE_NAME, CORC_CLI_STRUCTURE
@@ -46,79 +47,94 @@ def run():
 
 
 def recursive_add_corc_operations(
-    corc_cli_type,  # orchestration
-    corc_cli_operations,  # [pool, add_provider, remove_provider]
+    corc_cli_type,
+    corc_cli_operations,
     parser,
     module_core_prefix="corc.core",
     module_cli_prefix="corc.cli.input_groups",
 ):
     """This functions generates the corc cli interfaces for each operation type."""
-    # TODO, adjust to local pop of operations to make it truly recursive
-    # and such that later operations in corc_cli_operations doesn't get dropped
-    # if a dict structure is infront of them
-    for operation in corc_cli_operations:
-        if isinstance(operation, list):
-            return recursive_add_corc_operations(corc_cli_type, operation, parser)
-        if isinstance(operation, dict):
-            # Note, we only expect there to be one key here
-            operation_key = list(operation.keys())[0]
+    if isinstance(corc_cli_operations, list):
+        for operation in corc_cli_operations:
+            recursive_add_corc_operations(
+                corc_cli_type,
+                operation,
+                parser,
+                module_core_prefix=module_core_prefix,
+                module_cli_prefix=module_cli_prefix,
+            )
+    elif isinstance(corc_cli_operations, dict):
+        for operation_key, operation in corc_cli_operations.items():
             # We postfix the module path with the
             # operation_key, such that loading will correctly occur once
             # we get down to an operation that is a simple string
-            module_core_prefix = module_core_prefix + ".{}".format(operation_key)
-            module_cli_prefix = module_cli_prefix + ".{}".format(operation_key)
+            module_core_prefix = "{}.{}".format(module_core_prefix, operation_key)
+            module_cli_prefix = "{}.{}".format(module_cli_prefix, operation_key)
 
             # Note, we expect the values to be a list that
             # contains the underlying operations
             # operation_cli_type = "{}.{}".format(corc_cli_type, operation_key)
-            operation_values = operation.values()
             operation_parser = parser.add_parser(operation_key)
             operation_subparser = operation_parser.add_subparsers(title="COMMAND")
 
             return recursive_add_corc_operations(
                 operation_key,
-                operation_values,
+                operation,
                 operation_subparser,
                 module_core_prefix=module_core_prefix,
                 module_cli_prefix=module_cli_prefix,
             )
-        # Dynamically import the different cli input groups
-        if isinstance(operation, str):
-            operation_parser = parser.add_parser(operation)
-            operation_input_groups_func = import_from_module(
-                "{}.{}".format(module_cli_prefix, corc_cli_type),
-                "{}".format(corc_cli_type),
-                "{}_groups".format(operation),
+    # Dynamically import the different cli input groups
+    elif isinstance(corc_cli_operations, str):
+        add_corc_cli_operation(
+            corc_cli_type,
+            corc_cli_operations,
+            parser,
+            module_core_prefix=module_core_prefix,
+            module_cli_prefix=module_cli_prefix,
+        )
+
+
+def add_corc_cli_operation(
+    corc_cli_type,
+    operation,
+    parser,
+    module_core_prefix="corc.core",
+    module_cli_prefix="corc.cli.input_groups",
+):
+    operation_parser = parser.add_parser(operation)
+    operation_input_groups_func = import_from_module(
+        "{}.{}".format(module_cli_prefix, corc_cli_type),
+        "{}".format(operation),
+        "{}_groups".format(operation),
+    )
+
+    provider_groups = []
+    argument_groups = []
+    input_groups = operation_input_groups_func(operation_parser)
+    if not input_groups:
+        raise RuntimeError(
+            "No input groups were returned by the input group function: {}".format(
+                operation_input_groups_func.func_name
             )
+        )
 
-            provider_groups = []
-            argument_groups = []
-            input_groups = operation_input_groups_func(operation_parser)
-            if not input_groups:
-                raise RuntimeError(
-                    "No input groups were returned by the input group function: {}".format(
-                        operation_input_groups_func.func_name
-                    )
-                )
+    if len(input_groups) == 2:
+        provider_groups = input_groups[0]
+        argument_groups = input_groups[1]
+    else:
+        # Only a single datatype was returned
+        # and therefore should no longer be a tuple
+        provider_groups = input_groups
 
-            if len(input_groups) == 2:
-                provider_groups = input_groups[0]
-                argument_groups = input_groups[1]
-            else:
-                # Only a single datatype was returned
-                # and therefore should no longer be a tuple
-                provider_groups = input_groups
-
-            operation_parser.set_defaults(
-                func=cli_exec,
-                module_path="{}.{}.{}".format(
-                    module_core_prefix, corc_cli_type, operation
-                ),
-                module_name="{}".format(corc_cli_type),
-                func_name=operation,
-                provider_groups=provider_groups,
-                argument_groups=argument_groups,
-            )
+    operation_parser.set_defaults(
+        func=cli_exec,
+        module_path="{}.{}".format(module_core_prefix, operation),
+        module_name="{}".format(operation),
+        func_name=operation,
+        provider_groups=provider_groups,
+        argument_groups=argument_groups,
+    )
 
 
 def functions_cli(commands):
@@ -134,6 +150,7 @@ def functions_cli(commands):
                 corc_cli_type,
                 corc_cli_operations,
                 function_parser,
+                module_core_prefix="corc.core.{}".format(corc_cli_type),
                 module_cli_prefix="corc.cli.input_groups.{}".format(corc_cli_type),
             )
             # Load in the installed plugins and their CLIs

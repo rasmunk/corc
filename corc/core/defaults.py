@@ -52,13 +52,13 @@ POOL = "pool"
 POOL_OPERATIONS = ["create", "remove", "show", "ls", "add_node", "remove_node"]
 POOL_CLI = {POOL: POOL_OPERATIONS}
 
-ORCHESTRATION = "orchestration"
-ORCHESTRATION_OPERATIONS = ["add_provider", "remove_provider", POOL_CLI]
-ORCHESTRATION_CLI = {ORCHESTRATION: ORCHESTRATION_OPERATIONS}
-
 STACK = "stack"
-STACK_OPERATIONS = ["deploy", "remove"]
+STACK_OPERATIONS = ["deploy", "destroy", "show", "ls"]
 STACK_CLI = {STACK: STACK_OPERATIONS}
+
+ORCHESTRATION = "orchestration"
+ORCHESTRATION_OPERATIONS = ["add_provider", "remove_provider", POOL_CLI, STACK_CLI]
+ORCHESTRATION_CLI = {ORCHESTRATION: ORCHESTRATION_OPERATIONS}
 
 STORAGE_OPERATIONS = ["add_provider", "remove_provider"]
 STORAGE_CLI = {STORAGE: STORAGE_OPERATIONS}
