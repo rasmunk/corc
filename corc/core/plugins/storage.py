@@ -32,7 +32,6 @@ def pip_uninstall(plugin_name):
 
 def install(plugin_type, plugin_name, plugin_directory=default_plugins_dir):
     """Installs a particular plugin"""
-
     module_installed = pip_install(plugin_name)
     if not module_installed:
         print("Failed to install plugin: {}".format(plugin_name))

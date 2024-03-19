@@ -17,15 +17,17 @@ from corc.cli.parsers.pool import (
 def add_provider_groups(parser):
     add_provider_group(parser)
 
-    provider_groups = [ORCHESTRATION_PROVIDER_NAME]
-    return provider_groups
+    provider_groups = []
+    argument_groups = []
+    return provider_groups, argument_groups
 
 
 def remove_provider_groups(parser):
     remove_provider_group(parser)
 
-    provider_groups = [ORCHESTRATION_PROVIDER_NAME]
-    return provider_groups
+    provider_groups = []
+    argument_groups = []
+    return provider_groups, argument_groups
 
 
 def create_groups(parser):

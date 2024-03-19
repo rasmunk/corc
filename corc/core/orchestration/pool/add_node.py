@@ -1,4 +1,4 @@
-from corc.core.pool.models import Pool, Node
+from corc.core.orchestration.pool.models import Pool, Node
 
 
 async def add_node(pool_name, *node_args, **node_kwargs):

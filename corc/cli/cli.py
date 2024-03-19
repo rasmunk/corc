@@ -157,14 +157,14 @@ def functions_cli(commands):
             plugin_entrypoint_type = "{}.{}".format(
                 PLUGIN_ENTRYPOINT_BASE, corc_cli_type
             )
-            # type_plugins = get_plugins(plugin_type=plugin_entrypoint_type)
-            # for plugin in type_plugins:
-            #     function_provider = function_parser.add_parser(plugin.name)
-            #     function_cli_parser = function_provider.add_subparsers(title="COMMAND")
-            #     cli_module_path = "{}.{}.{}".format(plugin.name, "cli", "cli")
-            #     imported_cli_module = import_plugin(cli_module_path, return_module=True)
-            #     if imported_cli_module:
-            #         imported_cli_module.functions_cli(function_cli_parser)
+            type_plugins = get_plugins(plugin_type=plugin_entrypoint_type)
+            for plugin in type_plugins:
+                function_provider = function_parser.add_parser(plugin.name)
+                function_cli_parser = function_provider.add_subparsers(title="COMMAND")
+                cli_module_path = "{}.{}.{}".format(plugin.name, "cli", "cli")
+                imported_cli_module = import_plugin(cli_module_path, return_module=True)
+                if imported_cli_module:
+                    imported_cli_module.functions_cli(function_cli_parser)
 
 
 if __name__ == "__main__":

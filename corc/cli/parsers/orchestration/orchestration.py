@@ -3,6 +3,7 @@ from corc.core.orchestration.defaults import (
     SUPPORTED_ORCHESTRATION_PROVIDERS,
 )
 from corc.core.plugins.plugin import load
+from corc.cli.parsers.actions import PositionalArgumentsAction
 
 
 def add_provider_group(parser):
@@ -10,7 +11,11 @@ def add_provider_group(parser):
     lower_supported_providers = (
         ",".join(SUPPORTED_ORCHESTRATION_PROVIDERS).lower().split(",")
     )
-    parser.add_argument(ORCHESTRATION_PROVIDER_NAME, choices=lower_supported_providers)
+    parser.add_argument(
+        ORCHESTRATION_PROVIDER_NAME,
+        choices=lower_supported_providers,
+        action=PositionalArgumentsAction,
+    )
 
 
 def remove_provider_group(parser):
@@ -26,4 +31,5 @@ def remove_provider_group(parser):
     parser.add_argument(
         ORCHESTRATION_PROVIDER_NAME,
         choices=installed_providers,
+        action=PositionalArgumentsAction,
     )

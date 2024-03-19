@@ -1,4 +1,4 @@
-from corc.core.pool.models import Pool, Node
+from corc.core.pool.models import Pool
 
 
 async def remove_node(pool_name, node_id):
