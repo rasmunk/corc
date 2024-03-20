@@ -16,15 +16,13 @@ pools:
 
 nodes:
   node01:
-    provider: libvirt_provider
+    provider:
+      name: libvirt_provider
+      driver: libvirt
     settings:
-      name: node01
-      memory: 2048mib
-      vcpus: 2
-
-  node[02-03]:
-    provider: libvirt_provider
-    settings:
-      name: "{{ node.name }}"
-      memory: 2048mib
-      vcpus: 2
+      args:
+        - node02
+        - /var/lib/libvirt/images/saga-base-2.qcow2
+      kwargs:
+        memory_size: 2048mib
+        num_vcpus: 2

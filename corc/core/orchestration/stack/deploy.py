@@ -1,66 +1,50 @@
 # Description: Deploy the stack
 import asyncio
-from corc.utils.io import load_yaml, exists
-from corc.core.orchestration.pool.models import Pool, Node
+from corc.core.helpers import import_from_module
+from corc.core.orchestration.pool.models import Pool
 from corc.core.plugins.plugin import discover, import_plugin
-
-
-async def get_stack_config(deploy_file):
-    # Load the architecture file and deploy the stack
-    if not exists(deploy_file):
-        return False
-    stack_config = load_yaml(deploy_file)
-    if not stack_config:
-        return False
-    return stack_config
-
-
-async def get_deploy_node_configs(stack_config):
-    deploy_node_configs = {}
-    for node_name, node_kwargs in stack_config.get("nodes", {}).items():
-        provider = node_kwargs.get("provider", None)
-        if not provider:
-            return False, {
-                "error": "Provider for node: {} is required.".format(node_name)
-            }
-
-        node_settings = node_kwargs.get("settings", None)
-        if not node_settings:
-            return False, {
-                "error": "Settings for node: {} are required.".format(node_name)
-            }
-
-        deploy_node_configs[node_name] = {
-            "provider": provider,
-            "settings": node_settings,
-        }
-    return True, deploy_node_configs
+from corc.core.orchestration.stack.config import (
+    get_stack_config,
+    get_stack_config_nodes,
+)
 
 
 async def provision_node(node_name, node_details):
-    plugin_driver = discover(node_details["provider"])
+    plugin_driver = discover(node_details["provider"]["name"])
     if not plugin_driver:
         return False, {
             "name": node_name,
-            "error": "Provider: {} is not installed.".format(node_details["provider"]),
+            "error": "Provider: {} is not installed.".format(
+                node_details["provider"]["name"]
+            ),
         }
     plugin_module = import_plugin(plugin_driver.name, return_module=True)
     if not plugin_module:
         return False, {
             "name": node_name,
-            "error": "Failed to load plugin: {}.".format(node_details["provider"]),
-        }
-
-    driver_client = plugin_driver.client.new_client(plugin_driver)
-    if not driver_client:
-        return False, {
-            "name": node_name,
-            "error": "Failed to create provider client for: {}.".format(
-                node_details["provider"]
+            "error": "Failed to load plugin: {}.".format(
+                node_details["provider"]["name"]
             ),
         }
 
-    return await create(driver_client, node_details["node"])
+    driver_client_func = import_from_module(
+        "{}.{}".format(plugin_driver.name, "client"), "client", "new_client"
+    )
+    driver = driver_client_func(node_details["provider"]["driver"])
+    if not driver:
+        return False, {
+            "name": node_name,
+            "error": "Failed to create client for provider driver: {}.".format(
+                node_details["provider"]["driver"]
+            ),
+        }
+
+    provider_create_func = import_from_module(
+        "{}.{}".format(plugin_driver.module, "create"), "create", "create"
+    )
+    return await provider_create_func(
+        driver, *node_details["settings"]["args"], **node_details["settings"]["kwargs"]
+    )
 
 
 async def deploy(*args, **kwargs):
@@ -71,7 +55,7 @@ async def deploy(*args, **kwargs):
     if not stack_config:
         return False, {"error": "Failed to load stack config."}
 
-    success, response = await get_deploy_node_configs(stack_config)
+    success, response = await get_stack_config_nodes(stack_config)
     if not success:
         return False, response
     deploy_nodes = response
@@ -88,8 +72,8 @@ async def deploy(*args, **kwargs):
             print("Failed to provision node: {}.".format(result[1]["error"]))
             failed_nodes.append(result[1]["error"])
         else:
-            print("Provisioned node: {}.".format(result[1]["node"]))
-            provisioned_nodes.append(result[1])
+            print("Provisioned node: {}.".format(result[1]))
+            provisioned_nodes.append(result[1]["instance"])
 
     for pool_name, pool_kwargs in stack_config.get("pools", {}).items():
         pool = Pool(pool_name)
@@ -101,7 +85,7 @@ async def deploy(*args, **kwargs):
                     )
                 }
 
-            added = await pool.add(provisioned_nodes[node_name]["node"])
+            added = await pool.add(provisioned_nodes[node_name])
             if not added:
                 return False, {
                     "error": "Failed to add node: {} to pool: {}.".format(
