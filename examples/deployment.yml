@@ -15,14 +15,14 @@ pools:
       - node10
 
 nodes:
-  node01:
+  node[01-03]:
     provider:
       name: libvirt_provider
       driver: libvirt
     settings:
       args:
-        - node02
-        - /var/lib/libvirt/images/saga-base-2.qcow2
+        - "{{ node.name }}"
+        - /var/lib/libvirt/images/saga-base.qcow2
       kwargs:
         memory_size: 2048mib
         num_vcpus: 2
