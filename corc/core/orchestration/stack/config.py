@@ -27,30 +27,25 @@ async def extract_node_config(node_name, node_kwargs):
     }
 
 
-async def recursive_template_node_config(template_vars, node_details, node_config):
+async def recursively_prepare_node_config(template_vars, node_config, output_dict=None):
+    if not output_dict:
+        output_dict = {}
     # TODO, augment to support recursive templating
     if isinstance(node_config, list):
         for config in node_config:
-            return await recursive_template_node_config(template, node_details, config)
+            return await recursively_prepare_node_config(
+                template_vars, config, output_dict=output_dict
+            )
     elif isinstance(node_config, dict):
         for key, value in node_config.items():
-            node_config[key] = await recursive_template_node_config(
-                template, node_details, value
+            output_dict[key] = await recursively_prepare_node_config(
+                template_vars, value, output_dict=output_dict
             )
     elif isinstance(node_config, str):
-        template.generate()
-        template = jinja_environment.from_string(node_config)
-
-    return template.render(node_details)
-
-
-async def template_node_config(node_details, node_config):
-    new_node_config = {}
-    environment = jinja2.Environment()
-    for key, value in node_config.items():
-        template = environment.from_string(value)
-        new_node_config[key] = template.render(node_details)
-    return new_node_config
+        environment = jinja2.Environment()
+        template = environment.from_string(node_config)
+        return template.render(template_vars)
+    return output_dict
 
 
 async def get_stack_config_nodes(stack_config):
@@ -79,13 +74,13 @@ async def get_stack_config_nodes(stack_config):
                 if not success:
                     return False, response
                 node_config = response
-                node_details = {
+                node_template_values = {
                     "node": {
                         "name": unrolled_node,
                     }
                 }
-                templated_node_config = await template_node_config(
-                    node_details, node_config
+                templated_node_config = await recursively_prepare_node_config(
+                    node_template_values, node_config
                 )
                 deploy_node_configs[unrolled_node] = templated_node_config
         else:
@@ -93,5 +88,4 @@ async def get_stack_config_nodes(stack_config):
             if not success:
                 return False, response
             deploy_node_configs[node_name] = response
-
     return True, deploy_node_configs
