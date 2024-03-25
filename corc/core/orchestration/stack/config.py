@@ -27,26 +27,27 @@ async def extract_node_config(node_name, node_kwargs):
     }
 
 
-async def recursively_prepare_node_config(template_vars, node_config, output_dict=None):
-    if not output_dict:
-        output_dict = {}
+async def recursively_prepare_node_config(template_vars, node_config):
+    output_dict = {}
     # TODO, augment to support recursive templating
     if isinstance(node_config, list):
         templated_list = []
         for config in node_config:
-            templated_list.append(await recursively_prepare_node_config(
-                template_vars, config, output_dict=output_dict
-            ))
+            templated_list.append(
+                await recursively_prepare_node_config(template_vars, config)
+            )
         return templated_list
     elif isinstance(node_config, dict):
         for key, value in node_config.items():
             output_dict[key] = await recursively_prepare_node_config(
-                template_vars, value, output_dict=output_dict
+                template_vars, value
             )
     elif isinstance(node_config, str):
         environment = jinja2.Environment()
         template = environment.from_string(node_config)
         return template.render(template_vars)
+    elif isinstance(node_config, (int, float, bytes)):
+        return node_config
     return output_dict
 
 
