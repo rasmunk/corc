@@ -49,7 +49,7 @@ COMPUTE_OPERATIONS = ["add_provider", "remove_provider"]
 COMPUTE_CLI = {COMPUTE: COMPUTE_OPERATIONS}
 
 POOL = "pool"
-POOL_OPERATIONS = ["create", "remove", "show", "ls", "add_node", "remove_node"]
+POOL_OPERATIONS = ["create", "remove", "show", "ls", "add_instance", "remove_instance"]
 POOL_CLI = {POOL: POOL_OPERATIONS}
 
 STACK = "stack"

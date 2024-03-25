@@ -23,7 +23,7 @@ async def discover_pools(path):
     return pools
 
 
-class Node:
+class Instance:
     def __init__(self, name, **kwargs):
         self.name = name
         self.state = None
@@ -31,13 +31,13 @@ class Node:
 
     def print_state(self):
         print(
-            "Node name: {}, state: {}, config: {}".format(
+            "Instance name: {}, state: {}, config: {}".format(
                 self.name, self.state, self.config
             )
         )
 
     def __str__(self):
-        return "Node name: {}, state: {}, config: {}".format(
+        return "Instance name: {}, state: {}, config: {}".format(
             self.name, self.state, self.config
         )
 

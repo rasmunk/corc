@@ -7,7 +7,7 @@ from corc.core.orchestration.pool.models import Pool
 from corc.core.plugins.plugin import discover, import_plugin
 from corc.core.orchestration.stack.config import (
     get_stack_config,
-    get_stack_config_nodes,
+    get_stack_config_instances,
 )
 
 
@@ -78,7 +78,7 @@ async def deploy(*args, **kwargs):
         return False, {"error": "Failed to load stack config."}
     stack[name]["config"] = stack_config
 
-    success, response = await get_stack_config_nodes(stack_config)
+    success, response = await get_stack_config_instances(stack_config)
     if not success:
         return False, response
     deploy_instances = response
@@ -126,4 +126,8 @@ async def deploy(*args, **kwargs):
                 print(
                     "Added instance: {} to pool: {}.".format(instance_name, pool_name)
                 )
+    saved = stack_db.add(stack)
+    if not saved:
+        return False, {"error": "Failed to save stack: {}.".format(name)}
+
     return True, {"msg": "Stack deployed successfully."}

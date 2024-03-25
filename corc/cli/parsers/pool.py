@@ -1,4 +1,4 @@
-from corc.core.defaults import POOL, NODE, PACKAGE_NAME
+from corc.core.defaults import POOL, INSTANCE, PACKAGE_NAME
 from corc.cli.parsers.actions import PositionalArgumentsAction
 
 
@@ -43,41 +43,41 @@ def ls_group(parser):
     pool_group = parser.add_argument_group(title="Pool list arguments")
 
 
-def add_node_group(parser):
-    node_group = parser.add_argument_group(title="Node arguments")
-    node_group.add_argument(
+def add_instance_group(parser):
+    instance_group = parser.add_argument_group(title="Instance arguments")
+    instance_group.add_argument(
         "pool_name",
         action=PositionalArgumentsAction,
-        help="The name of the pool that the node should be added to.",
+        help="The name of the pool that the instance should be added to.",
     )
-    node_group.add_argument(
+    instance_group.add_argument(
         "name",
         action=PositionalArgumentsAction,
-        help="The name of the node to be added.",
+        help="The name of the instance to be added.",
     )
-    node_group.add_argument(
+    instance_group.add_argument(
         "-s",
         "--state",
-        dest="{}_state".format(NODE),
-        help="The state of the node.",
+        dest="{}_state".format(INSTANCE),
+        help="The state of the instance.",
     )
-    node_group.add_argument(
+    instance_group.add_argument(
         "-c",
         "--config",
-        dest="{}_config".format(NODE),
-        help="The config of the node.",
+        dest="{}_config".format(INSTANCE),
+        help="The config of the instance.",
     )
 
 
-def remove_node_group(parser):
-    node_group = parser.add_argument_group(title="Node arguments")
-    node_group.add_argument(
+def remove_instance_group(parser):
+    instance_group = parser.add_argument_group(title="Instance arguments")
+    instance_group.add_argument(
         "pool_name",
         action=PositionalArgumentsAction,
-        help="The name of the pool that the node should be removed from.",
+        help="The name of the pool that the instance should be removed from.",
     )
-    node_group.add_argument(
+    instance_group.add_argument(
         "name",
         action=PositionalArgumentsAction,
-        help="The name of the node.",
+        help="The name of the instance.",
     )

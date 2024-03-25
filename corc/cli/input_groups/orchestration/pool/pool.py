@@ -4,8 +4,8 @@ from corc.cli.parsers.pool import (
     remove_group,
     show_group,
     ls_group,
-    add_node_group,
-    remove_node_group,
+    add_instance_group,
+    remove_instance_group,
 )
 
 
@@ -41,16 +41,16 @@ def ls_groups(parser):
     return provider_groups, argument_groups
 
 
-def add_node_groups(parser):
-    add_node_group(parser)
+def add_instance_groups(parser):
+    add_instance_group(parser)
 
     provider_groups = []
     argument_groups = [POOL]
     return provider_groups, argument_groups
 
 
-def remove_node_groups(parser):
-    remove_node_group(parser)
+def remove_instance_groups(parser):
+    remove_instance_group(parser)
 
     provider_groups = []
     argument_groups = [POOL]

@@ -12,92 +12,98 @@ async def get_stack_config(deploy_file):
     return stack_config
 
 
-async def extract_node_config(node_name, node_kwargs):
-    provider = node_kwargs.get("provider", None)
+async def extract_instance_config(instance_name, instance_kwargs):
+    provider = instance_kwargs.get("provider", None)
     if not provider:
-        return False, {"error": "Provider for node: {} is required.".format(node_name)}
+        return False, {
+            "error": "Provider for node: {} is required.".format(instance_name)
+        }
 
-    node_settings = node_kwargs.get("settings", None)
-    if not node_settings:
-        return False, {"error": "Settings for node: {} are required.".format(node_name)}
+    instance_settings = instance_kwargs.get("settings", None)
+    if not instance_settings:
+        return False, {
+            "error": "Settings for node: {} are required.".format(instance_name)
+        }
 
     return True, {
         "provider": provider,
-        "settings": node_settings,
+        "settings": instance_settings,
     }
 
 
-async def recursively_prepare_node_config(template_vars, node_config):
+async def recursively_prepare_instance_config(template_vars, instance_config):
     output_dict = {}
     # TODO, augment to support recursive templating
-    if isinstance(node_config, list):
+    if isinstance(instance_config, list):
         templated_list = []
-        for config in node_config:
+        for config in instance_config:
             templated_list.append(
-                await recursively_prepare_node_config(template_vars, config)
+                await recursively_prepare_instance_config(template_vars, config)
             )
         return templated_list
-    elif isinstance(node_config, dict):
-        for key, value in node_config.items():
-            output_dict[key] = await recursively_prepare_node_config(
+    elif isinstance(instance_config, dict):
+        for key, value in instance_config.items():
+            output_dict[key] = await recursively_prepare_instance_config(
                 template_vars, value
             )
-    elif isinstance(node_config, str):
+    elif isinstance(instance_config, str):
         environment = jinja2.Environment()
-        template = environment.from_string(node_config)
+        template = environment.from_string(instance_config)
         return template.render(template_vars)
-    elif isinstance(node_config, (int, float, bytes)):
-        return node_config
+    elif isinstance(instance_config, (int, float, bytes)):
+        return instance_config
     return output_dict
 
 
-async def get_stack_config_nodes(stack_config):
-    deploy_node_configs = {}
-    for node_name, node_kwargs in stack_config.get("nodes", {}).items():
-        if "[" in node_name and "]" in node_name:
+async def get_stack_config_instances(stack_config):
+    deploy_instance_configs = {}
+    for instance_name, instance_kwargs in stack_config.get("instances", {}).items():
+        if "[" in instance_name and "]" in instance_name:
             # Node range defined, unroll list
-            start_string_index = node_name.index("[")
-            stop_string_index = node_name.index("]")
+            start_string_index = instance_name.index("[")
+            stop_string_index = instance_name.index("]")
 
             range_numbers = [
                 int(number)
-                for number in node_name[
+                for number in instance_name[
                     start_string_index + 1 : stop_string_index
                 ].split("-")
             ]
-            unrolled_nodes = [
-                "node{:02d}".format(i)
+            unrolled_instances = [
+                "instance{:02d}".format(i)
                 for i in range(range_numbers[0], range_numbers[1] + 1)
             ]
 
-            for unrolled_node in unrolled_nodes:
-                success, response = await extract_node_config(
-                    unrolled_node, node_kwargs
+            for unrolled_instance in unrolled_instances:
+                success, response = await extract_instance_config(
+                    unrolled_instance, instance_kwargs
                 )
                 if not success:
                     return False, response
-                node_config = response
-                node_template_values = {
-                    "node": {
-                        "name": unrolled_node,
+                instance_config = response
+                instance_template_values = {
+                    "instance": {
+                        "name": unrolled_instance,
                     }
                 }
-                templated_node_config = await recursively_prepare_node_config(
-                    node_template_values, node_config
+                templated_instance_config = await recursively_prepare_instance_config(
+                    instance_template_values, instance_config
                 )
-                deploy_node_configs[unrolled_node] = templated_node_config
+                deploy_instance_configs[unrolled_instance] = templated_instance_config
         else:
-            success, response = await extract_node_config(node_name, node_kwargs)
+            success, response = await extract_instance_config(
+                instance_name, instance_kwargs
+            )
             if not success:
                 return False, response
-            node_config = response
-            node_template_values = {
-                "node": {
-                    "name": node_name,
+            instance_config = response
+            instance_template_values = {
+                "instance": {
+                    "name": instance_name,
                 }
             }
-            templated_node_config = await recursively_prepare_node_config(
-                node_template_values, node_config
+            templated_instance_config = await recursively_prepare_instance_config(
+                instance_template_values, instance_config
             )
-            deploy_node_configs[node_name] = templated_node_config
-    return True, deploy_node_configs
+            deploy_instance_configs[instance_name] = templated_instance_config
+    return True, deploy_instance_configs

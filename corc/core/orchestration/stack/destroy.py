@@ -7,44 +7,44 @@ from corc.core.orchestration.pool.models import Pool
 from corc.core.plugins.plugin import discover, import_plugin
 from corc.core.orchestration.stack.config import (
     get_stack_config,
-    get_stack_config_nodes,
+    get_stack_config_instances,
 )
 
 
-async def destroy_node(node_name, node_details):
-    plugin_driver = discover(node_details["provider"]["name"])
+async def destroy_instance(instance_name, instance_details):
+    plugin_driver = discover(instance_details["provider"]["name"])
     if not plugin_driver:
         return False, {
-            "name": node_name,
+            "name": instance_name,
             "error": "Provider: {} is not installed.".format(
-                node_details["provider"]["name"]
+                instance_details["provider"]["name"]
             ),
         }
     plugin_module = import_plugin(plugin_driver.name, return_module=True)
     if not plugin_module:
         return False, {
-            "name": node_name,
+            "name": instance_name,
             "error": "Failed to load plugin: {}.".format(
-                node_details["provider"]["name"]
+                instance_details["provider"]["name"]
             ),
         }
 
     driver_client_func = import_from_module(
         "{}.{}".format(plugin_driver.name, "client"), "client", "new_client"
     )
-    driver = driver_client_func(node_details["provider"]["driver"])
+    driver = driver_client_func(instance_details["provider"]["driver"])
     if not driver:
         return False, {
-            "name": node_name,
+            "name": instance_name,
             "error": "Failed to create client for provider driver: {}.".format(
-                node_details["provider"]["driver"]
+                instance_details["provider"]["driver"]
             ),
         }
 
     provider_remove_func = import_from_module(
         "{}.{}".format(plugin_driver.module, "remove"), "remove", "remove"
     )
-    return await provider_remove_func(driver, node_name)
+    return await provider_remove_func(driver, instance_name)
 
 
 async def destroy(*args, **kwargs):
@@ -58,41 +58,41 @@ async def destroy(*args, **kwargs):
     if not stack_config:
         return False, {"error": "Failed to load stack config."}
 
-    success, response = await get_stack_config_nodes(stack_config)
+    success, response = await get_stack_config_instances(stack_config)
     if not success:
         return False, response
-    remove_nodes = response
+    remove_instances = response
 
     remove_tasks = [
-        destroy_node(node_name, node_details)
-        for node_name, node_details in remove_nodes.items()
+        destroy_instance(instance_name, instance_details)
+        for instance_name, instance_details in remove_instances.items()
     ]
     remove_results = await asyncio.gather(*remove_tasks)
 
-    removed_nodes, not_removed_nodes = [], []
+    removed_instances, not_removed_instances = [], []
     for result in remove_results:
         if result[0]:
-            removed_nodes.append(result[1])
+            removed_instances.append(result[1])
             await stack_db.remove(result[1])
         else:
-            not_removed_nodes.append(result[1])
+            not_removed_instances.append(result[1])
 
-    removed_node_names = {node.name: node for node in removed_nodes}
+    removed_instance_names = {instance.name: instance for instance in removed_instances}
     for pool_name, pool_kwargs in stack_config.get("pools", {}).items():
         pool = Pool(pool_name)
-        for node_name in pool_kwargs.get("nodes", []):
-            if node_name not in removed_nodes:
+        for instance_name in pool_kwargs.get("instances", []):
+            if instance_name not in removed_instances:
                 return False, {
-                    "error": "Node: {} did not provision succesfully in the stack.".format(
-                        node_name
+                    "error": "Instance: {} did not provision succesfully in the stack.".format(
+                        instance_name
                     )
                 }
 
-            removed = await pool.remove(removed_nodes[node_name])
+            removed = await pool.remove(removed_instances[instance_name])
             if not removed:
                 return False, {
-                    "error": "Failed to remove node: {} to pool: {}.".format(
-                        node_name, pool_name
+                    "error": "Failed to remove Instance: {} to pool: {}.".format(
+                        instance_name, pool_name
                     )
                 }
         removed = await stack_db.remove(pool_name)
