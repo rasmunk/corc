@@ -32,10 +32,12 @@ async def recursively_prepare_node_config(template_vars, node_config, output_dic
         output_dict = {}
     # TODO, augment to support recursive templating
     if isinstance(node_config, list):
+        templated_list = []
         for config in node_config:
-            return await recursively_prepare_node_config(
+            templated_list.append(await recursively_prepare_node_config(
                 template_vars, config, output_dict=output_dict
-            )
+            ))
+        return templated_list
     elif isinstance(node_config, dict):
         for key, value in node_config.items():
             output_dict[key] = await recursively_prepare_node_config(
