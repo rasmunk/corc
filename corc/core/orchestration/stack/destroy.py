@@ -1,4 +1,7 @@
 import asyncio
+from corc.core.defaults import STACK
+from corc.core.storage.dictdatabase import DictDatabase
+from corc.core.storage.dictdatabase import DictDatabase
 from corc.core.helpers import import_from_module
 from corc.core.orchestration.pool.models import Pool
 from corc.core.plugins.plugin import discover, import_plugin
@@ -46,6 +49,9 @@ async def destroy_node(node_name, node_details):
 
 async def destroy(*args, **kwargs):
     name, deploy_file = args[0], args[1]
+    stack_db = DictDatabase(STACK)
+    if not await stack_db.exists(name):
+        return False, {"error": "Stack: {} does not exist.".format(name)}
 
     # Load the architecture file and deploy the stack
     stack_config = await get_stack_config(deploy_file)
@@ -67,9 +73,11 @@ async def destroy(*args, **kwargs):
     for result in remove_results:
         if result[0]:
             removed_nodes.append(result[1])
+            await stack_db.remove(result[1])
         else:
             not_removed_nodes.append(result[1])
 
+    removed_node_names = {node.name: node for node in removed_nodes}
     for pool_name, pool_kwargs in stack_config.get("pools", {}).items():
         pool = Pool(pool_name)
         for node_name in pool_kwargs.get("nodes", []):
@@ -87,5 +95,10 @@ async def destroy(*args, **kwargs):
                         node_name, pool_name
                     )
                 }
+        removed = await stack_db.remove(pool_name)
+        if not removed:
+            return False, {
+                "error": "Failed to remove pool: {} from stack.".format(pool_name)
+            }
 
     return True, {"msg": "Stack: {} has been destroyed.".format(name)}
