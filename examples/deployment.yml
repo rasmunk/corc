@@ -15,7 +15,7 @@ pools:
       - node10
 
 nodes:
-  node[01-03]:
+  node01:
     provider:
       name: libvirt_provider
       driver: libvirt

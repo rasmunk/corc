@@ -75,17 +75,18 @@ async def deploy(*args, **kwargs):
             print("Provisioned node: {}.".format(result[1]))
             provisioned_nodes.append(result[1]["instance"])
 
+    provisioned_node_names = {node.name: node for node in provisioned_nodes}
     for pool_name, pool_kwargs in stack_config.get("pools", {}).items():
         pool = Pool(pool_name)
         for node_name in pool_kwargs.get("nodes", []):
-            if node_name not in provisioned_nodes:
+            if node_name not in provisioned_node_names:
                 return False, {
                     "error": "Node: {} did not provision succesfully in the stack.".format(
                         node_name
                     )
                 }
 
-            added = await pool.add(provisioned_nodes[node_name])
+            added = await pool.add(provisioned_node_names[node_name])
             if not added:
                 return False, {
                     "error": "Failed to add node: {} to pool: {}.".format(

@@ -90,5 +90,14 @@ async def get_stack_config_nodes(stack_config):
             success, response = await extract_node_config(node_name, node_kwargs)
             if not success:
                 return False, response
-            deploy_node_configs[node_name] = response
+            node_config = response
+            node_template_values = {
+                "node": {
+                    "name": node_name,
+                }
+            }
+            templated_node_config = await recursively_prepare_node_config(
+                node_template_values, node_config
+            )
+            deploy_node_configs[node_name] = templated_node_config
     return True, deploy_node_configs
