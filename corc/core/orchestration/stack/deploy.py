@@ -18,6 +18,15 @@ async def provision_node(node_name, node_details):
                 node_details["provider"]["name"]
             ),
         }
+
+    driver_args = []
+    if "args" in node_details["provider"]:
+        driver_args = node_details["provider"]["args"]
+
+    driver_kwargs = {}
+    if "kwargs" in node_details["provider"]:
+        driver_kwargs = node_details["provider"]["kwargs"]
+
     plugin_module = import_plugin(plugin_driver.name, return_module=True)
     if not plugin_module:
         return False, {
@@ -30,7 +39,9 @@ async def provision_node(node_name, node_details):
     driver_client_func = import_from_module(
         "{}.{}".format(plugin_driver.name, "client"), "client", "new_client"
     )
-    driver = driver_client_func(node_details["provider"]["driver"])
+    driver = driver_client_func(
+        node_details["provider"]["driver"], *driver_args, **driver_kwargs
+    )
     if not driver:
         return False, {
             "name": node_name,
