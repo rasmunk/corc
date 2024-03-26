@@ -17,6 +17,10 @@ class DictDatabase:
             "lock_path": self._lock_path,
         }
 
+    async def is_empty(self):
+        with shelve.open(self.name) as db:
+            return len(db) == 0
+
     async def items(self):
         with shelve.open(self.name) as db:
             return [item for item in db.values()]
@@ -92,6 +96,14 @@ class DictDatabase:
     async def get(self, item_id):
         with shelve.open(self.name) as db:
             return db.get(item_id)
+
+    async def find(self, key, value):
+        with shelve.open(self.name) as db:
+            return [
+                item
+                for item in db.values()
+                if hasattr(item, key) and getattr(item, key) == value
+            ]
 
     async def flush(self):
         lock = acquire_lock(self._lock_path)

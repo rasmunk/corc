@@ -140,6 +140,7 @@ async def destroy(*args, **kwargs):
         if not found_instance[0]:
             stack["config"]["instances"].pop(instance_details["name"])
             stack["instances"].pop(instance_details["name"])
+
     # Persist the changes to the stack
     updated = await stack_db.update(name, stack)
     if not updated:
@@ -151,14 +152,17 @@ async def destroy(*args, **kwargs):
     for pool_name, pool_kwargs in stack["config"]["pools"].items():
         pool = Pool(pool_name)
         for instance_name in pool_kwargs.get("instances", []):
-            removed = await pool.remove(instance_name)
-            if not removed:
-                return False, {
-                    "error": "Failed to remove Instance: {} from pool: {}.".format(
-                        instance_name, pool_name
-                    )
-                }
-        stack["pools"].pop(pool_name)
+            if instance_name not in stack["instances"]:
+                for instance in await pool.find("name", instance_name):
+                    if not await pool.remove(instance.id):
+                        return False, {
+                            "error": "Failed to remove Instance: {} from Pool: {}.".format(
+                                instance_name, pool_name
+                            )
+                        }
+        if await pool.is_empty():
+            if await pool.remove_persistence():
+                stack["pools"].pop(pool_name)
 
     removed = await stack_db.remove(name)
     if not removed:
