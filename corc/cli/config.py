@@ -5,7 +5,6 @@ from corc.core.config import (
     load_config,
     save_config,
     generate_default_config,
-    valid_config,
 )
 from corc.core.providers.config import generate_config, valid_config
 

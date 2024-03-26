@@ -1,4 +1,3 @@
-from corc.core.defaults import STACK, NODE, PACKAGE_NAME
 from corc.cli.parsers.actions import PositionalArgumentsAction
 
 
@@ -49,4 +48,4 @@ def show_group(parser):
 
 
 def ls_group(parser):
-    stack_group = parser.add_argument_group(title="Stack list arguments")
+    _ = parser.add_argument_group(title="Stack list arguments")

@@ -1,7 +1,6 @@
 from corc.core.defaults import CLUSTER, OCI, JOB, META, S3, STORAGE, PROVIDER
 from corc.cli.args import extract_arguments
 from corc.cli.job import (
-    run as api_run,
     get_results as api_get_results,
     delete_results as api_delete_results,
     list_results as api_list_results,
@@ -28,8 +27,6 @@ def run(args):
         storage_kwargs=storage_kwargs,
         staging_kwargs=s3_kwargs,
     )
-
-    # api_run(provider, provider_kwargs, action_kwargs)
 
 
 def get_results(args):

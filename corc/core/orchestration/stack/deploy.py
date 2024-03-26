@@ -1,6 +1,5 @@
 # Description: Deploy the stack
 import asyncio
-import uuid
 from corc.core.defaults import STACK
 from corc.core.storage.dictdatabase import DictDatabase
 from corc.core.helpers import import_from_module

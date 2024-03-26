@@ -87,17 +87,3 @@ def get_orchestrator(resource_type, provider):
         pass
     options.update(orchestrator_definition.get("options", {}))
     return klass, options
-
-
-# TODO, maybe more to a more sensible place
-def get_provider_resource_creation_id(provider, resource_type):
-    """Returns the fields used to identify the resource type for a given provider"""
-    creation_id = RESOURCE_CREATION_IDENTIFERS[provider][resource_type]
-    return creation_id
-
-
-# def get_scheduler(scheduler, provider):
-#     scheduler_definition = SCHEDULERS[scheduler][provider]
-#     klass = scheduler_definition.get("klass", None)
-#     options = scheduler_definition.get("options", {})
-#     return klass, options

@@ -1,5 +1,3 @@
-import flatten_dict
-from corc.core.config import recursive_check_config
 from corc.core.defaults import (
     OCI,
     CLUSTER,
@@ -171,30 +169,6 @@ oci_config_groups = {
     VCN_ROUTETABLE_ROUTERULES: valid_route_rule_config,
     PROFILE: valid_profile_config,
 }
-
-
-def generate_oci_config(overwrite_with_empty=False, **kwargs):
-    config = default_oci_config
-    if kwargs:
-        flat = flatten_dict.flatten(config)
-        other_flat = flatten_dict.flatten(kwargs)
-        for k, v in other_flat.items():
-            if not v and overwrite_with_empty:
-                flat[k] = v
-            if v:
-                flat[k] = v
-        config = flatten_dict.unflatten(flat)
-    return config
-
-
-def valid_oci_config(config, verbose=False):
-    if not isinstance(config, dict):
-        return False
-
-    if "oci" not in config:
-        return False
-
-    return recursive_check_config(config["oci"], valid_full_oci_config, verbose=verbose)
 
 
 def load_config_groups(**kwargs):

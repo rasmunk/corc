@@ -1,14 +1,9 @@
 import asyncio
 from corc.core.defaults import STACK
 from corc.core.storage.dictdatabase import DictDatabase
-from corc.core.storage.dictdatabase import DictDatabase
 from corc.core.helpers import import_from_module
 from corc.core.orchestration.pool.models import Pool
 from corc.core.plugins.plugin import discover, import_plugin
-from corc.core.orchestration.stack.config import (
-    get_stack_config,
-    get_stack_config_instances,
-)
 
 
 async def destroy_instance(instance_id, instance_details):
@@ -132,7 +127,7 @@ async def destroy(*args, **kwargs):
         destroy_instance(instance_id, instance_details["config"])
         for instance_id, instance_details in remove_instance_details.items()
     ]
-    remove_results = await asyncio.gather(*remove_tasks)
+    _ = await asyncio.gather(*remove_tasks)
 
     # Update the stack config
     for instance_id, instance_details in remove_instance_details.items():

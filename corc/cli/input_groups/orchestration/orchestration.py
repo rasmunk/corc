@@ -1,5 +1,4 @@
 from corc.core.defaults import POOL
-from corc.core.orchestration.defaults import ORCHESTRATION_PROVIDER_NAME
 from corc.cli.parsers.orchestration.orchestration import (
     add_provider_group,
     remove_provider_group,

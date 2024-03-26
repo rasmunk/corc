@@ -1,12 +1,10 @@
 import argparse
-import copy
 import datetime
 import json
 from corc.core.defaults import PACKAGE_NAME, CORC_CLI_STRUCTURE
 from corc.cli.helpers import cli_exec, import_from_module
 from corc.utils.format import eprint
 from corc.core.plugins.plugin import get_plugins, import_plugin, PLUGIN_ENTRYPOINT_BASE
-from corc.core.plugins.storage import load
 
 
 def to_str(o):

@@ -1,4 +1,4 @@
-from corc.core.defaults import POOL, INSTANCE, PACKAGE_NAME
+from corc.core.defaults import INSTANCE
 from corc.cli.parsers.actions import PositionalArgumentsAction
 
 
@@ -40,7 +40,7 @@ def show_group(parser):
 
 
 def ls_group(parser):
-    pool_group = parser.add_argument_group(title="Pool list arguments")
+    _ = parser.add_argument_group(title="Pool list arguments")
 
 
 def add_instance_group(parser):
