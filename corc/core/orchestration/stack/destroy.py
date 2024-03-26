@@ -11,19 +11,28 @@ from corc.core.orchestration.stack.config import (
 )
 
 
-async def destroy_instance(instance_name, instance_details):
+async def destroy_instance(instance_id, instance_details):
     plugin_driver = discover(instance_details["provider"]["name"])
     if not plugin_driver:
         return False, {
-            "name": instance_name,
+            "id": instance_id,
             "error": "Provider: {} is not installed.".format(
                 instance_details["provider"]["name"]
             ),
         }
+
+    driver_args = []
+    if "args" in instance_details["provider"]:
+        driver_args = instance_details["provider"]["args"]
+
+    driver_kwargs = {}
+    if "kwargs" in instance_details["provider"]:
+        driver_kwargs = instance_details["provider"]["kwargs"]
+
     plugin_module = import_plugin(plugin_driver.name, return_module=True)
     if not plugin_module:
         return False, {
-            "name": instance_name,
+            "id": instance_id,
             "error": "Failed to load plugin: {}.".format(
                 instance_details["provider"]["name"]
             ),
@@ -32,10 +41,14 @@ async def destroy_instance(instance_name, instance_details):
     driver_client_func = import_from_module(
         "{}.{}".format(plugin_driver.name, "client"), "client", "new_client"
     )
-    driver = driver_client_func(instance_details["provider"]["driver"])
+    driver = driver_client_func(
+        instance_details["provider"]["driver"],
+        *driver_args,
+        **driver_kwargs,
+    )
     if not driver:
         return False, {
-            "name": instance_name,
+            "id": instance_id,
             "error": "Failed to create client for provider driver: {}.".format(
                 instance_details["provider"]["driver"]
             ),
@@ -44,61 +57,110 @@ async def destroy_instance(instance_name, instance_details):
     provider_remove_func = import_from_module(
         "{}.{}".format(plugin_driver.module, "remove"), "remove", "remove"
     )
-    return await provider_remove_func(driver, instance_name)
+    return await provider_remove_func(driver, instance_id)
+
+
+async def get_instance(instance_id, instance_details):
+    plugin_driver = discover(instance_details["provider"]["name"])
+    if not plugin_driver:
+        return False, {
+            "id": instance_id,
+            "error": "Provider: {} is not installed.".format(
+                instance_details["provider"]["name"]
+            ),
+        }
+
+    driver_args = []
+    if "args" in instance_details["provider"]:
+        driver_args = instance_details["provider"]["args"]
+
+    driver_kwargs = {}
+    if "kwargs" in instance_details["provider"]:
+        driver_kwargs = instance_details["provider"]["kwargs"]
+
+    plugin_module = import_plugin(plugin_driver.name, return_module=True)
+    if not plugin_module:
+        return False, {
+            "id": instance_id,
+            "error": "Failed to load plugin: {}.".format(
+                instance_details["provider"]["name"]
+            ),
+        }
+
+    driver_client_func = import_from_module(
+        "{}.{}".format(plugin_driver.name, "client"), "client", "new_client"
+    )
+    driver = driver_client_func(
+        instance_details["provider"]["driver"],
+        *driver_args,
+        **driver_kwargs,
+    )
+    if not driver:
+        return False, {
+            "id": instance_id,
+            "error": "Failed to create client for provider driver: {}.".format(
+                instance_details["provider"]["driver"]
+            ),
+        }
+
+    provider_get_func = import_from_module(
+        "{}.{}".format(plugin_driver.module, "get"), "get", "get"
+    )
+    return await provider_get_func(driver, instance_id)
 
 
 async def destroy(*args, **kwargs):
-    name, deploy_file = args[0], args[1]
+    name = args[0]
     stack_db = DictDatabase(STACK)
-    if not await stack_db.exists(name):
+    if not await stack_db.exists():
+        return False, {"error": "The Stack database does not exist."}
+
+    stack = await stack_db.get(name)
+    if not stack:
         return False, {"error": "Stack: {} does not exist.".format(name)}
 
-    # Load the architecture file and deploy the stack
-    stack_config = await get_stack_config(deploy_file)
-    if not stack_config:
-        return False, {"error": "Failed to load stack config."}
-
-    success, response = await get_stack_config_instances(stack_config)
-    if not success:
-        return False, response
-    remove_instances = response
-
+    remove_instance_details = {}
+    for live_name in stack["instances"]:
+        for config_name in stack["config"]["instances"]:
+            if live_name == config_name:
+                remove_instance_details[stack["instances"][live_name].id] = {
+                    "name": live_name,
+                    "config": stack["config"]["instances"][config_name],
+                }
+    # Remove the instances
     remove_tasks = [
-        destroy_instance(instance_name, instance_details)
-        for instance_name, instance_details in remove_instances.items()
+        destroy_instance(instance_id, instance_details["config"])
+        for instance_id, instance_details in remove_instance_details.items()
     ]
     remove_results = await asyncio.gather(*remove_tasks)
 
-    removed_instances, not_removed_instances = [], []
-    for result in remove_results:
-        if result[0]:
-            removed_instances.append(result[1])
-            await stack_db.remove(result[1])
-        else:
-            not_removed_instances.append(result[1])
+    # Update the stack config
+    for instance_id, instance_details in remove_instance_details.items():
+        found_instance = await get_instance(instance_id, instance_details["config"])
+        if not found_instance[0]:
+            stack["config"]["instances"].pop(instance_details["name"])
+            stack["instances"].pop(instance_details["name"])
+    # Persist the changes to the stack
+    updated = await stack_db.update(name, stack)
+    if not updated:
+        return False, {
+            "error": "Failed to update Stack: {} after removing Instances".format(name)
+        }
 
-    removed_instance_names = {instance.name: instance for instance in removed_instances}
-    for pool_name, pool_kwargs in stack_config.get("pools", {}).items():
+    # Remove the pools
+    for pool_name, pool_kwargs in stack["config"]["pools"].items():
         pool = Pool(pool_name)
         for instance_name in pool_kwargs.get("instances", []):
-            if instance_name not in removed_instances:
-                return False, {
-                    "error": "Instance: {} did not provision succesfully in the stack.".format(
-                        instance_name
-                    )
-                }
-
-            removed = await pool.remove(removed_instances[instance_name])
+            removed = await pool.remove(instance_name)
             if not removed:
                 return False, {
-                    "error": "Failed to remove Instance: {} to pool: {}.".format(
+                    "error": "Failed to remove Instance: {} from pool: {}.".format(
                         instance_name, pool_name
                     )
                 }
-        removed = await stack_db.remove(pool_name)
-        if not removed:
-            return False, {
-                "error": "Failed to remove pool: {} from stack.".format(pool_name)
-            }
+        stack["pools"].pop(pool_name)
 
+    removed = await stack_db.remove(name)
+    if not removed:
+        return False, {"error": "Failed to remove stack: {}.".format(name)}
     return True, {"msg": "Stack: {} has been destroyed.".format(name)}

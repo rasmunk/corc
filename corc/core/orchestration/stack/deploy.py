@@ -1,5 +1,6 @@
 # Description: Deploy the stack
 import asyncio
+import uuid
 from corc.core.defaults import STACK
 from corc.core.storage.dictdatabase import DictDatabase
 from corc.core.helpers import import_from_module
@@ -70,19 +71,20 @@ async def deploy(*args, **kwargs):
         created = await stack_db.touch()
         if not created:
             return False, {"error": "Failed to create stack: {}.".format(name)}
-    stack = {name: {}}
+
+    stack = {"id": name, "name": name, "config": {}, "instances": {}, "pools": {}}
 
     # Load the architecture file and deploy the stack
     stack_config = await get_stack_config(deploy_file)
     if not stack_config:
         return False, {"error": "Failed to load stack config."}
-    stack[name]["config"] = stack_config
+    stack["config"] = stack_config
 
     success, response = await get_stack_config_instances(stack_config)
     if not success:
         return False, response
     deploy_instances = response
-    stack[name]["instances"] = []
+    stack["config"]["instances"] = deploy_instances
 
     provision_tasks = [
         provision_instance(instance_name, instance_details)
@@ -90,43 +92,32 @@ async def deploy(*args, **kwargs):
     ]
     provision_results = await asyncio.gather(*provision_tasks)
 
-    provisioned_instances, failed_instances = [], []
     for result in provision_results:
-        if not result[0]:
-            print("Failed to provision instance: {}.".format(result[1]["error"]))
-            failed_instances.append(result[1]["error"])
+        if result[0]:
+            stack["instances"][result[1]["instance"].name] = result[1]["instance"]
         else:
-            print("Provisioned instance: {}.".format(result[1]))
-            provisioned_instances.append(result[1]["instance"])
-            stack[name]["instances"].append(result[1]["instance"])
+            print("Failed to provision instance: {}.".format(result[1]["name"]))
 
-    provisioned_instance_names = {
-        instance.name: instance for instance in provisioned_instances
-    }
-    stack[name]["pools"] = {}
     for pool_name, pool_kwargs in stack_config.get("pools", {}).items():
         pool = Pool(pool_name)
-        stack[name]["pools"][pool_name] = pool
+        stack["pools"][pool_name] = pool
         for instance_name in pool_kwargs.get("instances", []):
-            if instance_name not in provisioned_instance_names:
-                return False, {
-                    "error": "Instance: {} did not provision succesfully in the stack.".format(
-                        instance_name
+            if instance_name in stack["instances"]:
+                added = await pool.add(stack["instances"][instance_name])
+                if not added:
+                    print(
+                        "Failed to add instance: {} to pool: {}.".format(
+                            instance_name, pool_name
+                        )
                     )
-                }
+                else:
+                    print(
+                        "Added instance: {} to pool: {}.".format(
+                            instance_name, pool_name
+                        )
+                    )
 
-            added = await pool.add(provisioned_instance_names[instance_name])
-            if not added:
-                return False, {
-                    "error": "Failed to add instance: {} to pool: {}.".format(
-                        instance_name, pool_name
-                    )
-                }
-            else:
-                print(
-                    "Added instance: {} to pool: {}.".format(instance_name, pool_name)
-                )
-    saved = stack_db.add(stack)
+    saved = await stack_db.add(stack)
     if not saved:
         return False, {"error": "Failed to save stack: {}.".format(name)}
 

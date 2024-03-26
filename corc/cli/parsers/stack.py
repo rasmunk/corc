@@ -37,11 +37,6 @@ def destroy_group(parser):
         action=PositionalArgumentsAction,
         help="The name of the stack that should be removed.",
     )
-    stack_group.add_argument(
-        "deploy_file",
-        action=PositionalArgumentsAction,
-        help="Which stack config to remove.",
-    )
 
 
 def show_group(parser):

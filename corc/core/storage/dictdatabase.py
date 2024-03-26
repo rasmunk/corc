@@ -22,9 +22,14 @@ class DictDatabase:
             return [item for item in db.values()]
 
     async def add(self, item):
-        if not hasattr(item, "id"):
+        _id = None
+        if hasattr(item, "id"):
+            _id = item.id
+        elif "id" in item:
+            _id = item["id"]
+        else:
             raise AttributeError(
-                "add item must have an 'id' attribute to be added to the storage"
+                "add item must have an id attribute or a key named id."
             )
 
         lock = acquire_lock(self._lock_path)
@@ -32,7 +37,7 @@ class DictDatabase:
             return False
         try:
             with shelve.open(self.name) as db:
-                db[item.id] = item
+                db[_id] = item
         except Exception as err:
             print(err)
             return False
@@ -47,6 +52,20 @@ class DictDatabase:
         try:
             with shelve.open(self.name) as db:
                 db.pop(item_id)
+        except Exception as err:
+            print(err)
+            return False
+        finally:
+            release_lock(lock)
+        return True
+
+    async def update(self, item_id, item):
+        lock = acquire_lock(self._lock_path)
+        if not lock:
+            return False
+        try:
+            with shelve.open(self.name) as db:
+                db[item_id] = item
         except Exception as err:
             print(err)
             return False
