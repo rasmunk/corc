@@ -1,7 +1,7 @@
 import os
 import unittest
 
-from corc.authenticator import SSHAuthenticator, gen_ssh_credentials
+from corc.core.authenticator import SSHAuthenticator, gen_ssh_credentials
 
 
 class TestAuthenticator(unittest.TestCase):

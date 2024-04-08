@@ -1,8 +1,13 @@
 import unittest
 from oci.core import VirtualNetworkClient, VirtualNetworkClientCompositeOperations
-from corc.config import load_from_env_or_config, gen_config_provider_prefix
-from corc.providers.oci.helpers import new_client, get, list_entities, stack_was_deleted
-from corc.providers.oci.network import (
+from corc.core.config import load_from_env_or_config, gen_config_provider_prefix
+from corc.core.orchestration.providers.oci.helpers import (
+    new_client,
+    get,
+    list_entities,
+    stack_was_deleted,
+)
+from corc.core.orchestration.providers.oci.network import (
     new_vcn_stack,
     delete_vcn_stack,
     ensure_vcn_stack,
@@ -65,7 +70,9 @@ class TestVCNStack(unittest.TestCase):
         )
 
         self.vcn_options = dict(
-            cidr_block="10.0.0.0/16", display_name=vcn_name, dns_label="ku",
+            cidr_block="10.0.0.0/16",
+            display_name=vcn_name,
+            dns_label="ku",
         )
 
         self.subnet_options = dict(display_name=subnet_name, dns_label="workers")
@@ -95,7 +102,9 @@ class TestVCNStack(unittest.TestCase):
 
         for vcn in vcns:
             deleted_stack = delete_vcn_stack(
-                self.network_client, self.options["profile"]["compartment_id"], vcn=vcn,
+                self.network_client,
+                self.options["profile"]["compartment_id"],
+                vcn=vcn,
             )
             self.assertTrue(stack_was_deleted(deleted_stack))
 

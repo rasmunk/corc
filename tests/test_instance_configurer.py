@@ -2,11 +2,11 @@ import os
 import time
 import unittest
 
-# from corc.providers.types import get_orchestrator, CONTAINER, LOCAL
-from corc.authenticator import SSHAuthenticator
-from corc.config import load_from_env_or_config, gen_config_provider_prefix
-from corc.configurer import AnsibleConfigurer
-from corc.providers.oci.instance import OCIInstanceOrchestrator
+# from corc.core.providers.types import get_orchestrator, CONTAINER, LOCAL
+from corc.core.authenticator import SSHAuthenticator
+from corc.core.config import load_from_env_or_config, gen_config_provider_prefix
+from corc.core.configurer import AnsibleConfigurer
+from corc.core.orchestration.providers.oci.instance import OCIInstanceOrchestrator
 
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -31,7 +31,10 @@ class TestInstanceConfigurer(unittest.TestCase):
             prefix=gen_config_provider_prefix(prefix),
             throw=True,
         )
-        oci_profile_options = dict(compartment_id=oci_compartment_id, name=oci_name,)
+        oci_profile_options = dict(
+            compartment_id=oci_compartment_id,
+            name=oci_name,
+        )
 
         test_name = "New_Test_Instance_Conf"
         node_name = test_name + "_Node"
@@ -80,7 +83,9 @@ class TestInstanceConfigurer(unittest.TestCase):
         )
 
         vcn_options = dict(
-            cidr_block="10.0.0.0/16", display_name=vcn_name, dns_label="ku",
+            cidr_block="10.0.0.0/16",
+            display_name=vcn_name,
+            dns_label="ku",
         )
         subnet_options = dict(display_name=subnet_name, dns_label="workers")
 

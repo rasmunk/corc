@@ -1,18 +1,18 @@
 import copy
 import os
 import unittest
-from corc.config import (
+from corc.core.config import (
     load_from_env_or_config,
     gen_config_provider_prefix,
     generate_default_config,
     save_config,
     remove_config,
 )
-from corc.providers.defaults import EC2, LIBVIRT, VIRTUAL_MACHINE
-from corc.providers.oci.network import get_subnet_in_vcn_stack
-from corc.providers.oci.config import generate_oci_config
-from corc.providers.oci.instance import OCIInstanceOrchestrator
-from corc.providers.types import get_orchestrator
+from corc.core.orchestration.defaults import EC2, LIBVIRT, VIRTUAL_MACHINE
+from corc.core.orchestration.providers.oci.network import get_subnet_in_vcn_stack
+from corc.core.orchestration.providers.oci.config import generate_oci_config
+from corc.core.orchestration.providers.oci.instance import OCIInstanceOrchestrator
+from corc.core.providers.types import get_orchestrator
 
 
 class TestInstanceOrchestrator(unittest.TestCase):
@@ -30,7 +30,10 @@ class TestInstanceOrchestrator(unittest.TestCase):
             prefix=gen_config_provider_prefix(self.provider),
             throw=True,
         )
-        oci_profile_options = dict(compartment_id=oci_compartment_id, name=oci_name,)
+        oci_profile_options = dict(
+            compartment_id=oci_compartment_id,
+            name=oci_name,
+        )
 
         test_name = "Test_Instance_Orch"
         node_name = test_name + "_Node"

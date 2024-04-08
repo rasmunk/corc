@@ -1,8 +1,6 @@
-from corc.defaults import CLUSTER, OCI, JOB, META, S3, STORAGE, PROVIDER
+from corc.core.defaults import CLUSTER, OCI, JOB, META, S3, STORAGE, PROVIDER
 from corc.cli.args import extract_arguments
-from corc.cli.input_groups.providers.helpers import select_provider
 from corc.cli.job import (
-    run as api_run,
     get_results as api_get_results,
     delete_results as api_delete_results,
     list_results as api_list_results,
@@ -17,10 +15,10 @@ def run(args):
     storage_kwargs = vars(extract_arguments(args, [STORAGE]))
     s3_kwargs = vars(extract_arguments(args, [S3]))
 
-    provider = select_provider(provider_kwargs, default_fallback=True, verbose=True)
-    if not provider:
-        return False
-    provider_kwargs = vars(extract_arguments(args, [provider.upper()]))
+    # provider = select_provider(provider_kwargs, default_fallback=True, verbose=True)
+    # if not provider:
+    #    return False
+    # provider_kwargs = vars(extract_arguments(args, [provider.upper()]))
     job_kwargs["meta"] = meta_kwargs
 
     action_kwargs = dict(
@@ -29,8 +27,6 @@ def run(args):
         storage_kwargs=storage_kwargs,
         staging_kwargs=s3_kwargs,
     )
-
-    api_run(provider, provider_kwargs, action_kwargs)
 
 
 def get_results(args):
@@ -41,7 +37,9 @@ def get_results(args):
 
     if oci_args:
         return api_get_results(
-            job_kwargs=job_args, staging_kwargs=staging_args, storage_kwargs=s3_args,
+            job_kwargs=job_args,
+            staging_kwargs=staging_args,
+            storage_kwargs=s3_args,
         )
 
 

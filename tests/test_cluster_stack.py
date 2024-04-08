@@ -9,9 +9,13 @@ from oci.container_engine import (
     ContainerEngineClient,
     ContainerEngineClientCompositeOperations,
 )
-from corc.config import load_from_env_or_config, gen_config_provider_prefix
-from corc.providers.oci.helpers import new_client, get, get_kubernetes_version
-from corc.providers.oci.cluster import (
+from corc.core.config import load_from_env_or_config, gen_config_provider_prefix
+from corc.core.orchestration.providers.oci.helpers import (
+    new_client,
+    get,
+    get_kubernetes_version,
+)
+from corc.core.orchestration.providers.oci.cluster import (
     new_cluster_stack,
     get_cluster_stack,
     get_cluster_by_name,
@@ -20,7 +24,11 @@ from corc.providers.oci.cluster import (
     gen_cluster_stack_details,
     list_entities,
 )
-from corc.providers.oci.network import new_vcn_stack, delete_vcn_stack, valid_vcn_stack
+from corc.core.orchestration.providers.oci.network import (
+    new_vcn_stack,
+    delete_vcn_stack,
+    valid_vcn_stack,
+)
 
 
 class TestClusterStack(unittest.TestCase):
@@ -90,7 +98,9 @@ class TestClusterStack(unittest.TestCase):
         )
 
         vcn_options = dict(
-            cidr_block="10.0.0.0/16", display_name=vcn_name, dns_label="ku",
+            cidr_block="10.0.0.0/16",
+            display_name=vcn_name,
+            dns_label="ku",
         )
         subnet_options = dict(
             cidr_block="10.0.2.0/24", display_name=subnet_name, dns_label="workers"
@@ -147,7 +157,9 @@ class TestClusterStack(unittest.TestCase):
 
         for vcn in vcns:
             deleted = delete_vcn_stack(
-                self.network_client, self.options["profile"]["compartment_id"], vcn=vcn,
+                self.network_client,
+                self.options["profile"]["compartment_id"],
+                vcn=vcn,
             )
             self.assertTrue(deleted)
 

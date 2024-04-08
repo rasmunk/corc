@@ -1,4 +1,4 @@
-from corc.defaults import PROFILE, INSTANCE
+from corc.core.defaults import PROFILE, INSTANCE
 from corc.cli.parsers.providers.ec2.instance import (
     start_instance_group,
     instance_identity_group,

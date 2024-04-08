@@ -1,6 +1,6 @@
 import unittest
-from corc.providers.defaults import LIBVIRT, VIRTUAL_MACHINE
-from corc.providers.types import get_orchestrator
+from corc.core.orchestration.defaults import LIBVIRT, VIRTUAL_MACHINE
+from corc.core.providers.types import get_orchestrator
 
 
 class TestLibvirtInstanceOrchestrator(unittest.TestCase):
@@ -14,7 +14,7 @@ class TestLibvirtInstanceOrchestrator(unittest.TestCase):
         image = ""
         size = ""
         options = dict(
-            provider=self.provider,
+            provider=self.providFer,
             provider_kwargs=dict(profile=profile_options),
             kwargs=dict(instance=dict(name=node_name, image=image, size=size)),
         )

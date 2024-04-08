@@ -1,6 +1,6 @@
 from oci.core import VirtualNetworkClient, VirtualNetworkClientCompositeOperations
-from corc.providers.oci.helpers import new_client
-from corc.providers.oci.network import new_vcn_stack
+from corc.core.orchestration.providers.oci.helpers import new_client
+from corc.core.orchestration.providers.oci.network import new_vcn_stack
 
 
 def prepare_options():
@@ -20,7 +20,11 @@ def prepare_options():
         cidr_block="10.0.1.0/24", display_name="workers", dns_label="workers"
     )
 
-    options = dict(profile=oci_profile_options, vcn=vcn_options, subnet=subnet_options,)
+    options = dict(
+        profile=oci_profile_options,
+        vcn=vcn_options,
+        subnet=subnet_options,
+    )
     return options
 
 

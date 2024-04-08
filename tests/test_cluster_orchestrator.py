@@ -1,13 +1,13 @@
 import unittest
-from corc.config import load_from_env_or_config, gen_config_provider_prefix
-from corc.providers.oci.cluster import OCIClusterOrchestrator
+from corc.core.config import load_from_env_or_config, gen_config_provider_prefix
+from corc.core.orchestration.providers.oci.cluster import OCIClusterOrchestrator
 
 # import json
 # from libcloud.container.types import Provider
 # from libcloud.container.providers import get_driver
 # from libcloud.container.drivers.ecs import ROOT
-# from corc.providers.defaults import ECS, KUBERNETES, CONTAINER_CLUSTER
-# from corc.providers.types import get_orchestrator
+# from corc.core.providers.defaults import ECS, KUBERNETES, CONTAINER_CLUSTER
+# from corc.core.providers.types import get_orchestrator
 
 
 class TestClusterOrchestrator(unittest.TestCase):
@@ -80,7 +80,9 @@ class TestClusterOrchestrator(unittest.TestCase):
         cluster_options = dict(name=cluster_name, node=node_options)
 
         vcn_options = dict(
-            cidr_block="10.0.0.0/16", display_name=vcn_name, dns_label="ku",
+            cidr_block="10.0.0.0/16",
+            display_name=vcn_name,
+            dns_label="ku",
         )
 
         subnet_options = dict(

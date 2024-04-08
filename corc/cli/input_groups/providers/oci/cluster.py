@@ -1,4 +1,4 @@
-from corc.defaults import (
+from corc.core.defaults import (
     PROFILE,
     CLUSTER,
     CLUSTER_NODE,

@@ -1,8 +1,7 @@
 import os
 import subprocess
 import unittest
-import copy
-from corc.config import load_from_env_or_config, gen_config_prefix
+from corc.core.config import load_from_env_or_config, gen_config_prefix
 
 
 class TestCLILibvirt(unittest.TestCase):
@@ -10,7 +9,7 @@ class TestCLILibvirt(unittest.TestCase):
         self.test_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tmp")
         self.config_path = os.path.join(self.test_dir, "config")
 
-        self.provider_name = "Libvirt_"
+        self.provider_name = "libvirt_provider"
         self.test_name = self.provider_name + "Test_CLI"
         self.instance_name = self.test_name + "_Instance"
         self.cluster_name = self.test_name + "_Cluster"
@@ -35,83 +34,27 @@ class TestCLILibvirt(unittest.TestCase):
             os.remove(self.config_path)
         self.assertFalse(os.path.exists(self.config_path))
 
-    def test_cli_config_libvirt_help(self):
-        args = ["corc", "config", "libvirt", "-h"]
+    def test_cli_orchestration_add_provider_libvirt(self):
+        args = ["corc", "orchestration", "add_provider", self.provider_name]
         result = subprocess.run(args)
         self.assertIsNotNone(result)
         self.assertTrue(hasattr(result, "returncode"))
         self.assertEqual(result.returncode, 0)
 
-    def test_cli_config_libvirt_generate(self):
-        args = [
-            "corc",
-            "config",
-            "libvirt",
-            "generate",
-            "--config-path",
-            self.config_path,
-        ]
+        # Verify that the provider is added
+        args = ["corc", "orchestration", "list_providers"]
         result = subprocess.run(args)
         self.assertIsNotNone(result)
         self.assertTrue(hasattr(result, "returncode"))
         self.assertEqual(result.returncode, 0)
+        self.assertIn(self.provider_name, str(result.stdout))
 
-        # Check that the config is generated
-        self.assertTrue(os.path.exists(self.config_path))
-        # Clean up
-        os.remove(self.config_path)
-        self.assertFalse(os.path.exists(self.config_path))
-
-    def test_cli_instance_libvirt_help(self):
-        args = ["corc", "instance", "orchestration", "libvirt", "-h"]
+    def test_cli_orchestration_remove_provider_libvirt(self):
+        args = ["corc", "orchestration", "remove_provider", self.provider_name]
         result = subprocess.run(args)
         self.assertIsNotNone(result)
         self.assertTrue(hasattr(result, "returncode"))
         self.assertEqual(result.returncode, 0)
-
-    def test_cli_instance_libvirt_start(self):
-        args = ["corc", "instance", "orchestration", "libvirt"]
-
-        # Start an instance
-        start_args = copy.deepcopy(args)
-        start_args.extend(["start", "--instance-name", self.instance_name])
-        start_result = subprocess.run(start_args)
-        self.assertIsNotNone(start_result)
-        self.assertTrue(hasattr(start_result, "returncode"))
-        self.assertEqual(start_result.returncode, 0)
-
-    def test_cli_instance_libvirt_get(self):
-        args = ["corc", "instance", "orchestration", "libvirt"]
-
-        # Get the started instance
-        get_args = copy.deepcopy(args)
-        get_args.extend(["get", "--instance-name", self.instance_name])
-        get_result = subprocess.run(get_args)
-        self.assertIsNotNone(get_result)
-        self.assertTrue(hasattr(get_result, "returncode"))
-        self.assertEqual(get_result.returncode, 0)
-
-    def test_clit_instance_libvirt_stop(self):
-        args = ["corc", "instance", "orchestration", "libvirt"]
-
-        # Stop the started instance
-        stop_args = copy.deepcopy(args)
-        stop_args.extend(["stop", "--instance-name", self.instance_name])
-        stop_result = subprocess.run(stop_args)
-        self.assertIsNotNone(stop_result)
-        self.assertTrue(hasattr(stop_result, "returncode"))
-        self.assertEqual(stop_result.returncode, 0)
-
-    # def test_cli_instance_libvirt_delete(self):
-    #     args = ["corc", "instance", "orchestration", "libvirt"]
-
-    #     # Delete the instance
-    #     delete_args = copy.deepcopy(args)
-    #     delete_args.extend(["delete", "--instance-name", self.instance_name])
-    #     delete_result = subprocess.run(delete_args)
-    #     self.assertIsNotNone(delete_result)
-    #     self.assertTrue(hasattr(delete_result, "returncode"))
-    #     self.assertEqual(delete_result.returncode, 0)
 
 
 if __name__ == "__main__":

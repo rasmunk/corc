@@ -1,4 +1,4 @@
-from corc.defaults import PROFILE, CLUSTER
+from corc.core.defaults import PROFILE, CLUSTER
 from corc.cli.parsers.providers.ec2.cluster import (
     start_cluster_group,
     cluster_identity_group,

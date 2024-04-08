@@ -1,4 +1,4 @@
-from corc.providers.oci.cluster import OCIClusterOrchestrator
+from corc.core.orchestration.providers.oci.cluster import OCIClusterOrchestrator
 
 
 def prepare_options():
@@ -7,7 +7,9 @@ def prepare_options():
         "64y2pr7atpxpv4q",
         name="XNOVOTECH",
     )
-    cluster_options = dict(name="Test XNOVOTECH Cluster",)
+    cluster_options = dict(
+        name="Test XNOVOTECH Cluster",
+    )
 
     # Sort order in ascending to ensure that complex images
     # such as GPU powered shapes are not selected.
