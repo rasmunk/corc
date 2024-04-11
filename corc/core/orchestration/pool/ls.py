@@ -1,5 +1,5 @@
 import os
-from corc.core.pool.models import discover_pools
+from corc.core.orchestration.pool.models import discover_pools
 
 
 async def ls(*args, **kwargs):

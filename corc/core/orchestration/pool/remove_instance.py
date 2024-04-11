@@ -1,4 +1,4 @@
-from corc.core.pool.models import Pool
+from corc.core.orchestration.pool.models import Pool
 
 
 async def instance_node(pool_name, node_id):
