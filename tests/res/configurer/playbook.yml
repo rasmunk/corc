@@ -1,6 +1,0 @@
-- hosts: compute
-  tasks:
-    - name: set homename to testnode
-      hostname:
-        name: testnode
-      become: yes

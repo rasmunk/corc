@@ -1,5 +1,5 @@
 import unittest
-from corc.core.orchestration.defaults import LIBVIRT, VIRTUAL_MACHINE
+from corc.core.orchestration.defaults import LIBVIRT_PROVIDER, VIRTUAL_MACHINE
 from corc.core.providers.types import get_orchestrator
 
 
@@ -20,7 +20,9 @@ class TestLibvirtInstanceOrchestrator(unittest.TestCase):
         )
 
         self.options = options
-        ApacheLibvirtOrchestrator, options = get_orchestrator(VIRTUAL_MACHINE, LIBVIRT)
+        ApacheLibvirtOrchestrator, options = get_orchestrator(
+            VIRTUAL_MACHINE, LIBVIRT_PROVIDER
+        )
         self.options.update(options)
 
         ApacheLibvirtOrchestrator.validate_options(self.options)

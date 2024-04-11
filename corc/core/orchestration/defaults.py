@@ -1,8 +1,7 @@
 # Supported providers
-LIBVIRT = "libvirt_provider"
-OCI = "oci"
+LIBVIRT_PROVIDER = "libvirt_provider"
 LOCAL = "local"
-SUPPORTED_ORCHESTRATION_PROVIDERS = [LIBVIRT, OCI]
+SUPPORTED_ORCHESTRATION_PROVIDERS = [LIBVIRT_PROVIDER]
 
 # Orchestration provider variables
 ORCHESTRATION_PROVIDER_NAME = "provider_name"

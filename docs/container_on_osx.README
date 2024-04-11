@@ -1,7 +1,0 @@
-To deploy a container on OSX via the ApacheContainerOrchestrator,
-The internal dockerd daemon as to be mounted on the host itself.
-
-
-This can be accomplished as follows:
-
-    docker run -d -v /var/run/docker.sock:/var/run/docker.sock -p 127.0.0.1:2345:2345 bobrik/socat TCP-LISTEN:2345,fork UNIX-CONNECT:/var/run/docker.sock

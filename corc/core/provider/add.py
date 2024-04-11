@@ -26,5 +26,7 @@ def add_provider(provider_type, name):
     # Load and save the default configuration for the provider
     # TODO, load from the plugin
     # Find every module that defines the corc.plugins entrypoint
-    discovered_plugins = entry_points("corc.plugins")
+
+    # Throws KeyError if the entry point is not found
+    entry_points("corc.plugins")
     return True
