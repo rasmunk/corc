@@ -22,7 +22,7 @@ instances:
     settings:
       args:
         - "{{ instance.name }}"
-        - /var/lib/libvirt/images/{{ instance.name }}-saga-base.qcow2
+        - /path/to/predefined/image/file/{{ instance.name }}.qcow2
       kwargs:
         memory_size: 2048mib
         num_vcpus: 2

@@ -4,14 +4,21 @@ corc
 .. image:: https://badge.fury.io/py/corc.svg
     :target: https://badge.fury.io/py/corc
 
-**Note**, corc is still very much in early development, therefore not every command and option will run as expected.
+**Note**, corc is a small project that is currently under development for providing a set of tools for managing infrastructure components.
 
-corc is a cloud orchestration tool for managing cloud resources,
-including VM's, virtual networks and container clusters.
+corc is a tool for conducting a range of operations for managing infrastructure components via a set of supported providers.
+Each provider is defined as a seperate plugin that can be installed and utilized by corc.
+The list of components that corc exposes are:
 
-In addition, corc provides the capability to schedule job on orchestrated resources
+- Configurer
+- Compute
+- Orchestration
+- Storage
 
-The current implementation supports the `OCI <https://en.wikipedia.org/wiki/Oracle_Cloud>`_ and AWS `EC2 <https://en.wikipedia.org/wiki/Amazon_Elastic_Compute_Cloud>`_ backend.
+Currently, the set of plugins/providers is very limited, and the initial development is focused on the area of
+orchestration and the associated `libvirt_provider` plugin.
+
+However, plugin/provider contributions for each of these components are very welcome.
 
 ------------
 Installation
@@ -27,69 +34,62 @@ Installation from local git repository::
     cd corc
     pip install .
 
--------------
-Configuration
--------------
 
-Depending on the selected backend cloud to utilize, corc requires that the specified provider's developer authentication mechanism is configuered on the system at hand.
+If you have cloned the repo, an alternative way to install corc is to run::
 
-For instance the OCI (Oracle Cloud Infrastructure), requires that API keys have been predefined in the specific compartment and that these are associated
-with a profile in a valid oci configuration. See (https://docs.cloud.oracle.com/en-us/iaas/Content/API/Concepts/devguidesetupprereq.htm)
+    make install
 
-In addition, if utilizing the S3 storage feature, corc expects that there similarly is a valid S3 configuration.
-For more information on this, see (https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html)
-
+Which will create a virtual environment, install the required dependencies, and install corc itself.
 
 -----
 Usage
 -----
 
-As mentioned, corc is a command-line tool for managing cloud resources, such instantiating VM instances or Kubernetes Clusters or scheduling jobs on said clusters.
+Since `corc` is a top level interface for managing infrastucture components, specialized providers that provide the specific implementation have 
+to be installed. To accomplish this, each of the different corc components define 
+the `add_provider` and `remove_provider` arguments that can be used to install and remove providers::
 
-The available options can be discovered through the CLI itself, e.g::
+    usage: corc orchestration [-h] {add_provider,remove_provider,pool,stack} ...
 
-    usage: corc [-h] {config,aws,oci} ...
-
-    optional arguments:
-      -h, --help        show this help message and exit
+    options:
+      -h, --help            show this help message and exit
 
     COMMAND:
-      {config,ec2,oci}
+      {add_provider,remove_provider,pool,stack}
 
-A good start is to first generate the corc configuration. Afterwards the provider specific details such as the OCI ``compartment_id`` should be filled into this.
-By default the corc configuration is placed into the ``~/.corc/config`` file. Currently OCI is the only supported provider, which means that this is also the only provider that will be put into the configuration file.
 
-The specific values can be overwritten during the config generation, details about this can be displayed via ``corc config oci generate -h``.
+For instance, if we want to add the `libvirt_provider <https://pypi.org/project/libvirt-provider/>`_ to the orchestration component, we can do so by running::
 
----------------
-Getting Started
----------------
+    corc orchestration add_provider libvirt_provider
 
-To start utilizing the OCI provider, corc requires that the authentication details for this provider is first defined via the default ``~/.oci/config`` as defined by OCI. In addition, `corc` needs to know which `compartment` to operate the given task on. This is defined via the ``corc.providers.oci.profile.compartment_id`` configuration variable.
 
-After these steps have been fulfilled, corc is ready to either orchestrate resources or schedule tasks/jobs on the providers infrastructure.
+-----------------------------
+Orchestrator Stacks and Pools
+-----------------------------
 
-For instance, the following command orchestrates a Kubernetes cluster called ``cluster`` at OCI with 5 nodes::
+As part of the orchestration component, corc defines the concepts of `stacks` and `pools`.
+A stack is a collection of resources that are managed and orchestrated by corc.
 
-    :~# corc oci orchestration cluster start --cluster-node-size 5
+Stacks are expected to defined as a yaml file that are passed to corc, which is
+used to orchestrate a set of resources.
 
-After this is completed, a simple hello world job can be schduled straight after::
+A pool is a construct that can be used to logically group resources.
+When a pool is constructed, it is saved to a local state file where the pool is constructed.
 
-    # Schedule the job
-    :~# corc oci job run --storage-enable "/bin/echo Hello World"
-    {
-        "job": {
-            "id": "job-1594378280"
-        },
-        "msg": "Job submitted",
-        "status": "success"
-    }
+When defining a stack as a yaml file, it is supported that pools are defined as part of the stack.
+An example of a stack yaml definition can be seen in the ``examples/stack.yml``
 
-    # Retrieve the results
-    :~# corc oci job result get --job-meta-name job-1594378280
-    
-Which will download the generated content available in the default output directory ``/tmp/output`` in the execution environment.
-This by default includes a ``job`` description file that details what command was executed and how it went.
+The corc orchestration CLI can be used to manage both `stacks` and `pools`::
 
-The ``get`` COMMAND will unless otherwise specified, download the job output into the current directory with the ``job-name`` as the prefix, and a automatically unique generated postfix string. The ``corc oci job result get --job-meta-name job-15943782`` for instance produced a local directory called ``job-1594378280-mgjb2`` that contains the job output file.
+    :~ corc orchestration -h
+    usage: corc orchestration [-h] {add_provider,remove_provider,pool,stack} ...
 
+    options:
+    -h, --help            show this help message and exit
+
+    COMMAND:
+    {add_provider,remove_provider,pool,stack}
+
+
+When a stack is deployed, corc will orchestrate the defined resources, create the 
+specified pools if nonexistent, and associate resources to their specific pools.
