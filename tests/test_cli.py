@@ -1,18 +1,14 @@
-import os
 import subprocess
 import unittest
+import uuid
 
 
 class TestCLI(unittest.TestCase):
     def setUp(self):
-        self.test_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tmp")
-        self.test_name = "Test_CLI"
-
         # Add unique test postfix
         test_id = str(uuid.uuid4())
-        if test_id:
-            self.instance_name += test_id
-            self.cluster_name += test_id
+        self.instance_name = "instance-{}".format(test_id)
+        self.cluster_name = "instance-{}".format(test_id)
 
         # Install the cli
         args = ["pip3", "install", ".", "-q"]
@@ -22,9 +18,7 @@ class TestCLI(unittest.TestCase):
         self.assertEqual(result.returncode, 0)
 
     def tearDown(self):
-        if os.path.exists(self.config_path):
-            os.remove(self.config_path)
-        self.assertFalse(os.path.exists(self.config_path))
+        pass
 
     def test_cli_help(self):
         args = ["corc", "-h"]

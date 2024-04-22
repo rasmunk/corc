@@ -19,6 +19,14 @@ class Plugin:
         self.module = module
         self.config = config
 
+    def as_dict(self):
+        return {
+            "name": self.name,
+            "group": self.group,
+            "module": self.module,
+            "config": self.config,
+        }
+
 
 def get_plugins(plugin_type=PLUGIN_ENTRYPOINT_BASE):
     """Get all the installed plugins on the system"""

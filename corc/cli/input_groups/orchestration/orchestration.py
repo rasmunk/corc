@@ -1,6 +1,7 @@
 from corc.core.defaults import POOL
 from corc.cli.parsers.orchestration.orchestration import (
     add_provider_group,
+    list_providers_group,
     remove_provider_group,
 )
 from corc.cli.parsers.pool import (
@@ -15,6 +16,14 @@ from corc.cli.parsers.pool import (
 
 def add_provider_groups(parser):
     add_provider_group(parser)
+
+    provider_groups = []
+    argument_groups = []
+    return provider_groups, argument_groups
+
+
+def list_providers_groups(parser):
+    list_providers_group(parser)
 
     provider_groups = []
     argument_groups = []

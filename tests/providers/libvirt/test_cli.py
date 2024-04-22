@@ -33,7 +33,7 @@ class TestCLILibvirt(unittest.TestCase):
 
         # Verify that the provider is added
         args = ["corc", "orchestration", "list_providers"]
-        result = subprocess.run(args)
+        result = subprocess.run(args, capture_output=True)
         self.assertIsNotNone(result)
         self.assertTrue(hasattr(result, "returncode"))
         self.assertEqual(result.returncode, 0)

@@ -44,7 +44,13 @@ STACK_OPERATIONS = ["deploy", "destroy", "show", "ls"]
 STACK_CLI = {STACK: STACK_OPERATIONS}
 
 ORCHESTRATION = "orchestration"
-ORCHESTRATION_OPERATIONS = ["add_provider", "remove_provider", POOL_CLI, STACK_CLI]
+ORCHESTRATION_OPERATIONS = [
+    "add_provider",
+    "remove_provider",
+    "list_providers",
+    POOL_CLI,
+    STACK_CLI,
+]
 ORCHESTRATION_CLI = {ORCHESTRATION: ORCHESTRATION_OPERATIONS}
 
 STORAGE_OPERATIONS = ["add_provider", "remove_provider"]

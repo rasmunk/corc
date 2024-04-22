@@ -19,10 +19,7 @@ def add_provider_group(parser):
 
 
 def list_providers_group(parser):
-    parser.add_argument(
-        ORCHESTRATION_PROVIDER_NAME,
-        action=PositionalArgumentsAction,
-    )
+    pass
 
 
 def remove_provider_group(parser):
