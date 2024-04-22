@@ -18,6 +18,13 @@ def add_provider_group(parser):
     )
 
 
+def list_providers_group(parser):
+    parser.add_argument(
+        ORCHESTRATION_PROVIDER_NAME,
+        action=PositionalArgumentsAction,
+    )
+
+
 def remove_provider_group(parser):
     lower_supported_providers = (
         ",".join(SUPPORTED_ORCHESTRATION_PROVIDERS).lower().split(",")
