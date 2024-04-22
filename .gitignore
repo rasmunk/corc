@@ -1,4 +1,4 @@
-# Byte-compiled / optimized / DLL files
+G# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
@@ -141,3 +141,5 @@ job-*/
 # Ignore tmp files
 tmp/
 
+# Ignore test images
+tests/images/

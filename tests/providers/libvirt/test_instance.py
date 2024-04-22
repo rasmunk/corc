@@ -16,7 +16,7 @@ class TestCLILibvirtInstance(unittest.TestCase):
         self.instance_name = "instance-{}".format(test_id)
 
         # Prepare test image disks
-        self.architecture = "x86_64"
+        self.architecture = "amd64"
         self.images_dir = join("tests", "images", self.architecture)
         if not exists(self.images_dir):
             self.assertTrue(makedirs(self.images_dir))

@@ -6,16 +6,6 @@ class TestCLILibvirt(unittest.TestCase):
     def setUp(self):
         self.provider_name = "libvirt_provider"
 
-        # Install the cli
-        args = ["pip3", "install", ".", "-q"]
-        result = subprocess.run(args)
-        self.assertIsNotNone(result)
-        self.assertTrue(hasattr(result, "returncode"))
-        self.assertEqual(result.returncode, 0)
-
-    def tearDown(self):
-        pass
-
     def test_cli_orchestration_add_provider_libvirt(self):
         args = ["corc", "orchestration", "add_provider", self.provider_name]
         result = subprocess.run(args)
