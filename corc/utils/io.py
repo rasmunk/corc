@@ -4,6 +4,15 @@ import yaml
 import shutil
 
 
+def copy(src, dst):
+    try:
+        shutil.copy(src, dst)
+        return True
+    except Exception as err:
+        print("Failed to copy file: {} - {}".format(src, err))
+    return False
+
+
 def makedirs(path):
     try:
         os.makedirs(path)
@@ -60,6 +69,10 @@ def load(path, mode="r", readlines=False):
     except Exception as err:
         print("Failed to load file: {} - {}".format(path, err))
     return False
+
+
+def join(path, *paths):
+    return os.path.join(path, *paths)
 
 
 def remove(path):

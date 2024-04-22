@@ -1,18 +1,10 @@
-import os
 import subprocess
 import unittest
-import uuid
 
 
 class TestCLILibvirt(unittest.TestCase):
     def setUp(self):
-        self.test_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tmp")
-
         self.provider_name = "libvirt_provider"
-        self.test_name = self.provider_name + "Test_CLI"
-        test_id = uuid.uuid4().hex
-
-        self.instance_name = "instance-{}".format(test_id)
 
         # Install the cli
         args = ["pip3", "install", ".", "-q"]
