@@ -58,6 +58,6 @@ uninstallcheck:
 check:
 	. $(VENV)/activate; python3 setup.py check -rms
 	. $(VENV)/activate; pytest -s -v tests/providers
-#	. $(VENV)/activate; pytest -s -v tests/
+	. $(VENV)/activate; pytest -s -v tests/
 
 include Makefile.venv

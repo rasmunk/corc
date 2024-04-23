@@ -47,7 +47,7 @@ class TestCliPool(unittest.IsolatedAsyncioTestCase):
         test_id = str(uuid.uuid4())
         pool_name = "dummy-remove-test-{}".format(test_id)
         remove_pool = Pool(pool_name)
-        self.assertTrue(remove_pool.touch())
+        self.assertTrue(await remove_pool.touch())
 
         remove_pool_args = copy.deepcopy(self.base_args)
         remove_pool_args.extend(["remove", pool_name])

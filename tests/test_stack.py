@@ -49,7 +49,7 @@ class TestStack(unittest.IsolatedAsyncioTestCase):
         test_id = str(uuid.uuid4())
         name = f"{self.name}-{test_id}"
         stack_db = DictDatabase(STACK)
-        self.assertTrue(stack_db.touch())
+        self.assertTrue(await stack_db.touch())
 
         # Create stack instance to be removed
         deploy_file = join("tests", "res", "test-stack.yml")
