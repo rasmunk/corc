@@ -8,6 +8,7 @@ async def ls(*args, **kwargs):
     # Might create a designed path where the pools are stored
     pools = await discover_pools(os.getcwd())
     if not pools:
+        response["pools"] = []
         response["msg"] = "No pools found."
         return True, response
 

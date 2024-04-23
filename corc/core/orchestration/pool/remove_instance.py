@@ -1,7 +1,7 @@
 from corc.core.orchestration.pool.models import Pool
 
 
-async def instance_node(pool_name, node_id):
+async def remove_instance(pool_name, node_id):
     response = {}
     pool = Pool(pool_name)
     if not await pool.exists():

@@ -8,7 +8,6 @@ class TestCLI(unittest.TestCase):
         # Add unique test postfix
         test_id = str(uuid.uuid4())
         self.instance_name = "instance-{}".format(test_id)
-        self.cluster_name = "instance-{}".format(test_id)
 
         # Install the cli
         args = ["pip3", "install", ".", "-q"]

@@ -11,4 +11,4 @@ async def list_providers():
         return False, {"msg": "Failed to list the providers."}
 
     plugin_names = [plugin.name for plugin in installed_providers]
-    return True, {"providers": plugin_names}
+    return True, {"providers": plugin_names, "msg": "Found providers"}
