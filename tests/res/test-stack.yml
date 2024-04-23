@@ -1,0 +1,44 @@
+pools:
+  pool01:
+    instances:
+      - instance01
+      - instance02
+  pool02:
+    instances:
+      - instance01
+      - instance03
+
+
+instances:
+  instance01:
+    provider:
+      name: dummy_provider
+      driver: dummy
+    settings:
+      args:
+        - "{{ instance.name }}"
+        - /path/to/predefined/image/file/{{ instance.name }}.qcow2
+      kwargs:
+        memory_size: 2048mib
+        num_vcpus: 2
+  instance02:
+    provider:
+      name: dummy_provider
+      driver: dummy
+    settings:
+      args:
+        - "{{ instance.name }}"
+      kwargs:
+        memory_size: 2048mib
+        num_vcpus: 2
+  instance03:
+    provider:
+      name: libvirt_provider
+      driver: libvirt
+    settings:
+      args:
+        - "{{ instance.name }}"
+        - "image/file/{{ instance.name }}.qcow2"
+      kwargs:
+        memory_size: 2048mib
+        num_vcpus: 2
