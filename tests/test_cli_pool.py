@@ -2,6 +2,7 @@ import copy
 import subprocess
 import unittest
 import uuid
+import json
 from corc.core.orchestration.pool.models import Pool
 from corc.core.orchestration.pool.remove_instance import remove_instance
 
@@ -9,7 +10,7 @@ from corc.core.orchestration.pool.remove_instance import remove_instance
 class TestCliPool(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
         self.name = "pool"
-        self.base_args = ["corc", "orchestration", "pool"]
+        self.base_args = ["corc", "orchestration", self.name]
 
     async def asyncTearDown(self):
         # Ensure that any pool is destroyed
@@ -22,21 +23,24 @@ class TestCliPool(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(await pool.remove_persistence())
 
     async def test_dummy_pool_create(self):
-        create_pool_args = copy.deepcopy(self.base_args).extend(["create", self.name])
+        test_id = str(uuid.uuid4())
+        name = f"{self.name}-{test_id}"
+        create_pool_args = copy.deepcopy(self.base_args)
+        create_pool_args.extend(["create", name])
         result = subprocess.run(create_pool_args)
         self.assertIsNotNone(result)
         self.assertTrue(hasattr(result, "returncode"))
         self.assertEqual(result.returncode, 0)
 
         # Check that the pool exists
-        pool = Pool(self.name)
+        pool = Pool(name)
         self.assertIsNotNone(pool)
-        self.assertEqual(pool.name, self.name)
+        self.assertEqual(pool.name, name)
 
         # Remove and validate that it is gone
-        self.assertTrue(pool.flush())
-        self.assertTrue(pool.remove_persistence())
-        self.assertFalse(pool.exists())
+        self.assertTrue(await pool.flush())
+        self.assertTrue(await pool.remove_persistence())
+        self.assertFalse(await pool.exists())
 
     async def test_dummy_pool_remove(self):
         # Create a pool that can be removed by the CLI
@@ -45,7 +49,8 @@ class TestCliPool(unittest.IsolatedAsyncioTestCase):
         remove_pool = Pool(pool_name)
         self.assertTrue(remove_pool.touch())
 
-        remove_pool_args = copy.deepcopy(self.base_args).extend(["remove", self.name])
+        remove_pool_args = copy.deepcopy(self.base_args)
+        remove_pool_args.extend(["remove", pool_name])
         result = subprocess.run(remove_pool_args)
         self.assertIsNotNone(result)
         self.assertTrue(hasattr(result, "returncode"))
@@ -53,14 +58,13 @@ class TestCliPool(unittest.IsolatedAsyncioTestCase):
 
     async def test_dummy_pool_list(self):
         test_id = str(uuid.uuid4())
-        list_pools = copy.deepcopy(self.base_args).extend(["list"])
+        list_pools = copy.deepcopy(self.base_args)
+        list_pools.extend(["ls"])
         result = subprocess.run(list_pools, capture_output=True)
         self.assertIsNotNone(result)
         self.assertTrue(hasattr(result, "returncode"))
         self.assertEqual(result.returncode, 0)
-
-        current_pools = dict(result.stdout)["pools"]
-        self.assertListEqual(current_pools, [])
+        self.assertListEqual(json.loads(result.stdout)["pools"], [])
 
         # Add pools
         pool1, pool2, pool3 = (
@@ -70,7 +74,8 @@ class TestCliPool(unittest.IsolatedAsyncioTestCase):
         )
         pools = [pool1, pool2, pool3]
         for pool in pools:
-            create_pool_args = copy.deepcopy(self.base_args).extend(["create", pool])
+            create_pool_args = copy.deepcopy(self.base_args)
+            create_pool_args.extend(["create", pool])
             result = subprocess.run(create_pool_args)
             self.assertIsNotNone(result)
             self.assertTrue(hasattr(result, "returncode"))
@@ -80,14 +85,20 @@ class TestCliPool(unittest.IsolatedAsyncioTestCase):
             # Check that the pool exists
             pool = Pool(pool)
             self.assertIsNotNone(pool)
-            self.assertEqual(pool.name, self.name)
+            self.assertTrue(await pool.exists())
 
         for pool in pools:
             # Remove pools
-            remove_pool_args = copy.deepcopy(self.base_args).extend(["remove", pool])
+            remove_pool_args = copy.deepcopy(self.base_args)
+            remove_pool_args.extend(["remove", pool])
             result = subprocess.run(remove_pool_args)
             self.assertIsNotNone(result)
             self.assertTrue(hasattr(result, "returncode"))
             self.assertEqual(result.returncode, 0)
 
         # TODO, check that the pools are removed
+        post_result = subprocess.run(list_pools, capture_output=True)
+        self.assertIsNotNone(post_result)
+        self.assertTrue(hasattr(post_result, "returncode"))
+        self.assertEqual(post_result.returncode, 0)
+        self.assertEqual(json.loads(post_result.stdout)["pools"], [])

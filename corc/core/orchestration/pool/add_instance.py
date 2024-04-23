@@ -12,7 +12,7 @@ async def add_instance(pool_name, *instance_args, **instance_kwargs):
         response["msg"] = "Instance already exists in pool."
         return False, response
 
-    added = await pool.add(Instance(*instance_args))
+    added = await pool.add(Instance(*instance_args, **instance_kwargs))
     if not added:
         response["msg"] = "Failed to add instance to pool."
         return False, response
