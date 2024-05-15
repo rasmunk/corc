@@ -3,8 +3,23 @@ import unittest
 
 
 class TestCLILibvirt(unittest.TestCase):
-    def setUp(self):
-        self.provider_name = "libvirt_provider"
+    @classmethod
+    def setUpClass(cls):
+        cls.provider_name = "libvirt_provider"
+        # Install the cli
+        args = ["pip3", "install", ".", "-q"]
+        result = subprocess.run(args)
+        assert result is not None
+        assert hasattr(result, "returncode")
+        assert result.returncode == 0
+
+    @classmethod
+    def tearDownClass(cls):
+        args = ["pip3", "uninstall", "corc"]
+        result = subprocess.run(args)
+        assert result is not None
+        assert hasattr(result, "returncode")
+        assert result.returncode == 0
 
     def test_cli_orchestration_add_provider_libvirt(self):
         args = ["corc", "orchestration", "add_provider", self.provider_name]
