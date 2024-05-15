@@ -22,7 +22,7 @@ def pip_install(plugin_name):
 
 def pip_uninstall(plugin_name):
     """Uninstall a particular plugin using pip"""
-    cmd = ["pip", "uninstall", plugin_name]
+    cmd = ["pip", "uninstall", "-y", plugin_name]
     result = run(cmd, capture_output=True)
     if not result:
         print("Failed to uninstall plugin: {}".format(plugin_name))

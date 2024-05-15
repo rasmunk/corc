@@ -15,7 +15,7 @@ class TestCLILibvirt(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        args = ["pip3", "uninstall", "corc"]
+        args = ["pip3", "uninstall", "corc", "-y"]
         result = subprocess.run(args)
         assert result is not None
         assert hasattr(result, "returncode")

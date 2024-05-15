@@ -4,20 +4,24 @@ import uuid
 
 
 class TestCLI(unittest.TestCase):
-    def setUp(self):
-        # Add unique test postfix
-        test_id = str(uuid.uuid4())
-        self.instance_name = "instance-{}".format(test_id)
 
+    @classmethod
+    def setUpClass(cls):
+        cls.provider_name = "libvirt_provider"
         # Install the cli
         args = ["pip3", "install", ".", "-q"]
         result = subprocess.run(args)
-        self.assertIsNotNone(result)
-        self.assertTrue(hasattr(result, "returncode"))
-        self.assertEqual(result.returncode, 0)
+        assert result is not None
+        assert hasattr(result, "returncode")
+        assert result.returncode == 0
 
-    def tearDown(self):
-        pass
+    @classmethod
+    def tearDownClass(cls):
+        args = ["pip3", "uninstall", "corc", "-y"]
+        result = subprocess.run(args)
+        assert result is not None
+        assert hasattr(result, "returncode")
+        assert result.returncode == 0
 
     def test_cli_help(self):
         args = ["corc", "-h"]
