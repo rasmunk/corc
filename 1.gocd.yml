@@ -1,9 +1,9 @@
 environments:
-  pypi_package:
+  corc:
     environment_variables:
       GIT_USER: "{{SECRET:[github][username]}}"
-      TWINE_USERNAME: "{{SECRET:[corc][username]}}"
-      TWINE_PASSWORD: "{{SECRET:[corc][password]}}"
+      PYPI_USERNAME: "{{SECRET:[corc][username]}}"
+      PYPI_PASSWORD: "{{SECRET:[corc][password]}}"
     pipelines:
       - corc
 pipelines:
