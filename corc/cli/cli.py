@@ -22,7 +22,7 @@ def run():
     commands = parser.add_subparsers(title="COMMAND")
 
     # Add corc functions to the CLI
-    functions_cli(commands)
+    cli(commands)
     args = parser.parse_args()
     # Convert to a dictionary
     arguments = vars(args)
@@ -138,7 +138,7 @@ def add_corc_cli_operation(
     )
 
 
-def functions_cli(commands):
+def cli(commands):
     """
     Add the functions that corc supports to the CLI.
     """
@@ -165,7 +165,7 @@ def functions_cli(commands):
                 cli_module_path = "{}.{}.{}".format(plugin.name, "cli", "cli")
                 imported_cli_module = import_plugin(cli_module_path, return_module=True)
                 if imported_cli_module:
-                    imported_cli_module.functions_cli(function_cli_parser)
+                    imported_cli_module.cli(function_cli_parser)
 
 
 if __name__ == "__main__":
