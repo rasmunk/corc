@@ -2,7 +2,6 @@ import unittest
 import uuid
 import copy
 import subprocess
-import os
 from corc.core.defaults import STACK
 from corc.utils.io import join
 from corc.core.storage.dictdatabase import DictDatabase

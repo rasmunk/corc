@@ -1,6 +1,5 @@
 import subprocess
 import unittest
-import uuid
 
 
 class TestCLI(unittest.TestCase):
