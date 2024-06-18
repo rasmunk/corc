@@ -6,7 +6,6 @@ class TestCLI(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.provider_name = "libvirt_provider"
         # Install the cli
         args = ["pip3", "install", ".", "-q"]
         result = subprocess.run(args)
