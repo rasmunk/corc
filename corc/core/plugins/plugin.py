@@ -1,9 +1,6 @@
 import sys
 
-if sys.version_info < (3, 8):
-    from importlib_metadata import entry_points, import_module
-else:
-    from importlib.metadata import entry_points, import_module
+from importlib_metadata import entry_points, import_module
 from corc.utils.io import removedirs
 from corc.core.defaults import PACKAGE_NAME
 
