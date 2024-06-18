@@ -8,6 +8,24 @@ from corc.core.orchestration.pool.remove_instance import remove_instance
 
 
 class TestCliPool(unittest.IsolatedAsyncioTestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        # Install the cli
+        args = ["pip3", "install", ".", "-q"]
+        result = subprocess.run(args)
+        assert result is not None
+        assert hasattr(result, "returncode")
+        assert result.returncode == 0
+
+    @classmethod
+    def tearDownClass(cls):
+        args = ["pip3", "uninstall", "corc", "-y"]
+        result = subprocess.run(args)
+        assert result is not None
+        assert hasattr(result, "returncode")
+        assert result.returncode == 0
+
     async def asyncSetUp(self):
         self.name = "pool"
         self.base_args = ["corc", "orchestration", self.name]

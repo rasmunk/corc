@@ -7,7 +7,25 @@ from corc.utils.io import join
 from corc.core.storage.dictdatabase import DictDatabase
 
 
-class TestStack(unittest.IsolatedAsyncioTestCase):
+class TestCliStack(unittest.IsolatedAsyncioTestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        # Install the cli
+        args = ["pip3", "install", ".", "-q"]
+        result = subprocess.run(args)
+        assert result is not None
+        assert hasattr(result, "returncode")
+        assert result.returncode == 0
+
+    @classmethod
+    def tearDownClass(cls):
+        args = ["pip3", "uninstall", "corc", "-y"]
+        result = subprocess.run(args)
+        assert result is not None
+        assert hasattr(result, "returncode")
+        assert result.returncode == 0
+
     async def asyncSetUp(self):
         self.name = "dummy"
         self.base_args = ["corc", "orchestration", STACK]
