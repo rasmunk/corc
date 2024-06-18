@@ -2,7 +2,7 @@ PACKAGE_NAME=corc
 PACKAGE_NAME_FORMATTED=$(subst -,_,$(PACKAGE_NAME))
 
 .PHONY: all init clean dist distclean maintainer-clean
-.PHONY: install uninstall installcheck check
+.PHONY: install uninstall installtest uninstalltest test
 
 all: venv install-dep init
 
@@ -48,14 +48,14 @@ uninstall:
 	$(VENV)/pip uninstall -y -r requirements.txt
 	$(VENV)/pip uninstall -y $(PACKAGE_NAME)
 
-installcheck:
+installtest:
 	$(VENV)/pip install -r tests/requirements.txt
 
-uninstallcheck:
+uninstalltest:
 	$(VENV)/pip uninstall -y -r requirements.txt
 
 # The tests requires access to the docker socket
-check:
+test:
 	. $(VENV)/activate; python3 setup.py check -rms
 	. $(VENV)/activate; pytest -s -v tests/providers
 	. $(VENV)/activate; pytest -s -v tests/
