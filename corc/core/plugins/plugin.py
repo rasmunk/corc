@@ -1,5 +1,3 @@
-import sys
-
 from importlib_metadata import entry_points, import_module
 from corc.utils.io import removedirs
 from corc.core.defaults import PACKAGE_NAME
