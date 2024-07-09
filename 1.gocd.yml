@@ -6,10 +6,13 @@ environments:
       PYPI_PASSWORD: "{{SECRET:[corc][password]}}"
     pipelines:
       - corc
+format_version: 10
 pipelines:
   corc:
-    group: pypi_package
-    locking: off
+    display_order: -1
+    group: bare_metal_pypi_package
+    label_template: ${COUNT}
+    lock_behaviour: none
     timer:
       # Run on the 1st at 00:00 of every month
       spec: "0 0 0 1 * ? *"
@@ -31,4 +34,4 @@ pipelines:
       SRC_DIRECTORY: corc
       TEST_DIRECTORY: corc
       PUSH_DIRECTORY: publish-python-scripts
-    template: pypi_package
+    template: bare_metal_pypi_package
