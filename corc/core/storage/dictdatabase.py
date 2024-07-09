@@ -18,11 +18,11 @@ class DictDatabase:
         }
 
     async def is_empty(self):
-        with shelve.open(self.name) as db:
+        with shelve.open(self._database_path) as db:
             return len(db) == 0
 
     async def items(self):
-        with shelve.open(self.name) as db:
+        with shelve.open(self._database_path) as db:
             return [item for item in db.values()]
 
     async def add(self, item):
@@ -40,7 +40,7 @@ class DictDatabase:
         if not lock:
             return False
         try:
-            with shelve.open(self.name) as db:
+            with shelve.open(self._database_path) as db:
                 db[_id] = item
         except Exception as err:
             print(err)
@@ -54,7 +54,7 @@ class DictDatabase:
         if not lock:
             return False
         try:
-            with shelve.open(self.name) as db:
+            with shelve.open(self._database_path) as db:
                 db.pop(item_id)
         except Exception as err:
             print(err)
@@ -68,7 +68,7 @@ class DictDatabase:
         if not lock:
             return False
         try:
-            with shelve.open(self.name) as db:
+            with shelve.open(self._database_path) as db:
                 db[item_id] = item
         except Exception as err:
             print(err)
@@ -94,11 +94,11 @@ class DictDatabase:
         return True
 
     async def get(self, item_id):
-        with shelve.open(self.name) as db:
+        with shelve.open(self._database_path) as db:
             return db.get(item_id)
 
     async def find(self, key, value):
-        with shelve.open(self.name) as db:
+        with shelve.open(self._database_path) as db:
             return [
                 item
                 for item in db.values()
@@ -111,7 +111,7 @@ class DictDatabase:
             return False
 
         try:
-            with shelve.open(self.name) as db:
+            with shelve.open(self._database_path) as db:
                 [db.pop(item_id) for item_id in db.keys()]
         except Exception as err:
             print(err)
@@ -126,7 +126,7 @@ class DictDatabase:
             return False
 
         try:
-            with shelve.open(self.name) as _:
+            with shelve.open(self._database_path) as _:
                 pass
         except Exception as err:
             print(err)
