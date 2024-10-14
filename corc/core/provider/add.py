@@ -1,5 +1,5 @@
 import os
-from importlib_metadata import entry_points
+from importlib.metadata import entry_points
 from corc.core.defaults import default_base_path
 from corc.utils.io import makedirs, exists
 
