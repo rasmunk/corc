@@ -4,8 +4,8 @@ from corc.core.orchestration.pool.models import discover_pools
 
 async def ls(*args, **kwargs):
     response = {}
-    # Note, simple discover method that has be to be improved.
-    # Might create a designed path where the pools are stored
+    # TODO, switch to using the kwargs path
+    # path = kwargs.get("path", os.getcwd())
     pools = await discover_pools(os.getcwd())
     if not pools:
         response["pools"] = []
