@@ -1,10 +1,13 @@
 import argparse
 import datetime
 import json
+import sys
 from corc.core.defaults import PACKAGE_NAME, CORC_CLI_STRUCTURE
 from corc.cli.helpers import cli_exec, import_from_module
-from corc.utils.format import eprint
+from corc.utils.format import error_print
 from corc.core.plugins.plugin import get_plugins, import_plugin, PLUGIN_ENTRYPOINT_BASE
+
+from corc.cli.return_codes import SUCCESS, FAILURE
 
 
 def to_str(o):
@@ -14,7 +17,7 @@ def to_str(o):
         return o.__str__()
 
 
-def run():
+def main(args=None):
     parser = argparse.ArgumentParser(
         prog=PACKAGE_NAME, formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
@@ -22,9 +25,9 @@ def run():
 
     # Add corc functions to the CLI
     cli(commands)
-    args = parser.parse_args()
+    parsed_args = parser.parse_args(args)
     # Convert to a dictionary
-    arguments = vars(args)
+    arguments = vars(parsed_args)
     # Execute default function
     if "func" in arguments:
         func = arguments.pop("func")
@@ -38,12 +41,15 @@ def run():
         try:
             output = json.dumps(response, indent=4, sort_keys=True, default=to_str)
         except Exception as err:
-            eprint("Failed to format: {}, err: {}".format(output, err))
+            error_print("Failed to format: {}, err: {}".format(output, err))
+            return FAILURE
         if success:
             print(output)
+            return SUCCESS
         else:
-            eprint(output)
-    return None
+            error_print(output)
+            return FAILURE
+    return SUCCESS
 
 
 def recursive_add_corc_operations(
@@ -168,4 +174,4 @@ def cli(commands):
 
 
 if __name__ == "__main__":
-    arguments = run()
+    sys.exit(main(sys.argv[1:]))
