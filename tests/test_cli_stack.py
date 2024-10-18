@@ -1,34 +1,24 @@
 import unittest
 import uuid
 import copy
-import subprocess
+from corc.cli.return_codes import SUCCESS
+from corc.cli.cli import main
 from corc.core.defaults import STACK
 from corc.utils.io import join
 from corc.core.storage.dictdatabase import DictDatabase
 
+# Because the main function spawns an event loop, we cannot execute the
+# main function directly in the current event loop.
+# Therefore we execute the function in a separate thread such
+# that it will instantiate its own event loop
+from tests.utils import execute_func_in_future
+
 
 class TestCliStack(unittest.IsolatedAsyncioTestCase):
 
-    @classmethod
-    def setUpClass(cls):
-        # Install the cli
-        args = ["pip3", "install", ".", "-q"]
-        result = subprocess.run(args)
-        assert result is not None
-        assert hasattr(result, "returncode")
-        assert result.returncode == 0
-
-    @classmethod
-    def tearDownClass(cls):
-        args = ["pip3", "uninstall", "corc", "-y"]
-        result = subprocess.run(args)
-        assert result is not None
-        assert hasattr(result, "returncode")
-        assert result.returncode == 0
-
     async def asyncSetUp(self):
         self.name = "dummy"
-        self.base_args = ["corc", "orchestration", STACK]
+        self.base_args = ["orchestration", STACK]
 
     async def asyncTearDown(self):
         # Ensure that any pool is destroyed
@@ -44,10 +34,9 @@ class TestCliStack(unittest.IsolatedAsyncioTestCase):
         deploy_file = join("tests", "res", "test-stack.yml")
         create_stack_args = copy.deepcopy(self.base_args)
         create_stack_args.extend(["deploy", name, deploy_file])
-        result = subprocess.run(create_stack_args)
-        self.assertIsNotNone(result)
-        self.assertTrue(hasattr(result, "returncode"))
-        self.assertEqual(result.returncode, 0)
+
+        return_code = execute_func_in_future(main, create_stack_args)
+        self.assertEqual(return_code, SUCCESS)
 
         # Check that the stack exists
         stack_db = DictDatabase(STACK)
@@ -73,14 +62,14 @@ class TestCliStack(unittest.IsolatedAsyncioTestCase):
         create_stack_args = copy.deepcopy(self.base_args)
         create_stack_args.extend(["deploy", name, deploy_file])
 
-        result = subprocess.run(create_stack_args)
-        self.assertIsNotNone(result)
-        self.assertTrue(hasattr(result, "returncode"))
-        self.assertEqual(result.returncode, 0)
+        return_code = execute_func_in_future(main, create_stack_args)
+        self.assertEqual(return_code, SUCCESS)
 
         remove_stack_args = copy.deepcopy(self.base_args)
         remove_stack_args.extend(["destroy", name])
-        result = subprocess.run(remove_stack_args)
-        self.assertIsNotNone(result)
-        self.assertTrue(hasattr(result, "returncode"))
-        self.assertEqual(result.returncode, 0)
+
+        return_code = execute_func_in_future(main, remove_stack_args)
+        self.assertEqual(return_code, SUCCESS)
+
+        # Check that the stack is empty
+        self.assertTrue(await stack_db.is_empty())

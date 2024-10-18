@@ -1,47 +1,34 @@
-import subprocess
 import unittest
+from io import StringIO
+from unittest.mock import patch
+from corc.cli.return_codes import SUCCESS
+from corc.cli.cli import main
 
 
 class TestCLILibvirt(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.provider_name = "libvirt_provider"
-        # Install the cli
-        args = ["pip3", "install", ".", "-q"]
-        result = subprocess.run(args)
-        assert result is not None
-        assert hasattr(result, "returncode")
-        assert result.returncode == 0
 
-    @classmethod
-    def tearDownClass(cls):
-        args = ["pip3", "uninstall", "corc", "-y"]
-        result = subprocess.run(args)
-        assert result is not None
-        assert hasattr(result, "returncode")
-        assert result.returncode == 0
-
-    def test_cli_orchestration_add_provider_libvirt(self):
-        args = ["corc", "orchestration", "add_provider", self.provider_name]
-        result = subprocess.run(args)
-        self.assertIsNotNone(result)
-        self.assertTrue(hasattr(result, "returncode"))
-        self.assertEqual(result.returncode, 0)
+    @patch("sys.stdout", new_callable=StringIO)
+    def test_cli_orchestration_add_provider_libvirt(self, mock_stdout):
+        return_code = main(["orchestration", "add_provider", self.provider_name])
+        self.assertEqual(return_code, SUCCESS)
 
         # Verify that the provider is added
-        args = ["corc", "orchestration", "list_providers"]
-        result = subprocess.run(args, capture_output=True)
-        self.assertIsNotNone(result)
-        self.assertTrue(hasattr(result, "returncode"))
-        self.assertEqual(result.returncode, 0)
-        self.assertIn(self.provider_name, str(result.stdout))
+        list_return_code = main(["orchestration", "list_providers"])
+        self.assertEqual(list_return_code, SUCCESS)
+        list_output = mock_stdout.getvalue()
+        self.assertIn(self.provider_name, list_output)
 
     def test_cli_orchestration_remove_provider_libvirt(self):
-        args = ["corc", "orchestration", "remove_provider", self.provider_name]
-        result = subprocess.run(args)
-        self.assertIsNotNone(result)
-        self.assertTrue(hasattr(result, "returncode"))
-        self.assertEqual(result.returncode, 0)
+        add_return_code = main(["orchestration", "add_provider", self.provider_name])
+        self.assertEqual(add_return_code, SUCCESS)
+
+        remove_return_code = main(
+            ["orchestration", "remove_provider", self.provider_name]
+        )
+        self.assertEqual(remove_return_code, SUCCESS)
 
 
 if __name__ == "__main__":
