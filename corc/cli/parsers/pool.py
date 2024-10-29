@@ -1,4 +1,5 @@
-from corc.core.defaults import INSTANCE
+import os
+from corc.core.defaults import INSTANCE, POOL
 from corc.cli.parsers.actions import PositionalArgumentsAction
 
 
@@ -19,13 +20,13 @@ def create_group(parser):
     pool_group.add_argument(
         "name", action=PositionalArgumentsAction, help="The name of the pool"
     )
-    # pool_group.add_argument(
-    #     "-p",
-    #     "--path",
-    #     dest="{}_path".format(POOL),
-    #     help="The path to where the pool should be created. Defaults to the current directory.",
-    #     default=os.getcwd()
-    # )
+    pool_group.add_argument(
+        "-d",
+        "--directory",
+        dest="{}_directory".format(POOL),
+        help="The directory path to where the pool should be created. Defaults to the current directory.",
+        default=os.getcwd(),
+    )
 
 
 def remove_group(parser):
@@ -35,13 +36,13 @@ def remove_group(parser):
         action=PositionalArgumentsAction,
         help="The name of the pool that should be removed.",
     )
-    # pool_group.add_argument(
-    #     "-p",
-    #     "--path",
-    #     dest="{}_path".format(POOL),
-    #     help="The path to where the pool is located. Defaults to the current directory.",
-    #     default=os.getcwd()
-    # )
+    pool_group.add_argument(
+        "-d",
+        "--directory",
+        dest="{}_directory".format(POOL),
+        help="The directory path to where the pool is located. Defaults to the current directory.",
+        default=os.getcwd(),
+    )
 
 
 def show_group(parser):
@@ -51,25 +52,24 @@ def show_group(parser):
         action=PositionalArgumentsAction,
         help="The name of the pool.",
     )
-    # pool_group.add_argument(
-    #     "-p",
-    #     "--path",
-    #     dest="{}_path".format(POOL),
-    #     help="The path to where the pool is located. Defaults to the current directory.",
-    #     default=os.getcwd()
-    # )
+    pool_group.add_argument(
+        "-d",
+        "--directory",
+        dest="{}_directory".format(POOL),
+        help="The directory path to where the pool is located. Defaults to the current directory.",
+        default=os.getcwd(),
+    )
 
 
 def ls_group(parser):
-    _ = parser.add_argument_group(title="Pool list arguments")
-    # pool_group = parser.add_argument_group(title="Pool list arguments")
-    # pool_group.add_argument(
-    #     "-p",
-    #     "--path",
-    #     dest="{}_path".format(POOL),
-    #     help="The path to where the pools should be discovered. Defaults to the current directory.",
-    #     default=os.getcwd()
-    # )
+    pool_group = parser.add_argument_group(title="Pool list arguments")
+    pool_group.add_argument(
+        "-d",
+        "--directory",
+        dest="{}_directory".format(POOL),
+        help="The directory path to where the pools are located. Defaults to the current directory.",
+        default=os.getcwd(),
+    )
 
 
 def add_instance_group(parser):
@@ -96,6 +96,13 @@ def add_instance_group(parser):
         dest="{}_config".format(INSTANCE),
         help="The config of the instance.",
     )
+    instance_group.add_argument(
+        "-d",
+        "--directory",
+        dest="{}_directory".format(INSTANCE),
+        help="The directory path to where the pool is located. Defaults to the current directory.",
+        default=os.getcwd(),
+    )
 
 
 def remove_instance_group(parser):
@@ -109,4 +116,11 @@ def remove_instance_group(parser):
         "name",
         action=PositionalArgumentsAction,
         help="The name of the instance.",
+    )
+    instance_group.add_argument(
+        "-d",
+        "--directory",
+        dest="{}_directory".format(INSTANCE),
+        help="The directory path to where the pool is located. Defaults to the current directory.",
+        default=os.getcwd(),
     )

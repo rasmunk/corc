@@ -1,4 +1,4 @@
-from corc.core.defaults import POOL
+from corc.core.defaults import POOL, INSTANCE
 from corc.cli.parsers.pool import (
     create_group,
     remove_group,
@@ -45,7 +45,7 @@ def add_instance_groups(parser):
     add_instance_group(parser)
 
     provider_groups = []
-    argument_groups = [POOL]
+    argument_groups = [INSTANCE]
     return provider_groups, argument_groups
 
 
@@ -53,5 +53,5 @@ def remove_instance_groups(parser):
     remove_instance_group(parser)
 
     provider_groups = []
-    argument_groups = [POOL]
+    argument_groups = [INSTANCE]
     return provider_groups, argument_groups

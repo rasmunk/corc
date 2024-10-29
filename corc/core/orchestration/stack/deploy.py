@@ -64,8 +64,9 @@ async def provision_instance(instance_name, instance_details):
 
 async def deploy(*args, **kwargs):
     name, deploy_file = args[0], args[1]
-    stack_db = DictDatabase(STACK)
+    directory = kwargs.get("directory", None)
 
+    stack_db = DictDatabase(STACK, directory=directory)
     if not await stack_db.exists():
         created = await stack_db.touch()
         if not created:

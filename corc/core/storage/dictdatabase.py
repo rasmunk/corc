@@ -5,10 +5,21 @@ from corc.utils.io import exists as file_exists
 
 
 class DictDatabase:
-    def __init__(self, name):
+    def __init__(self, name, directory=None):
+        """
+        :param name: The name of the database
+        :param directory: The directory where the database should be stored.
+        If not directory is provided, the library will default to the current working directory.
+        """
+
         self.name = name
-        self._database_path = "{}.db".format(self.name)
-        self._lock_path = "{}.lock".format(self.name)
+        if not directory:
+            directory = os.getcwd()
+        self.directory = directory
+
+        self._shelve_path = os.path.join(self.directory, self.name)
+        self._database_path = "{}.db".format(self._shelve_path)
+        self._lock_path = "{}.lock".format(self._shelve_path)
 
     def asdict(self):
         return {
@@ -18,11 +29,11 @@ class DictDatabase:
         }
 
     async def is_empty(self):
-        with shelve.open(self.name) as db:
+        with shelve.open(self._shelve_path) as db:
             return len(db) == 0
 
     async def items(self):
-        with shelve.open(self.name) as db:
+        with shelve.open(self._shelve_path) as db:
             return [item for item in db.values()]
 
     async def add(self, item):
@@ -40,7 +51,7 @@ class DictDatabase:
         if not lock:
             return False
         try:
-            with shelve.open(self.name) as db:
+            with shelve.open(self._shelve_path) as db:
                 db[_id] = item
         except Exception:
             return False
@@ -53,7 +64,7 @@ class DictDatabase:
         if not lock:
             return False
         try:
-            with shelve.open(self.name) as db:
+            with shelve.open(self._shelve_path) as db:
                 db.pop(item_id)
         except Exception:
             return False
@@ -66,7 +77,7 @@ class DictDatabase:
         if not lock:
             return False
         try:
-            with shelve.open(self.name) as db:
+            with shelve.open(self._shelve_path) as db:
                 db[item_id] = item
         except Exception:
             return False
@@ -90,11 +101,11 @@ class DictDatabase:
         return True
 
     async def get(self, item_id):
-        with shelve.open(self.name) as db:
+        with shelve.open(self._shelve_path) as db:
             return db.get(item_id)
 
     async def find(self, key, value):
-        with shelve.open(self.name) as db:
+        with shelve.open(self._shelve_path) as db:
             return [
                 item
                 for item in db.values()
@@ -107,7 +118,7 @@ class DictDatabase:
             return False
 
         try:
-            with shelve.open(self.name) as db:
+            with shelve.open(self._shelve_path) as db:
                 [db.pop(item_id) for item_id in db.keys()]
         except Exception:
             return False
@@ -121,7 +132,7 @@ class DictDatabase:
             return False
 
         try:
-            with shelve.open(self.name) as _:
+            with shelve.open(self._shelve_path) as _:
                 pass
         except Exception:
             return False

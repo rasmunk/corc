@@ -48,7 +48,7 @@ install: install-dep
 uninstall: uninstall-dep
 	$(VENV)/pip uninstall -y $(PACKAGE_NAME)
 
-installtest: install
+installtest: install-dep
 	$(VENV)/pip install -r tests/requirements.txt
 
 uninstalltest: venv

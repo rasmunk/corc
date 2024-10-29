@@ -3,7 +3,7 @@ from corc.core.orchestration.pool.models import Pool
 
 async def create(*args, **kwargs):
     response = {}
-    pool = Pool(*args)
+    pool = Pool(*args, **kwargs)
     if await pool.exists():
         response["pool"] = pool
         response["msg"] = "Pool already exists."

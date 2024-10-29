@@ -4,10 +4,10 @@ from corc.core.storage.dictdatabase import DictDatabase
 
 
 class Pool(DictDatabase):
-    def __init__(self, name):
+    def __init__(self, name, **kwargs):
         # The name of the pool is equal to the
         # database name
-        super().__init__(name)
+        super().__init__(name, **kwargs)
 
 
 # Note, simple discover method that has be to be improved.

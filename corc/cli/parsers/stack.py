@@ -1,3 +1,5 @@
+import os
+from corc.core.defaults import STACK
 from corc.cli.parsers.actions import PositionalArgumentsAction
 
 
@@ -27,6 +29,13 @@ def deploy_group(parser):
         action=PositionalArgumentsAction,
         help="Which stack file to deploy.",
     )
+    stack_group.add_argument(
+        "-d",
+        "--directory",
+        dest="{}_directory".format(STACK),
+        help="The directory path to where the stack should be created. Defaults to the current directory.",
+        default=os.getcwd(),
+    )
 
 
 def destroy_group(parser):
@@ -35,6 +44,13 @@ def destroy_group(parser):
         "name",
         action=PositionalArgumentsAction,
         help="The name of the stack that should be removed.",
+    )
+    stack_group.add_argument(
+        "-d",
+        "--directory",
+        dest="{}_directory".format(STACK),
+        help="The directory path to where the stack should be destroyed. Defaults to the current directory.",
+        default=os.getcwd(),
     )
 
 
@@ -45,7 +61,21 @@ def show_group(parser):
         action=PositionalArgumentsAction,
         help="The name of the stack.",
     )
+    stack_group.add_argument(
+        "-d",
+        "--directory",
+        dest="{}_directory".format(STACK),
+        help="The directory path to where the stack should be found. Defaults to the current directory.",
+        default=os.getcwd(),
+    )
 
 
 def ls_group(parser):
-    _ = parser.add_argument_group(title="Stack list arguments")
+    stack_group = parser.add_argument_group(title="Stack list arguments")
+    stack_group.add_argument(
+        "-d",
+        "--directory",
+        dest="{}_directory".format(STACK),
+        help="The directory path to where the stacks should be discovered. Defaults to the current directory.",
+        default=os.getcwd(),
+    )

@@ -106,7 +106,9 @@ async def get_instance(instance_id, instance_details):
 
 async def destroy(*args, **kwargs):
     name = args[0]
-    stack_db = DictDatabase(STACK)
+    directory = kwargs.get("directory", None)
+
+    stack_db = DictDatabase(STACK, directory=directory)
     if not await stack_db.exists():
         return False, {"error": "The Stack database does not exist."}
 

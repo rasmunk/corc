@@ -3,29 +3,29 @@ import os
 # Package name
 PACKAGE_NAME = "corc"
 
-PROVIDER = "PROVIDER"
+PROVIDER = "provider"
 
 # Profile group defaults
-PROFILE = "PROFILE"
-DRIVER = "DRIVER"
+PROFILE = "profile"
+DRIVER = "driver"
 PROFILE_DRIVER = "{}_{}".format(PROFILE, DRIVER)
 
 # Argument group defaults
-ANSIBLE = "ANSIBLE"
-CLUSTER = "CLUSTER"
-NODE = "NODE"
+ANSIBLE = "ansible"
+CLUSTER = "cluster"
+NODE = "node"
 CLUSTER_NODE = "{}_{}".format(CLUSTER, NODE)
-INSTANCE = "INSTANCE"
-CONFIG = "CONFIG"
-JOB = "JOB"
-META = "META"
+INSTANCE = "instance"
+CONFIG = "config"
+JOB = "job"
+META = "meta"
 JOB_META = "{}_{}".format(JOB, META)
-RUN = "RUN"
+RUN = "run"
 
 STORAGE = "storage"
 
 # To get extra information about an entity
-DETAILS = "DETAILS"
+DETAILS = "details"
 
 CONFIGURER = "configurer"
 CONFIGURER_OPERATIONS = ["add_provider", "remove_provider"]
