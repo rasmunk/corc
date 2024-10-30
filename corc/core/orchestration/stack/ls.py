@@ -7,8 +7,9 @@ async def ls(*args, **kwargs):
     stack_db = DictDatabase(STACK)
     stacks = await stack_db.items()
     if not stacks:
+        response["stacks"] = []
         response["msg"] = "No stacks found."
-        return False, response
+        return True, response
 
     response["stacks"] = stacks
     response["msg"] = "Found stacks."
