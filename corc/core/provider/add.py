@@ -1,6 +1,6 @@
 import os
 from importlib.metadata import entry_points
-from corc.core.defaults import default_base_path
+from corc.core.defaults import default_base_path, PACKAGE_NAME
 from corc.utils.io import makedirs, exists
 
 
@@ -22,5 +22,5 @@ def add_provider(provider_type, name):
     # Find every module that defines the corc.plugins entrypoint
 
     # Throws KeyError if the entry point is not found
-    entry_points("corc.plugins")
+    entry_points("{}.plugins".format(PACKAGE_NAME))
     return True

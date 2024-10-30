@@ -1,3 +1,4 @@
+import sys
 from importlib.metadata import entry_points, import_module
 from corc.utils.io import removedirs
 from corc.core.defaults import PACKAGE_NAME
@@ -25,7 +26,14 @@ class Plugin:
 
 def get_plugins(plugin_type=PLUGIN_ENTRYPOINT_BASE):
     """Get all the installed plugins on the system"""
-    installed_plugins = entry_points(group=plugin_type)
+    # Python 3.9 and below does not support group selection
+    # https://docs.python.org/3.9/library/importlib.metadata.html#entry-points
+    if sys.version_info <= (3, 10):
+        installed_entrypoints = entry_points()
+        installed_plugins = installed_entrypoints.get(plugin_type, [])
+    else:
+        # https://docs.python.org/3.10/library/importlib.metadata.html#entry-points
+        installed_plugins = entry_points(group=plugin_type)
     return [
         Plugin(plugin.name, plugin.group, plugin.module) for plugin in installed_plugins
     ]
