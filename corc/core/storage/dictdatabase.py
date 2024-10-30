@@ -1,5 +1,10 @@
 import shelve
 import os
+from corc.core.defaults import default_persistence_path
+from corc.core.persistence import (
+    create_persistence_directory,
+    persistence_directory_exists,
+)
 from corc.utils.io import acquire_lock, release_lock, remove
 from corc.utils.io import exists as file_exists
 
@@ -9,13 +14,18 @@ class DictDatabase:
         """
         :param name: The name of the database
         :param directory: The directory where the database should be stored.
-        If not directory is provided, the library will default to the current working directory.
+        If not provided, the default_persistence_path will be used.
         """
 
         self.name = name
         if not directory:
-            directory = os.getcwd()
+            directory = default_persistence_path
         self.directory = directory
+        if not persistence_directory_exists(self.directory):
+            if not create_persistence_directory(self.directory):
+                raise IOError(
+                    "Failed to create persistence directory: {}".format(self.directory)
+                )
 
         self._shelve_path = os.path.join(self.directory, self.name)
         self._database_path = "{}.db".format(self._shelve_path)

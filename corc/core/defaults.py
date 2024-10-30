@@ -39,6 +39,8 @@ POOL = "pool"
 POOL_OPERATIONS = ["create", "remove", "show", "ls", "add_instance", "remove_instance"]
 POOL_CLI = {POOL: POOL_OPERATIONS}
 
+PERSISTENCE = "persistence"
+
 STACK = "stack"
 STACK_OPERATIONS = ["deploy", "destroy", "show", "ls"]
 STACK_CLI = {STACK: STACK_OPERATIONS}
@@ -67,3 +69,6 @@ JOB_DEFAULT_NAME = "job"
 
 # Default state directory
 default_base_path = os.path.join(os.path.expanduser("~"), ".{}".format(PACKAGE_NAME))
+
+# Default persistence directory
+default_persistence_path = os.path.join(default_base_path, PERSISTENCE)

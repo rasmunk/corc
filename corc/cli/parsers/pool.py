@@ -1,5 +1,4 @@
-import os
-from corc.core.defaults import INSTANCE, POOL
+from corc.core.defaults import INSTANCE, POOL, default_persistence_path
 from corc.cli.parsers.actions import PositionalArgumentsAction
 
 
@@ -24,8 +23,8 @@ def create_group(parser):
         "-d",
         "--directory",
         dest="{}_directory".format(POOL),
-        help="The directory path to where the pool should be created. Defaults to the current directory.",
-        default=os.getcwd(),
+        help="The directory path to where the pool should be created.",
+        default=default_persistence_path,
     )
 
 
@@ -40,8 +39,8 @@ def remove_group(parser):
         "-d",
         "--directory",
         dest="{}_directory".format(POOL),
-        help="The directory path to where the pool is located. Defaults to the current directory.",
-        default=os.getcwd(),
+        help="The directory path to where the pool is located.",
+        default=default_persistence_path,
     )
 
 
@@ -56,8 +55,8 @@ def show_group(parser):
         "-d",
         "--directory",
         dest="{}_directory".format(POOL),
-        help="The directory path to where the pool is located. Defaults to the current directory.",
-        default=os.getcwd(),
+        help="The directory path to where the pool is located.",
+        default=default_persistence_path,
     )
 
 
@@ -67,8 +66,8 @@ def ls_group(parser):
         "-d",
         "--directory",
         dest="{}_directory".format(POOL),
-        help="The directory path to where the pools are located. Defaults to the current directory.",
-        default=os.getcwd(),
+        help="The directory path to where the pools are located.",
+        default=default_persistence_path,
     )
 
 
@@ -100,8 +99,8 @@ def add_instance_group(parser):
         "-d",
         "--directory",
         dest="{}_directory".format(INSTANCE),
-        help="The directory path to where the pool is located. Defaults to the current directory.",
-        default=os.getcwd(),
+        help="The directory path to where the pool is located.",
+        default=default_persistence_path,
     )
 
 
@@ -121,6 +120,6 @@ def remove_instance_group(parser):
         "-d",
         "--directory",
         dest="{}_directory".format(INSTANCE),
-        help="The directory path to where the pool is located. Defaults to the current directory.",
-        default=os.getcwd(),
+        help="The directory path to where the pool is located.",
+        default=default_persistence_path,
     )
