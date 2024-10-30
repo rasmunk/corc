@@ -26,8 +26,8 @@ class DictDatabase:
                 raise IOError(
                     "Failed to create persistence directory: {}".format(self.directory)
                 )
-
         self._shelve_path = os.path.join(self.directory, self.name)
+        # TODO, the path/extension various depending on the dbm module used
         self._database_path = "{}.db".format(self._shelve_path)
         self._lock_path = "{}.lock".format(self._shelve_path)
 

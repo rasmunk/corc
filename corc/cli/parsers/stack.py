@@ -32,7 +32,7 @@ def deploy_group(parser):
         "-d",
         "--directory",
         dest="{}_directory".format(STACK),
-        help="The directory path to where the stack should be created. Defaults to the current directory.",
+        help="The directory path to where the stack should be created.",
         default=default_persistence_path,
     )
 
@@ -48,7 +48,7 @@ def destroy_group(parser):
         "-d",
         "--directory",
         dest="{}_directory".format(STACK),
-        help="The directory path to where the stack should be destroyed. Defaults to the current directory.",
+        help="The directory path to where the stack should be destroyed.",
         default=default_persistence_path,
     )
 
