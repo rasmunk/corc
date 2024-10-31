@@ -11,8 +11,8 @@ async def remove(*args, **kwargs):
 
     removed = await stack.remove_persistence()
     if not removed:
-        response["msg"] = f"Failed to remove pool: {stack.name}."
+        response["msg"] = f"Failed to remove stack: {stack.name}."
         return False, response
 
-    response["msg"] = f"Removed pool: {stack.name}."
+    response["msg"] = f"Removed stack: {stack.name}."
     return True, response
