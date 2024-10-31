@@ -3,7 +3,7 @@ from corc.core.orchestration.pool.models import Pool
 
 async def remove(*args, **kwargs):
     response = {}
-    pool = Pool(*args)
+    pool = Pool(*args, **kwargs)
     exists = await pool.exists()
     if not exists:
         response["msg"] = f"Pool does already not exist: {pool.name}."

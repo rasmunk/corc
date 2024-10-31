@@ -1,5 +1,4 @@
 import asyncio
-from corc.core.defaults import STACK
 from corc.core.storage.dictdatabase import DictDatabase
 from corc.core.helpers import import_from_module
 from corc.core.orchestration.pool.models import Pool
@@ -108,9 +107,13 @@ async def destroy(*args, **kwargs):
     name = args[0]
     directory = kwargs.get("directory", None)
 
-    stack_db = DictDatabase(STACK, directory=directory)
+    stack_db = DictDatabase(name, directory=directory)
     if not await stack_db.exists():
-        return False, {"error": "The Stack database does not exist."}
+        return False, {
+            "error": "The Stack {} does not exist, so it can't be destroyed.".format(
+                name
+            )
+        }
 
     stack = await stack_db.get(name)
     if not stack:
@@ -161,7 +164,10 @@ async def destroy(*args, **kwargs):
             if await pool.remove_persistence():
                 stack["pools"].pop(pool_name)
 
-    removed = await stack_db.remove(name)
-    if not removed:
+    if not await stack_db.remove(name):
         return False, {"error": "Failed to remove stack: {}.".format(name)}
+
+    if await stack_db.is_empty() and not await stack_db.remove_persistence():
+        return False, {"error": "Failed to remove stack persistence: {}.".format(name)}
+
     return True, {"msg": "Stack: {} has been destroyed.".format(name)}

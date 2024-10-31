@@ -66,9 +66,8 @@ class TestCliPool(unittest.IsolatedAsyncioTestCase):
         self.assertIsNotNone(pool)
         self.assertEqual(pool.name, name)
 
-        database_persistence_path = os.path.join(CURRENT_TEST_DIR, f"{name}.db")
         # Verify that the persistence database exists in the expected path
-        self.assertTrue(exists(database_persistence_path))
+        self.assertTrue(exists(pool.get_database_path()))
 
     async def test_dummy_pool_create(self):
         test_id = str(uuid.uuid4())
@@ -82,6 +81,7 @@ class TestCliPool(unittest.IsolatedAsyncioTestCase):
         pool = Pool(name, directory=CURRENT_TEST_DIR)
         self.assertIsNotNone(pool)
         self.assertEqual(pool.name, name)
+        self.assertTrue(exists(pool.get_database_path()))
 
         # Remove and validate that it is gone
         self.assertTrue(await pool.flush())
@@ -94,12 +94,15 @@ class TestCliPool(unittest.IsolatedAsyncioTestCase):
         pool_name = "dummy-remove-test-{}".format(test_id)
         remove_pool = Pool(pool_name, directory=CURRENT_TEST_DIR)
         self.assertTrue(await remove_pool.touch())
+        self.assertTrue(exists(remove_pool.get_database_path()))
 
         remove_pool_args = copy.deepcopy(self.base_args)
         remove_pool_args.extend(["remove", pool_name, "--directory", CURRENT_TEST_DIR])
 
         return_code = execute_func_in_future(main, remove_pool_args)
         self.assertEqual(return_code, SUCCESS)
+        self.assertFalse(await remove_pool.exists())
+        self.assertFalse(exists(remove_pool.get_database_path()))
 
     @patch("sys.stdout", new_callable=StringIO)
     async def test_dummy_pool_list_empty(self, mock_stdout):
@@ -187,8 +190,9 @@ class TestCliPool(unittest.IsolatedAsyncioTestCase):
         create_pool_args.extend(["create", name, "--directory", CURRENT_TEST_DIR])
         return_code = execute_func_in_future(main, create_pool_args)
         self.assertEqual(return_code, SUCCESS)
-        database_path = os.path.join(CURRENT_TEST_DIR, f"{name}.db")
-        self.assertTrue(exists(database_path))
+
+        created_pool = Pool(name, directory=CURRENT_TEST_DIR)
+        self.assertTrue(exists(created_pool.get_database_path()))
 
         # Add instance to the pool
         add_instance_args = copy.deepcopy(self.base_args)

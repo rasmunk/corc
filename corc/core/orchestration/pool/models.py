@@ -1,4 +1,3 @@
-import os
 import uuid
 from corc.core.storage.dictdatabase import DictDatabase
 
@@ -8,20 +7,6 @@ class Pool(DictDatabase):
         # The name of the pool is equal to the
         # database name
         super().__init__(name, **kwargs)
-
-
-# Note, simple discover method that has be to be improved.
-# Might create a designed path where the pools are stored
-async def discover_pools(path, database_postfix=None):
-    if not database_postfix:
-        database_postfix = ".db"
-
-    pools = []
-    for root, dirs, files in os.walk(path):
-        for file in files:
-            if file.endswith(database_postfix):
-                pools.append(file.replace(database_postfix, ""))
-    return pools
 
 
 class Instance:

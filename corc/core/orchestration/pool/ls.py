@@ -1,11 +1,11 @@
 from corc.core.defaults import default_persistence_path
-from corc.core.orchestration.pool.models import discover_pools
+from corc.core.storage.dictdatabase import discover_databases
 
 
 async def ls(*args, **kwargs):
     response = {}
     directory = kwargs.get("directory", default_persistence_path)
-    pools = await discover_pools(directory)
+    pools = await discover_databases(directory)
     if not pools:
         response["pools"] = []
         response["msg"] = "No pools found."

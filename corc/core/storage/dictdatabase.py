@@ -16,6 +16,8 @@ from corc.utils.io import exists as file_exists
 # installed on the system
 DATABASE_TYPES = _names
 
+DATABASE_LOCK_FILE_POSTFIX = ".lock"
+
 
 class DictDatabase:
     def __init__(self, name, directory=None):
@@ -36,7 +38,7 @@ class DictDatabase:
                 )
 
         self._shelve_path = os.path.join(self.directory, self.name)
-        self._lock_path = "{}.lock".format(self._shelve_path)
+        self._lock_path = "{}.{}".format(self._shelve_path, DATABASE_LOCK_FILE_POSTFIX)
 
     def get_database_path(self):
         return self._find_database_path()
@@ -190,13 +192,9 @@ def get_database_possible_postfixes(database_type):
 
 # Note, simple discover method that has be to be improved.
 # Might create a designed path where the pools are stored
-async def discover_dict_db(path, database_postfix=None):
-    if not database_postfix:
-        database_postfix = ".db"
-
-    pools = []
-    for root, dirs, files in os.walk(path):
-        for file in files:
-            if file.endswith(database_postfix):
-                pools.append(file.replace(database_postfix, ""))
-    return pools
+async def discover_databases(directory_path):
+    databases = []
+    for file in os.listdir(directory_path):
+        if not file.endswith(DATABASE_LOCK_FILE_POSTFIX):
+            databases.append(file)
+    return databases

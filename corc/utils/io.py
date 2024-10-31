@@ -116,6 +116,10 @@ def remove_content_from_file(path, content):
 
 
 def exists(path):
+    if not path:
+        return False
+    if not isinstance(path, str):
+        return False
     return os.path.exists(path)
 
 

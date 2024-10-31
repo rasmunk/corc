@@ -1,11 +1,11 @@
-from corc.core.defaults import STACK
-from corc.core.storage.dictdatabase import DictDatabase
+from corc.core.defaults import default_persistence_path
+from corc.core.storage.dictdatabase import discover_databases
 
 
 async def ls(*args, **kwargs):
     response = {}
-    stack_db = DictDatabase(STACK)
-    stacks = await stack_db.items()
+    directory = kwargs.get("directory", default_persistence_path)
+    stacks = await discover_databases(directory)
     if not stacks:
         response["stacks"] = []
         response["msg"] = "No stacks found."

@@ -1,6 +1,5 @@
 # Description: Deploy the stack
 import asyncio
-from corc.core.defaults import STACK
 from corc.core.storage.dictdatabase import DictDatabase
 from corc.core.helpers import import_from_module
 from corc.core.orchestration.pool.models import Pool
@@ -66,13 +65,13 @@ async def deploy(*args, **kwargs):
     name, deploy_file = args[0], args[1]
     directory = kwargs.get("directory", None)
 
-    stack_db = DictDatabase(STACK, directory=directory)
+    stack_db = DictDatabase(name, directory=directory)
     if not await stack_db.exists():
         created = await stack_db.touch()
         if not created:
             return False, {"error": "Failed to create stack: {}.".format(name)}
 
-    stack = {"id": name, "name": name, "config": {}, "instances": {}, "pools": {}}
+    stack = {"id": name, "config": {}, "instances": {}, "pools": {}}
 
     # Load the architecture file and deploy the stack
     stack_config = await get_stack_config(deploy_file)
@@ -117,8 +116,7 @@ async def deploy(*args, **kwargs):
                         )
                     )
 
-    saved = await stack_db.add(stack)
-    if not saved:
+    if not await stack_db.add(stack):
         return False, {"error": "Failed to save stack: {}.".format(name)}
 
     return True, {"msg": "Stack deployed successfully."}

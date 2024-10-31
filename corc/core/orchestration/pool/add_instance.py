@@ -4,8 +4,8 @@ from corc.core.orchestration.pool.models import Pool, Instance
 async def add_instance(pool_name, instance_name, **kwargs):
     response = {}
 
-    pool_directory = kwargs.pop("directory", None)
-    pool = Pool(pool_name, directory=pool_directory)
+    directory = kwargs.get("directory", None)
+    pool = Pool(pool_name, directory=directory)
     if not await pool.exists():
         response["msg"] = f"Pool does not exist: {pool.name}"
         return False, response
