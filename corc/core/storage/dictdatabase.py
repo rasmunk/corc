@@ -16,7 +16,7 @@ from corc.utils.io import exists as file_exists
 # installed on the system
 DATABASE_TYPES = _names
 
-DATABASE_LOCK_FILE_POSTFIX = ".lock"
+DATABASE_LOCK_FILE_POSTFIX = "lock"
 
 
 class DictDatabase:
