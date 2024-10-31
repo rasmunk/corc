@@ -2,6 +2,14 @@ from corc.core.defaults import STACK, default_persistence_path
 from corc.cli.parsers.actions import PositionalArgumentsAction
 
 
+def valid_create_group(parser):
+    create_group(parser)
+
+
+def valid_remove_group(parser):
+    remove_group(parser)
+
+
 def valid_deploy_group(parser):
     deploy_group(parser)
 
@@ -16,6 +24,36 @@ def valid_show_group(parser):
 
 def valid_list_group(parser):
     ls_group(parser)
+
+
+def create_group(parser):
+    stack_group = parser.add_argument_group(title="Stack create arguments")
+    stack_group.add_argument(
+        "name", action=PositionalArgumentsAction, help="The name of the stack"
+    )
+    stack_group.add_argument(
+        "-d",
+        "--directory",
+        dest="{}_directory".format(STACK),
+        help="The directory path to where the stack should be created.",
+        default=default_persistence_path,
+    )
+
+
+def remove_group(parser):
+    stack_group = parser.add_argument_group(title="Stack remove arguments")
+    stack_group.add_argument(
+        "name",
+        action=PositionalArgumentsAction,
+        help="The name of the stack that should be removed.",
+    )
+    stack_group.add_argument(
+        "-d",
+        "--directory",
+        dest="{}_directory".format(STACK),
+        help="The directory path to where the stack is located.",
+        default=default_persistence_path,
+    )
 
 
 def deploy_group(parser):
