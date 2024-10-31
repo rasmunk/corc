@@ -1,5 +1,6 @@
 import shelve
 import os
+from dbm import whichdb, _names
 from corc.core.defaults import default_persistence_path
 from corc.core.persistence import (
     create_persistence_directory,
@@ -7,6 +8,13 @@ from corc.core.persistence import (
 )
 from corc.utils.io import acquire_lock, release_lock, remove
 from corc.utils.io import exists as file_exists
+
+# We extract from the underlying dbm module
+# which possible database types would be used to
+# manage the underlying shelve
+# The selection is based on which of the _names modules is
+# installed on the system
+DATABASE_TYPES = _names
 
 
 class DictDatabase:
@@ -26,15 +34,17 @@ class DictDatabase:
                 raise IOError(
                     "Failed to create persistence directory: {}".format(self.directory)
                 )
+
         self._shelve_path = os.path.join(self.directory, self.name)
-        # TODO, the path/extension various depending on the dbm module used
-        self._database_path = "{}.db".format(self._shelve_path)
         self._lock_path = "{}.lock".format(self._shelve_path)
+
+    def get_database_path(self):
+        return self._find_database_path()
 
     def asdict(self):
         return {
             "name": self.name,
-            "database_path": self._database_path,
+            "database_path": self.get_database_path(),
             "lock_path": self._lock_path,
         }
 
@@ -100,9 +110,10 @@ class DictDatabase:
         if not lock:
             return False
         try:
-            if not remove(self._database_path):
+            database_path = self.get_database_path()
+            if file_exists(database_path) and not remove(database_path):
                 return False
-            if not remove(self._lock_path):
+            if file_exists(self._lock_path) and not remove(self._lock_path):
                 return False
         except Exception:
             return False
@@ -151,15 +162,41 @@ class DictDatabase:
         return True
 
     async def exists(self):
-        return file_exists(self._database_path)
+        return file_exists(self.get_database_path())
+
+    def _find_database_path(self):
+        database_module_type = discover_database_module_type(self._shelve_path)
+        database_possible_postfixes = get_database_possible_postfixes(
+            database_module_type
+        )
+        for postfix in database_possible_postfixes:
+            possible_path = self._shelve_path + postfix
+            if file_exists(possible_path):
+                return possible_path
+        return False
+
+
+def discover_database_module_type(path):
+    return whichdb(path)
+
+
+def get_database_possible_postfixes(database_type):
+    if database_type == "dbm.ndbm":
+        return [".pag", ".dir", ".db"]
+    if database_type == "dbm.dumb":
+        return [".dat", ".dir"]
+    return [""]
 
 
 # Note, simple discover method that has be to be improved.
 # Might create a designed path where the pools are stored
-async def discover_dict_db(path):
+async def discover_dict_db(path, database_postfix=None):
+    if not database_postfix:
+        database_postfix = ".db"
+
     pools = []
     for root, dirs, files in os.walk(path):
         for file in files:
-            if file.endswith(".db"):
-                pools.append(file.replace(".db", ""))
+            if file.endswith(database_postfix):
+                pools.append(file.replace(database_postfix, ""))
     return pools

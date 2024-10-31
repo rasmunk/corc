@@ -48,7 +48,7 @@ def release_lock(lock, close=True):
 
 def write(path, content, mode="w", mkdirs=False):
     dir_path = os.path.dirname(path)
-    if not os.path.exists(dir_path) and mkdirs:
+    if not exists(dir_path) and mkdirs:
         if not makedirs(dir_path):
             return False
     try:
@@ -77,7 +77,7 @@ def join(path, *paths):
 
 def remove(path):
     try:
-        if os.path.exists(path):
+        if exists(path):
             os.remove(path)
             return True
     except Exception as err:
@@ -87,7 +87,7 @@ def remove(path):
 
 def removedirs(path, recursive=False):
     try:
-        if os.path.exists(path):
+        if exists(path):
             if recursive:
                 shutil.rmtree(path)
             else:
@@ -99,7 +99,7 @@ def removedirs(path, recursive=False):
 
 
 def remove_content_from_file(path, content):
-    if not os.path.exists(path):
+    if not exists(path):
         return False
 
     if not content:

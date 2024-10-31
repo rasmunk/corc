@@ -32,7 +32,7 @@ class TestCliPool(unittest.IsolatedAsyncioTestCase):
 
     async def asyncTearDown(self):
         # Ensure that any pool is destroyed
-        pool = Pool(self.name)
+        pool = Pool(self.name, directory=CURRENT_TEST_DIR)
         for node in await pool.items():
             removed, response = await remove_instance(self.client, node.id)
             self.assertTrue(removed)
@@ -62,7 +62,7 @@ class TestCliPool(unittest.IsolatedAsyncioTestCase):
         return_code = execute_func_in_future(main, create_pool_args)
         self.assertEqual(return_code, SUCCESS)
 
-        pool = Pool(name)
+        pool = Pool(name, directory=CURRENT_TEST_DIR)
         self.assertIsNotNone(pool)
         self.assertEqual(pool.name, name)
 
@@ -79,7 +79,7 @@ class TestCliPool(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(return_code, SUCCESS)
 
         # Check that the pool exists
-        pool = Pool(name)
+        pool = Pool(name, directory=CURRENT_TEST_DIR)
         self.assertIsNotNone(pool)
         self.assertEqual(pool.name, name)
 
@@ -92,7 +92,7 @@ class TestCliPool(unittest.IsolatedAsyncioTestCase):
         # Create a pool that can be removed by the CLI
         test_id = str(uuid.uuid4())
         pool_name = "dummy-remove-test-{}".format(test_id)
-        remove_pool = Pool(pool_name)
+        remove_pool = Pool(pool_name, directory=CURRENT_TEST_DIR)
         self.assertTrue(await remove_pool.touch())
 
         remove_pool_args = copy.deepcopy(self.base_args)
@@ -166,8 +166,9 @@ class TestCliPool(unittest.IsolatedAsyncioTestCase):
         create_pool_args.extend(["create", name, "--directory", CURRENT_TEST_DIR])
         return_code = execute_func_in_future(main, create_pool_args)
         self.assertEqual(return_code, SUCCESS)
-        database_path = os.path.join(CURRENT_TEST_DIR, f"{name}.db")
-        self.assertTrue(exists(database_path))
+
+        created_pool = Pool(name, directory=CURRENT_TEST_DIR)
+        self.assertTrue(created_pool.get_database_path())
 
         # Add instance to the pool
         add_instance_args = copy.deepcopy(self.base_args)
@@ -178,7 +179,7 @@ class TestCliPool(unittest.IsolatedAsyncioTestCase):
         return_code = execute_func_in_future(main, add_instance_args)
         self.assertEqual(return_code, SUCCESS)
 
-    async def test_dumm_pool_remove_instance(self):
+    async def test_dummy_pool_remove_instance(self):
         test_id = str(uuid.uuid4())
         name = f"{self.name}-{test_id}"
         # Create the pool
