@@ -2,12 +2,7 @@
 import asyncio
 from corc.core.storage.dictdatabase import DictDatabase
 from corc.core.helpers import import_from_module
-from corc.core.orchestration.pool.models import Pool
 from corc.core.plugins.plugin import discover, import_plugin
-from corc.core.orchestration.stack.config import (
-    get_stack_config,
-    get_stack_config_instances,
-)
 
 
 async def provision_instance(instance_name, instance_details):
@@ -62,29 +57,22 @@ async def provision_instance(instance_name, instance_details):
 
 
 async def deploy(*args, **kwargs):
-    name, deploy_file = args[0], args[1]
+    name = args[0]
     directory = kwargs.get("directory", None)
 
     stack_db = DictDatabase(name, directory=directory)
     if not await stack_db.exists():
-        created = await stack_db.touch()
-        if not created:
-            return False, {"error": "Failed to create stack: {}.".format(name)}
+        return False, {
+            "error": "The specified Stack to deploy: {} does not exists.".format(name)
+        }
 
-    stack = {"id": name, "config": {}, "instances": {}, "pools": {}}
+    stack_to_deploy = await stack_db.get(name)
+    if not stack_to_deploy:
+        return False, {
+            "error": "Failed to find a Stack entry with name: {}".format(name)
+        }
 
-    # Load the architecture file and deploy the stack
-    stack_config = await get_stack_config(deploy_file)
-    if not stack_config:
-        return False, {"error": "Failed to load stack config."}
-    stack["config"] = stack_config
-
-    success, response = await get_stack_config_instances(stack_config)
-    if not success:
-        return False, response
-    deploy_instances = response
-    stack["config"]["instances"] = deploy_instances
-
+    deploy_instances = stack_to_deploy["config"]["instances"]
     provision_tasks = [
         provision_instance(instance_name, instance_details)
         for instance_name, instance_details in deploy_instances.items()
@@ -93,30 +81,12 @@ async def deploy(*args, **kwargs):
 
     for result in provision_results:
         if result[0]:
-            stack["instances"][result[1]["instance"].name] = result[1]["instance"]
+            stack_to_deploy["instances"][result[1]["instance"].name] = result[1][
+                "instance"
+            ]
         else:
             print("Failed to provision instance: {}.".format(result[1]["name"]))
 
-    for pool_name, pool_kwargs in stack_config.get("pools", {}).items():
-        pool = Pool(pool_name)
-        stack["pools"][pool_name] = pool
-        for instance_name in pool_kwargs.get("instances", []):
-            if instance_name in stack["instances"]:
-                added = await pool.add(stack["instances"][instance_name])
-                if not added:
-                    print(
-                        "Failed to add instance: {} to pool: {}.".format(
-                            instance_name, pool_name
-                        )
-                    )
-                else:
-                    print(
-                        "Added instance: {} to pool: {}.".format(
-                            instance_name, pool_name
-                        )
-                    )
-
-    if not await stack_db.add(stack):
-        return False, {"error": "Failed to save stack: {}.".format(name)}
-
-    return True, {"msg": "Stack deployed successfully."}
+    if not await stack_db.update(name, stack_to_deploy):
+        return False, {"error": "Failed to update stack: {}".format(name)}
+    return True, {"msg": "Stack: {} deployed successfully.".format(name)}
