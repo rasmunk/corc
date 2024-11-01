@@ -48,6 +48,50 @@ class TestCliStack(unittest.IsolatedAsyncioTestCase):
             return_code = e.code
         self.assertEqual(return_code, SUCCESS)
 
+    async def test_dummy_stack_create(self):
+        test_id = str(uuid.uuid4())
+        name = f"{self.name}-{test_id}"
+
+        create_stack_args = copy.deepcopy(self.base_args)
+        create_stack_args.extend(["create", name, "--directory", CURRENT_TEST_DIR])
+
+        # Create the stack
+        return_code = execute_func_in_future(main, create_stack_args)
+        self.assertEqual(return_code, SUCCESS)
+
+        # Check that the stack exists
+        stack_db = DictDatabase(name, directory=CURRENT_TEST_DIR)
+        self.assertTrue(await stack_db.exists())
+
+        stack = await stack_db.get(name)
+        self.assertIsNotNone(stack)
+
+    async def test_dummy_stack_create_with_definitions(self):
+        pass
+
+    async def test_dummy_stack_remove(self):
+        test_id = str(uuid.uuid4())
+        name = f"{self.name}-{test_id}"
+
+        # Create stack instance to be removed
+        stack_file = join("tests", "res", "test-stack.yml")
+        create_stack_args = copy.deepcopy(self.base_args)
+        create_stack_args.extend(
+            ["deploy", name, stack_file, "--directory", CURRENT_TEST_DIR]
+        )
+
+        return_code = execute_func_in_future(main, create_stack_args)
+        self.assertEqual(return_code, SUCCESS)
+
+        remove_stack_args = copy.deepcopy(self.base_args)
+        remove_stack_args.extend(["remove", name, "--directory", CURRENT_TEST_DIR])
+
+        return_code = execute_func_in_future(main, remove_stack_args)
+        self.assertEqual(return_code, SUCCESS)
+
+        # Check that the stack is empty
+        self.assertTrue(await stack_db.is_empty())
+
     async def test_dummy_stack_deploy(self):
         test_id = str(uuid.uuid4())
         name = f"{self.name}-{test_id}"

@@ -29,13 +29,39 @@ def valid_list_group(parser):
 def create_group(parser):
     stack_group = parser.add_argument_group(title="Stack create arguments")
     stack_group.add_argument(
-        "name", action=PositionalArgumentsAction, help="The name of the stack"
+        "name", action=PositionalArgumentsAction, help="The name of the Stack"
+    )
+    stack_group.add_argument(
+        "-df",
+        "--config-file",
+        dest="{}_config_file".format(STACK),
+        help="The path to a file that contains a Stack configuration that should be associated with the Stack that is created.",
     )
     stack_group.add_argument(
         "-d",
         "--directory",
         dest="{}_directory".format(STACK),
-        help="The directory path to where the stack should be created.",
+        help="The directory path to where the Stack database should be located/created.",
+        default=default_persistence_path,
+    )
+
+
+def update_group(parser):
+    stack_group = parser.add_argument_group(title="Stack update arguments")
+    stack_group.add_argument(
+        "name", action=PositionalArgumentsAction, help="The name of the Stack."
+    )
+    stack_group.add_argument(
+        "-df",
+        "--config-file",
+        dest="{}_config_file".format(STACK),
+        help="The path to a file that contains a Stack configuration that should be used to update the Stack with.",
+    )
+    stack_group.add_argument(
+        "-d",
+        "--directory",
+        dest="{}_directory".format(STACK),
+        help="The directory path to where the Stack database is located.",
         default=default_persistence_path,
     )
 
@@ -45,32 +71,29 @@ def remove_group(parser):
     stack_group.add_argument(
         "name",
         action=PositionalArgumentsAction,
-        help="The name of the stack that should be removed.",
+        help="The name of the Stack that should be removed.",
     )
     stack_group.add_argument(
         "-d",
         "--directory",
         dest="{}_directory".format(STACK),
-        help="The directory path to where the stack is located.",
+        help="The directory path to where the Stack database is located.",
         default=default_persistence_path,
     )
 
 
 def deploy_group(parser):
-    stack_group = parser.add_argument_group(title="Stack create arguments")
+    stack_group = parser.add_argument_group(title="Stack deploy arguments")
     stack_group.add_argument(
-        "name", action=PositionalArgumentsAction, help="The name of the stack"
-    )
-    stack_group.add_argument(
-        "deploy_file",
+        "name",
         action=PositionalArgumentsAction,
-        help="Which stack file to deploy.",
+        help="The name of the Stack that should be deployed.",
     )
     stack_group.add_argument(
         "-d",
         "--directory",
         dest="{}_directory".format(STACK),
-        help="The directory path to where the stack should be created.",
+        help="The directory path to where the Stack should be created.",
         default=default_persistence_path,
     )
 
@@ -80,13 +103,13 @@ def destroy_group(parser):
     stack_group.add_argument(
         "name",
         action=PositionalArgumentsAction,
-        help="The name of the stack that should be removed.",
+        help="The name of the Stack that should be destroyed.",
     )
     stack_group.add_argument(
         "-d",
         "--directory",
         dest="{}_directory".format(STACK),
-        help="The directory path to where the stack should be destroyed.",
+        help="The directory path to where the Stack should be destroyed.",
         default=default_persistence_path,
     )
 
@@ -96,13 +119,13 @@ def show_group(parser):
     stack_group.add_argument(
         "name",
         action=PositionalArgumentsAction,
-        help="The name of the stack.",
+        help="The name of the Stack.",
     )
     stack_group.add_argument(
         "-d",
         "--directory",
         dest="{}_directory".format(STACK),
-        help="The directory path to where the stack should be found. Defaults to the current directory.",
+        help="The directory path to where the Stack should be found.",
         default=default_persistence_path,
     )
 
@@ -113,6 +136,6 @@ def ls_group(parser):
         "-d",
         "--directory",
         dest="{}_directory".format(STACK),
-        help="The directory path to where the stacks should be discovered. Defaults to the current directory.",
+        help="The directory path to where the Stacks should be discovered.",
         default=default_persistence_path,
     )

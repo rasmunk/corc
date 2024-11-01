@@ -107,3 +107,7 @@ async def get_stack_config_instances(stack_config):
             )
             deploy_instance_configs[instance_name] = templated_instance_config
     return True, deploy_instance_configs
+
+
+async def get_stack_config_pools(stack_config):
+    return stack_config.get("pools", {})

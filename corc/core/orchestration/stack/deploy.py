@@ -69,7 +69,7 @@ async def deploy(*args, **kwargs):
     stack_to_deploy = await stack_db.get(name)
     if not stack_to_deploy:
         return False, {
-            "error": "Failed to find a Stack entry with name: {}".format(name)
+            "error": "Failed to find a Stack with name: {} to deploy".format(name)
         }
 
     deploy_instances = stack_to_deploy["config"]["instances"]
@@ -78,7 +78,6 @@ async def deploy(*args, **kwargs):
         for instance_name, instance_details in deploy_instances.items()
     ]
     provision_results = await asyncio.gather(*provision_tasks)
-
     for result in provision_results:
         if result[0]:
             stack_to_deploy["instances"][result[1]["instance"].name] = result[1][
@@ -86,6 +85,8 @@ async def deploy(*args, **kwargs):
             ]
         else:
             print("Failed to provision instance: {}.".format(result[1]["name"]))
+
+    deploy_pools = await stack_to_deploy["config"]["pools"]
 
     if not await stack_db.update(name, stack_to_deploy):
         return False, {"error": "Failed to update stack: {}".format(name)}
