@@ -9,7 +9,7 @@ from corc.core.orchestration.stack.config import (
 async def create(*args, **kwargs):
     response = {}
     name = args[0]
-    definition_file = kwargs.get("definition_file", None)
+    config_file = kwargs.get("config_file", None)
     directory = kwargs.get("directory", None)
 
     stack_db = DictDatabase(name, directory=directory)
@@ -31,7 +31,7 @@ async def create(*args, **kwargs):
     stack = {"id": name, "config": {}, "instances": {}, "pools": {}}
 
     # Load the stack configuration file
-    stack_config = await get_stack_config(definition_file)
+    stack_config = await get_stack_config(config_file)
     if not stack_config:
         return False, {"error": "Failed to load stack config."}
 
