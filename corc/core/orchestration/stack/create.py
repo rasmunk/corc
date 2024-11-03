@@ -33,7 +33,10 @@ async def create(*args, **kwargs):
     # Load the stack configuration file
     stack_config = await get_stack_config(config_file)
     if not stack_config:
-        return False, {"error": "Failed to load stack config."}
+        response["msg"] = "Failed to load the Stack configuration file: {}.".format(
+            config_file
+        )
+        return False, response
 
     # Extract the pool configurations
     stack["config"]["pools"] = await get_stack_config_pools(stack_config)
@@ -47,11 +50,12 @@ async def create(*args, **kwargs):
     stack["config"]["instances"] = instances_response
 
     if not await stack_db.add(stack):
-        return False, {
-            "error": "Failed to save the Stack information to the database: {}".format(
+        response["msg"] = (
+            "Failed to save the Stack information to the database: {}".format(
                 stack_db.name
             )
-        }
+        )
+        return False, response
 
     response["stack"] = stack
     response["msg"] = "Created Stack succesfully."
