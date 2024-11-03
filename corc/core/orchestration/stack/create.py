@@ -13,16 +13,15 @@ async def create(*args, **kwargs):
     directory = kwargs.get("directory", None)
 
     stack_db = DictDatabase(name, directory=directory)
-    if await stack_db.exists():
-        response["msg"] = "The Stack: {} database already exists.".format(stack_db.name)
-        return True, response
+    if not await stack_db.exists():
+        if not await stack_db.touch():
+            response["msg"] = (
+                "The Stack database: {} did not exist in directory: {}, and it could not be created.".format(
+                    stack_db.name, directory
+                )
+            )
+            return False, response
 
-    created = await stack_db.touch()
-    if not created:
-        response["msg"] = "Failed to create the Stack database."
-        return False, response
-
-    # TODO, also allow this to happend via an update call
     stack = {"id": name, "config": {}, "instances": {}, "pools": {}}
 
     # Load the stack configuration file
@@ -30,14 +29,15 @@ async def create(*args, **kwargs):
     if not stack_config:
         return False, {"error": "Failed to load stack config."}
 
+    # Extract the pool configurations
     stack["config"]["pools"] = await get_stack_config_pools(stack_config)
 
+    # Extract the instance configurations
     instances_success, instances_response = await get_stack_config_instances(
         stack_config
     )
     if not instances_success:
         return False, instances_response
-
     stack["config"]["instances"] = instances_response
 
     if not await stack_db.add(stack):
