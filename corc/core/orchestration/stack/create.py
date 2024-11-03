@@ -22,6 +22,12 @@ async def create(*args, **kwargs):
             )
             return False, response
 
+    if await stack_db.get(name):
+        response["msg"] = (
+            "The Stack: {} already exists and therefore can't be created.".format(name)
+        )
+        return False, response
+
     stack = {"id": name, "config": {}, "instances": {}, "pools": {}}
 
     # Load the stack configuration file
