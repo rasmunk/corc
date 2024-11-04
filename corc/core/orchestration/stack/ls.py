@@ -2,9 +2,11 @@ from corc.core.defaults import default_persistence_path
 from corc.core.storage.dictdatabase import discover_databases
 
 
-async def ls(*args, **kwargs):
+async def ls(*args, directory=None):
+    if not directory:
+        directory = default_persistence_path
     response = {}
-    directory = kwargs.get("directory", default_persistence_path)
+
     stacks = await discover_databases(directory)
     if not stacks:
         response["stacks"] = []

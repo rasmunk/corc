@@ -6,11 +6,8 @@ from corc.core.orchestration.stack.config import (
 )
 
 
-async def update(*args, **kwargs):
+async def update(name, config_file=None, directory=None):
     response = {}
-    name = args[0]
-    config_file = kwargs.get("config_file", None)
-    directory = kwargs.get("directory", None)
 
     stack_db = DictDatabase(name, directory=directory)
     if not await stack_db.exists():

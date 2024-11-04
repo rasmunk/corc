@@ -1,0 +1,44 @@
+pools:
+  pool01:
+    instances:
+      - instance01
+  pool02:
+    instances:
+      - instance02
+  pool03:
+    instances:
+      - instance03
+      - instance04
+
+instances:
+  instance[01-02]:
+    provider:
+      name: dummy_provider
+      driver: dummy
+    settings:
+      args:
+        - "{{ instance.name }}"
+        - /path/to/predefined/image/file/{{ instance.name }}.qcow2
+      kwargs:
+        memory_size: 1024mib
+        num_vcpus: 2
+  instance03:
+    provider:
+      name: dummy_provider
+      driver: dummy
+    settings:
+      args:
+        - "{{ instance.name }}"
+      kwargs:
+        memory_size: 2048mib
+        num_vcpus: 1
+  instance04:
+    provider:
+      name: dummy_provider
+      driver: dummy
+    settings:
+      args:
+        - "{{ instance.name }}"
+      kwargs:
+        memory_size: 2048mib
+        num_vcpus: 4

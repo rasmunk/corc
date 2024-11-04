@@ -6,6 +6,10 @@ def valid_create_group(parser):
     create_group(parser)
 
 
+def valid_update_group(parser):
+    update_group(parser)
+
+
 def valid_remove_group(parser):
     remove_group(parser)
 
@@ -32,7 +36,7 @@ def create_group(parser):
         "name", action=PositionalArgumentsAction, help="The name of the Stack"
     )
     stack_group.add_argument(
-        "-df",
+        "-cf",
         "--config-file",
         dest="{}_config_file".format(STACK),
         help="The path to a file that contains a Stack configuration that should be associated with the Stack that is created.",
@@ -52,7 +56,7 @@ def update_group(parser):
         "name", action=PositionalArgumentsAction, help="The name of the Stack."
     )
     stack_group.add_argument(
-        "-df",
+        "-cf",
         "--config-file",
         dest="{}_config_file".format(STACK),
         help="The path to a file that contains a Stack configuration that should be used to update the Stack with.",

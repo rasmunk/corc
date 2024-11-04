@@ -2,14 +2,11 @@ import jinja2
 from corc.utils.io import load_yaml, exists
 
 
-async def get_stack_config(deploy_file):
+async def get_stack_config(config_file):
     # Load the architecture file and deploy the stack
-    if not exists(deploy_file):
+    if not exists(config_file):
         return False
-    stack_config = load_yaml(deploy_file)
-    if not stack_config:
-        return False
-    return stack_config
+    return load_yaml(config_file)
 
 
 async def extract_instance_config(instance_name, instance_kwargs):

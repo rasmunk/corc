@@ -42,7 +42,15 @@ POOL_CLI = {POOL: POOL_OPERATIONS}
 PERSISTENCE = "persistence"
 
 STACK = "stack"
-STACK_OPERATIONS = ["deploy", "destroy", "show", "ls"]
+STACK_OPERATIONS = [
+    "create",
+    "remove",
+    "update",
+    "show",
+    "ls",
+    "deploy",
+    "destroy",
+]
 STACK_CLI = {STACK: STACK_OPERATIONS}
 
 ORCHESTRATION = "orchestration"

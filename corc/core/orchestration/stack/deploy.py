@@ -16,11 +16,14 @@ async def provision_instance(instance_name, instance_details):
         }
 
     driver_args = []
-    if "args" in instance_details["provider"]:
+    if "args" in instance_details["provider"] and instance_details["provider"]["args"]:
         driver_args = instance_details["provider"]["args"]
 
     driver_kwargs = {}
-    if "kwargs" in instance_details["provider"]:
+    if (
+        "kwargs" in instance_details["provider"]
+        and instance_details["provider"]["kwargs"]
+    ):
         driver_kwargs = instance_details["provider"]["kwargs"]
 
     plugin_module = import_plugin(plugin_driver.name, return_module=True)
@@ -56,10 +59,8 @@ async def provision_instance(instance_name, instance_details):
     )
 
 
-async def deploy(*args, **kwargs):
+async def deploy(name, directory=None):
     response = {}
-    name = args[0]
-    directory = kwargs.get("directory", None)
 
     stack_db = DictDatabase(name, directory=directory)
     if not await stack_db.exists():
@@ -78,16 +79,11 @@ async def deploy(*args, **kwargs):
         provision_instance(instance_name, instance_details)
         for instance_name, instance_details in deploy_instances.items()
     ]
-    provision_results = await asyncio.gather(*provision_tasks)
-    for result in provision_results:
-        if result[0]:
-            stack_to_deploy["instances"][result[1]["instance"].name] = result[1][
-                "instance"
-            ]
+    for success, details in await asyncio.gather(*provision_tasks):
+        if success:
+            stack_to_deploy["instances"][details["instance"].name] = details["instance"]
         else:
-            print("Failed to provision instance: {}.".format(result[1]["name"]))
-
-    deploy_pools = await stack_to_deploy["config"]["pools"]
+            print("Failed to provision instance: {}.".format(details["name"]))
 
     if not await stack_db.update(name, stack_to_deploy):
         response["msg"] = "Failed to update stack: {}.".format(name)

@@ -1,10 +1,8 @@
 from corc.core.storage.dictdatabase import DictDatabase
 
 
-async def show(*args, **kwargs):
+async def show(name, directory=None):
     response = {}
-    name = args[0]
-    directory = kwargs.get("directory", None)
 
     stack = DictDatabase(name, directory=directory)
     if not await stack.exists():

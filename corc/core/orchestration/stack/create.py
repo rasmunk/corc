@@ -6,11 +6,8 @@ from corc.core.orchestration.stack.config import (
 )
 
 
-async def create(*args, **kwargs):
+async def create(name, config_file=None, directory=None):
     response = {}
-    name = args[0]
-    config_file = kwargs.get("config_file", None)
-    directory = kwargs.get("directory", None)
 
     stack_db = DictDatabase(name, directory=directory)
     if not await stack_db.exists():
@@ -31,23 +28,24 @@ async def create(*args, **kwargs):
     stack = {"id": name, "config": {}, "instances": {}, "pools": {}}
 
     # Load the stack configuration file
-    stack_config = await get_stack_config(config_file)
-    if not stack_config:
-        response["msg"] = "Failed to load the Stack configuration file: {}.".format(
-            config_file
+    if config_file:
+        stack_config = await get_stack_config(config_file)
+        if not stack_config:
+            response["msg"] = "Failed to load the Stack configuration file: {}.".format(
+                config_file
+            )
+            return False, response
+
+        # Extract the pool configurations
+        stack["config"]["pools"] = await get_stack_config_pools(stack_config)
+
+        # Extract the instance configurations
+        instances_success, instances_response = await get_stack_config_instances(
+            stack_config
         )
-        return False, response
-
-    # Extract the pool configurations
-    stack["config"]["pools"] = await get_stack_config_pools(stack_config)
-
-    # Extract the instance configurations
-    instances_success, instances_response = await get_stack_config_instances(
-        stack_config
-    )
-    if not instances_success:
-        return False, instances_response
-    stack["config"]["instances"] = instances_response
+        if not instances_success:
+            return False, instances_response
+        stack["config"]["instances"] = instances_response
 
     if not await stack_db.add(stack):
         response["msg"] = (
