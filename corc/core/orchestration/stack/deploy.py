@@ -10,7 +10,7 @@ async def provision_instance(instance_name, instance_details):
     if not plugin_driver:
         return False, {
             "name": instance_name,
-            "error": "Provider: {} is not installed.".format(
+            "msg": "Provider: {} is not installed.".format(
                 instance_details["provider"]["name"]
             ),
         }
@@ -27,7 +27,7 @@ async def provision_instance(instance_name, instance_details):
     if not plugin_module:
         return False, {
             "name": instance_name,
-            "error": "Failed to load plugin: {}.".format(
+            "msg": "Failed to load plugin: {}.".format(
                 instance_details["provider"]["name"]
             ),
         }
@@ -41,7 +41,7 @@ async def provision_instance(instance_name, instance_details):
     if not driver:
         return False, {
             "name": instance_name,
-            "error": "Failed to create client for provider driver: {}.".format(
+            "msg": "Failed to create client for provider driver: {}.".format(
                 instance_details["provider"]["driver"]
             ),
         }
@@ -57,20 +57,21 @@ async def provision_instance(instance_name, instance_details):
 
 
 async def deploy(*args, **kwargs):
+    response = {}
     name = args[0]
     directory = kwargs.get("directory", None)
 
     stack_db = DictDatabase(name, directory=directory)
     if not await stack_db.exists():
-        return False, {
-            "error": "The specified Stack to deploy: {} does not exists.".format(name)
-        }
+        response["msg"] = "The specified Stack to deploy: {} does not exists.".format(
+            name
+        )
+        return False, response
 
     stack_to_deploy = await stack_db.get(name)
     if not stack_to_deploy:
-        return False, {
-            "error": "Failed to find a Stack with name: {} to deploy".format(name)
-        }
+        response["msg"] = "Failed to find a Stack with name: {} to deploy".format(name)
+        return False, response
 
     deploy_instances = stack_to_deploy["config"]["instances"]
     provision_tasks = [
@@ -89,5 +90,8 @@ async def deploy(*args, **kwargs):
     deploy_pools = await stack_to_deploy["config"]["pools"]
 
     if not await stack_db.update(name, stack_to_deploy):
-        return False, {"error": "Failed to update stack: {}".format(name)}
-    return True, {"msg": "Stack: {} deployed successfully.".format(name)}
+        response["msg"] = "Failed to update stack: {}.".format(name)
+        return False, response
+
+    response["msg"] = "Stack: {} deployed successfully.".format(name)
+    return True, response

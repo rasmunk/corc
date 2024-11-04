@@ -16,13 +16,13 @@ async def extract_instance_config(instance_name, instance_kwargs):
     provider = instance_kwargs.get("provider", None)
     if not provider:
         return False, {
-            "error": "Provider for node: {} is required.".format(instance_name)
+            "msg": "Provider for node: {} is required.".format(instance_name)
         }
 
     instance_settings = instance_kwargs.get("settings", None)
     if not instance_settings:
         return False, {
-            "error": "Settings for node: {} are required.".format(instance_name)
+            "msg": "Settings for node: {} are required.".format(instance_name)
         }
 
     return True, {
