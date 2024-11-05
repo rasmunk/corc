@@ -53,6 +53,19 @@ STACK_OPERATIONS = [
 ]
 STACK_CLI = {STACK: STACK_OPERATIONS}
 
+SWARM = "swarm"
+SWARM_OPERATIONS = [
+    "create",
+    "remove",
+    "update",
+    "show",
+    "ls",
+    "sync",
+    "deploy",
+    "destroy",
+]
+SWARM_CLI = {SWARM: SWARM_OPERATIONS}
+
 ORCHESTRATION = "orchestration"
 ORCHESTRATION_OPERATIONS = [
     "add_provider",
@@ -67,13 +80,13 @@ STORAGE_OPERATIONS = ["add_provider", "remove_provider"]
 STORAGE_CLI = {STORAGE: STORAGE_OPERATIONS}
 
 # List of functionality that corc supports
-CORC_CLI_STRUCTURE = [CONFIGURER_CLI, COMPUTE_CLI, ORCHESTRATION_CLI, STORAGE_CLI]
-
-# Action groups
-ACTION_GROUPS = [INSTANCE, CONFIG, JOB, META, NODE, RUN, STORAGE]
-
-# Job defaults
-JOB_DEFAULT_NAME = "job"
+CORC_CLI_STRUCTURE = [
+    CONFIGURER_CLI,
+    COMPUTE_CLI,
+    ORCHESTRATION_CLI,
+    STORAGE_CLI,
+    SWARM_CLI,
+]
 
 # Default state directory
 default_base_path = os.path.join(os.path.expanduser("~"), ".{}".format(PACKAGE_NAME))

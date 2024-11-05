@@ -10,13 +10,13 @@ from corc.core.util import present_in, correct_type
 default_config_path = os.path.join(default_base_path, "config")
 
 
-def get_config_path(path=default_config_path):
+def get_config_path(path=None):
     return get_corc_path(path=path, env_postfix="CONFIG_FILE")
 
 
-def save_config(config, path=default_config_path):
-    path = get_config_path(path)
-    dir_path = os.path.dirname(path)
+def save_config(config, path=None):
+    config_path = get_config_path(path=path)
+    dir_path = os.path.dirname(config_path)
     if not exists(dir_path):
         created = makedirs(dir_path)
         if not created:
@@ -24,33 +24,33 @@ def save_config(config, path=default_config_path):
             return False
     if not config:
         return False
-    return dump_yaml(path, config)
+    return dump_yaml(config_path, config)
 
 
-def update_config(config, path=default_config_path):
-    path = get_config_path(path)
+def update_config(config, path=None):
+    config_path = get_config_path(path=path)
     if not config:
         return False
-    return dump_yaml(path, config, safe=True)
+    return dump_yaml(config_path, config, safe=True)
 
 
-def load_config(path=default_config_path):
-    path = get_config_path(path)
-    if not os.path.exists(path):
+def load_config(path=None):
+    config_path = get_config_path(path=path)
+    if not os.path.exists(config_path):
         return False
-    return load_yaml(path)
+    return load_yaml(config_path)
 
 
-def config_exists(path=default_config_path):
-    path = get_config_path(path)
-    return exists(path)
+def config_exists(path=None):
+    config_path = get_config_path(path=path)
+    return exists(config_path)
 
 
-def remove_config(path=default_config_path):
-    path = get_config_path(path=path)
-    if not os.path.exists(path):
+def remove_config(path=None):
+    config_path = get_config_path(path=path)
+    if not os.path.exists(config_path):
         return True
-    return remove(path)
+    return remove(config_path)
 
 
 def recursive_check_config(
@@ -97,11 +97,12 @@ def load_from_env(name, throw=False):
     return False
 
 
-def set_in_config(set_dict, prefix=None, path=default_config_path):
+def set_in_config(set_dict, prefix=None, path=None):
     if not prefix:
         prefix = tuple()
 
-    config = load_config(path=path)
+    config_path = get_config_path(path=path)
+    config = load_config(path=config_path)
     if not config:
         return False
 
@@ -111,16 +112,15 @@ def set_in_config(set_dict, prefix=None, path=default_config_path):
         flat_config[prefix + set_key] = set_value
 
     unflatten_dict = flatten_dict.unflatten(flat_config)
-    return update_config(unflatten_dict, path=path)
+    return update_config(unflatten_dict, path=config_path)
 
 
-def load_from_config(
-    find_dict, prefix=None, path=default_config_path, allow_sub_keys=False
-):
+def load_from_config(find_dict, prefix=None, path=None, allow_sub_keys=False):
     if not prefix:
         prefix = tuple()
 
-    config = load_config(path=path)
+    config_path = get_config_path(path=path)
+    config = load_config(path=config_path)
     if not config:
         return {}
 

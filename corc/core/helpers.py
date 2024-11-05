@@ -68,7 +68,10 @@ def unset_check(value):
     return False
 
 
-def get_corc_path(path=default_base_path, env_postfix=None):
+def get_corc_path(path=None, env_postfix=None):
+    if not path:
+        path = default_base_path
+
     env_var = None
     if env_postfix and isinstance(env_postfix, str):
         env_var = "CORC_{}".format(env_postfix)
@@ -77,7 +80,7 @@ def get_corc_path(path=default_base_path, env_postfix=None):
     return path
 
 
-def corc_home_path(path=default_base_path):
+def corc_home_path(path=None):
     return get_corc_path(path=path, env_postfix="HOME")
 
 
