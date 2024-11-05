@@ -59,10 +59,8 @@ SWARM_OPERATIONS = [
     "remove",
     "update",
     "show",
-    "ls",
     "sync",
-    "deploy",
-    "destroy",
+    "ls",
 ]
 SWARM_CLI = {SWARM: SWARM_OPERATIONS}
 

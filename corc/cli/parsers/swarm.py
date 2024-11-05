@@ -14,16 +14,12 @@ def valid_remove_group(parser):
     remove_group(parser)
 
 
-def valid_deploy_group(parser):
-    deploy_group(parser)
-
-
-def valid_destroy_group(parser):
-    destroy_group(parser)
-
-
 def valid_show_group(parser):
     show_group(parser)
+
+
+def valid_sync_group(parser):
+    sync_group(parser)
 
 
 def valid_list_group(parser):
@@ -86,40 +82,24 @@ def remove_group(parser):
     )
 
 
-def deploy_group(parser):
-    swarm_group = parser.add_argument_group(title="Swarm deploy arguments")
-    swarm_group.add_argument(
-        "name",
-        action=PositionalArgumentsAction,
-        help="The name of the Swarm that should be deployed.",
-    )
-    swarm_group.add_argument(
-        "-d",
-        "--directory",
-        dest="{}_directory".format(SWARM),
-        help="The directory path to where the Swarm should be created.",
-        default=default_persistence_path,
-    )
-
-
-def destroy_group(parser):
-    swarm_group = parser.add_argument_group(title="Swarm to destroy")
-    swarm_group.add_argument(
-        "name",
-        action=PositionalArgumentsAction,
-        help="The name of the Swarm that should be destroyed.",
-    )
-    swarm_group.add_argument(
-        "-d",
-        "--directory",
-        dest="{}_directory".format(SWARM),
-        help="The directory path to where the Swarm should be destroyed.",
-        default=default_persistence_path,
-    )
-
-
 def show_group(parser):
     swarm_group = parser.add_argument_group(title="Swarm show arguments")
+    swarm_group.add_argument(
+        "name",
+        action=PositionalArgumentsAction,
+        help="The name of the Swarm.",
+    )
+    swarm_group.add_argument(
+        "-d",
+        "--directory",
+        dest="{}_directory".format(SWARM),
+        help="The directory path to where the Swarm should be found.",
+        default=default_persistence_path,
+    )
+
+
+def sync_group(parser):
+    swarm_group = parser.add_argument_group(title="Swarm sync arguments")
     swarm_group.add_argument(
         "name",
         action=PositionalArgumentsAction,
