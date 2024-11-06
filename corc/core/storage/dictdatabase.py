@@ -192,12 +192,18 @@ def get_database_possible_postfixes(database_type):
 
 # Note, simple discover method that has be to be improved.
 # Might create a designed path where the pools are stored
-async def discover_databases(directory_path):
+async def discover_databases(directory_path, database_prefix=None):
     if not path_exists(directory_path):
         return []
 
     databases = []
     for _file in os.listdir(directory_path):
-        if not _file.endswith(DATABASE_LOCK_FILE_POSTFIX):
+        if _file.endswith(DATABASE_LOCK_FILE_POSTFIX):
+            continue
+
+        if not database_prefix:
             databases.append(_file)
+        else:
+            if _file.startswith(database_prefix):
+                databases.append(_file)
     return databases
