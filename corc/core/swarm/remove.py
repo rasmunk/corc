@@ -8,16 +8,20 @@ async def remove(name, directory=None):
         directory = default_swarm_perstistence_path
     response = {}
 
-    swarm = DictDatabase(SWARM, directory=directory)
-    if not await swarm.exists():
+    swarm_db = DictDatabase(SWARM, directory=directory)
+    if not await swarm_db.exists():
         response["msg"] = "The Swarm Database: {} already does not exist.".format(
-            swarm.name
+            swarm_db.name
         )
         return True, response
 
-    if not await swarm.remove_persistence():
-        response["msg"] = "Failed to remove swarm: {}.".format(swarm.name)
+    if not await swarm_db.get(name):
+        response["msg"] = "The Swarm: {} does not exist.".format(name)
+        return True, response
+
+    if not await swarm_db.remove(name):
+        response["msg"] = "Failed to remove swarm: {}.".format(name)
         return False, response
 
-    response["msg"] = "Removed swarm: {}.".format(swarm.name)
+    response["msg"] = "Removed swarm: {}.".format(name)
     return True, response
