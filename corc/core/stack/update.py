@@ -1,5 +1,5 @@
 from corc.core.storage.dictdatabase import DictDatabase
-from corc.core.orchestration.stack.config import (
+from corc.core.stack.config import (
     get_stack_config,
     get_stack_config_instances,
     get_stack_config_pools,

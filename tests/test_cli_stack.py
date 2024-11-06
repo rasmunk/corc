@@ -43,7 +43,7 @@ class TestCliStack(unittest.IsolatedAsyncioTestCase):
 
     async def asyncSetUp(self):
         self.name = "dummy"
-        self.base_args = ["orchestration", STACK]
+        self.base_args = [STACK]
         if not exists(CURRENT_TEST_DIR):
             self.assertTrue(makedirs(CURRENT_TEST_DIR))
 
