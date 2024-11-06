@@ -1,4 +1,5 @@
-from corc.core.defaults import SWARM, default_persistence_path
+from corc.core.defaults import SWARM
+from corc.core.swarm.defaults import default_swarm_perstistence_path
 from corc.cli.parsers.actions import PositionalArgumentsAction
 
 
@@ -42,7 +43,7 @@ def create_group(parser):
         "--directory",
         dest="{}_directory".format(SWARM),
         help="The directory path to where the Swarm database should be located/created.",
-        default=default_persistence_path,
+        default=default_swarm_perstistence_path,
     )
 
 
@@ -62,7 +63,7 @@ def update_group(parser):
         "--directory",
         dest="{}_directory".format(SWARM),
         help="The directory path to where the Swarm database is located.",
-        default=default_persistence_path,
+        default=default_swarm_perstistence_path,
     )
 
 
@@ -78,7 +79,7 @@ def remove_group(parser):
         "--directory",
         dest="{}_directory".format(SWARM),
         help="The directory path to where the Swarm database is located.",
-        default=default_persistence_path,
+        default=default_swarm_perstistence_path,
     )
 
 
@@ -94,7 +95,7 @@ def show_group(parser):
         "--directory",
         dest="{}_directory".format(SWARM),
         help="The directory path to where the Swarm should be found.",
-        default=default_persistence_path,
+        default=default_swarm_perstistence_path,
     )
 
 
@@ -110,7 +111,7 @@ def sync_group(parser):
         "--directory",
         dest="{}_directory".format(SWARM),
         help="The directory path to where the Swarm should be found.",
-        default=default_persistence_path,
+        default=default_swarm_perstistence_path,
     )
 
 
@@ -121,5 +122,5 @@ def ls_group(parser):
         "--directory",
         dest="{}_directory".format(SWARM),
         help="The directory path to where the Swarms should be discovered.",
-        default=default_persistence_path,
+        default=default_swarm_perstistence_path,
     )

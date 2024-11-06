@@ -1,9 +1,12 @@
 from corc.core.defaults import SWARM
+from corc.core.swarm.defaults import default_swarm_perstistence_path
 from corc.core.storage.dictdatabase import DictDatabase
 from corc.core.config import load_config
 
 
 async def update(name, config_file=None, directory=None):
+    if not directory:
+        directory = default_swarm_perstistence_path
     response = {}
 
     swarm_db = DictDatabase(SWARM, directory=directory)
