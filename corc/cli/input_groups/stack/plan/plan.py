@@ -21,6 +21,7 @@ from corc.cli.parsers.stack.plan.plan import (
     remove_group,
     show_group,
     ls_group,
+    update_group,
 )
 
 
@@ -58,6 +59,14 @@ def show_groups(parser):
 
 def ls_groups(parser):
     ls_group(parser)
+
+    provider_groups = []
+    argument_groups = [PLAN]
+    return provider_groups, argument_groups
+
+
+def update_groups(parser):
+    update_group(parser)
 
     provider_groups = []
     argument_groups = [PLAN]

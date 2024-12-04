@@ -32,6 +32,6 @@ async def ls(*args, directory=None):
         response["msg"] = "No plans found."
         return True, response
 
-    response["plans"] = plans
+    response["plans"] = [plan["id"] for plan in plans]
     response["msg"] = "Found plans."
     return True, response

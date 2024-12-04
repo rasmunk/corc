@@ -54,7 +54,7 @@ POOL_CLI = {POOL: POOL_OPERATIONS}
 PERSISTENCE = "persistence"
 
 PLAN = "plan"
-PLAN_OPERATIONS = ["apply", "create", "remove", "show", "ls"]
+PLAN_OPERATIONS = ["apply", "create", "remove", "show", "ls", "update"]
 PLAN_CLI = {PLAN: PLAN_OPERATIONS}
 
 STACK = "stack"
