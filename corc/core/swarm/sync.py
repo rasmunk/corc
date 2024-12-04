@@ -1,4 +1,3 @@
-import paramiko
 from corc.core.defaults import SWARM
 from corc.core.storage.dictdatabase import DictDatabase
 from corc.core.swarm.defaults import default_swarm_perstistence_path
