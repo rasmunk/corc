@@ -9,8 +9,6 @@ async def get_member_state(member):
     pass
 
 
-
-
 async def sync(name, directory=None):
     if not directory:
         directory = default_swarm_perstistence_path
@@ -25,7 +23,7 @@ async def sync(name, directory=None):
     if not swarm:
         response["msg"] = "Swarm {} does not exist.".format(name)
         return False, response
-    
+
     # TODO, get the state of all members
 
     return True, response

@@ -85,17 +85,8 @@ ORCHESTRATION_OPERATIONS = [
 ]
 ORCHESTRATION_CLI = {ORCHESTRATION: ORCHESTRATION_OPERATIONS}
 
-STORAGE_OPERATIONS = ["add_provider", "remove_provider"]
-STORAGE_CLI = {STORAGE: STORAGE_OPERATIONS}
-
 # List of functionality that corc supports
-CORC_CLI_STRUCTURE = [
-    CONFIGURER_CLI,
-    ORCHESTRATION_CLI,
-    STACK_CLI,
-    STORAGE_CLI,
-    SWARM_CLI,
-]
+CORC_CLI_STRUCTURE = [CONFIGURER_CLI, ORCHESTRATION_CLI, STACK_CLI, SWARM_CLI]
 
 # Default state directory
 default_base_path = os.path.join(os.path.expanduser("~"), ".{}".format(PACKAGE_NAME))
