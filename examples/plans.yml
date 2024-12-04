@@ -31,3 +31,9 @@ configurers:
     settings:
       args:
         - /var/lib/libvirt/images/{{ instance.name }}.qcow2
+
+plans:
+  - name: default_plan
+    initializer: default_image
+    orchestrator: default_vm
+    configurer: default_configurer
