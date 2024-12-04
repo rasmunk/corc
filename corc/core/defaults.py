@@ -47,10 +47,6 @@ CONFIGURER = "configurer"
 CONFIGURER_OPERATIONS = ["add_provider", "remove_provider"]
 CONFIGURER_CLI = {CONFIGURER: CONFIGURER_OPERATIONS}
 
-COMPUTE = "compute"
-COMPUTE_OPERATIONS = ["add_provider", "remove_provider"]
-COMPUTE_CLI = {COMPUTE: COMPUTE_OPERATIONS}
-
 POOL = "pool"
 POOL_OPERATIONS = ["create", "remove", "show", "ls", "add_instance", "remove_instance"]
 POOL_CLI = {POOL: POOL_OPERATIONS}
@@ -95,7 +91,6 @@ STORAGE_CLI = {STORAGE: STORAGE_OPERATIONS}
 # List of functionality that corc supports
 CORC_CLI_STRUCTURE = [
     CONFIGURER_CLI,
-    COMPUTE_CLI,
     ORCHESTRATION_CLI,
     STACK_CLI,
     STORAGE_CLI,

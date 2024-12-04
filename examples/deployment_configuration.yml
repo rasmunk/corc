@@ -1,0 +1,33 @@
+initializers:
+  default_image:
+    provider:
+      name: gen-vm-image
+      driver: gen-vm-image
+    settings:
+      args:
+        - "{{ instance.name }}"
+        - /path/to/predefined/image/file/{{ instance.name }}.qcow2
+      kwargs:
+        disk_size: 20gib
+
+orchestrators:
+  default_vm:
+    provider:
+      name: libvirt_provider
+      driver: libvirt
+    settings:
+      args:
+        - "{{ instance.name }}"
+        - /path/to/predefined/image/file/{{ instance.name }}.qcow2
+      kwargs:
+        memory_size: 2048mib
+        num_vcpus: 2
+
+configurers:
+  default_configurer:
+    provider:
+      name: configure-vm-image
+      driver: configure-vm-image
+    settings:
+      args:
+        - /var/lib/libvirt/images/{{ instance.name }}.qcow2
