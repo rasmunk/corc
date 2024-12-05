@@ -14,15 +14,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
+import copy
 import uuid
-from corc.core.storage.dictdatabase import DictDatabase
-
-
-class Pool(DictDatabase):
-    def __init__(self, name, **kwargs):
-        # The name of the pool is equal to the
-        # database name
-        super().__init__(name, **kwargs)
 
 
 class Instance:
@@ -39,9 +32,19 @@ class Instance:
             )
         )
 
+    def __eq__(self, other):
+        if not isinstance(other, Instance):
+            return NotImplemented
+        return (
+            self.id == other.id
+            and self.name == self.name
+            and self.state == other.state
+            and self.config == other.config
+        )
+
     def __str__(self):
-        return "Instance name: {}, state: {}, config: {}".format(
-            self.name, self.state, self.config
+        return "Instance id: {} name: {}, state: {}, config: {}".format(
+            self.id, self.name, self.state, self.config
         )
 
     def asdict(self):
@@ -50,3 +53,29 @@ class Instance:
             "state": self.state,
             "config": self.config,
         }
+
+
+def remove_instance_from_list(instances, instance_id):
+    copy_instances_list = copy.deepcopy(instances)
+    for instance in copy_instances_list:
+        if instance.id == instance_id:
+            try:
+                index = copy_instances_list.index(instance)
+                del copy_instances_list[index]
+            except ValueError:
+                return False
+    return copy_instances_list
+
+
+def find_instance_by_id(instances, instance_id):
+    for instance in instances:
+        if instance.id == instance_id:
+            return instance
+    return None
+
+
+def find_instance_by_name(instances, instance_name):
+    for instance in instances:
+        if instance.name == instance_name:
+            return instance
+    return None

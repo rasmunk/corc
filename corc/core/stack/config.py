@@ -25,7 +25,16 @@ async def get_stack_config(config_file):
     return load_yaml(config_file)
 
 
+# Extract the instance configuration, either the provider and settings
+# are required for the instance to be deployed.
+# Otherwise the a plan deployment configuration must be provided.
 async def extract_instance_config(instance_name, instance_kwargs):
+    plan = instance_kwargs.get("plan", None)
+    if plan:
+        return True, {
+            "plan": plan,
+        }
+
     provider = instance_kwargs.get("provider", None)
     if not provider:
         return False, {
@@ -99,6 +108,8 @@ async def get_stack_config_instances(stack_config):
                         "name": unrolled_instance,
                     }
                 }
+                # TODO, if the instance config is a plan, discover the plan and recursively prepare it
+
                 templated_instance_config = await recursively_prepare_instance_config(
                     instance_template_values, instance_config
                 )

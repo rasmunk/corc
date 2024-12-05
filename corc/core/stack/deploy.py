@@ -16,6 +16,7 @@
 
 # Description: Deploy the stack
 import asyncio
+from corc.core.defaults import STACK
 from corc.core.storage.dictdatabase import DictDatabase
 from corc.core.helpers import import_from_module
 from corc.core.plugins.plugin import discover, import_plugin
@@ -78,12 +79,15 @@ async def provision_instance(instance_name, instance_details):
 async def deploy(name, directory=None):
     response = {}
 
-    stack_db = DictDatabase(name, directory=directory)
+    stack_db = DictDatabase(STACK, directory=directory)
     if not await stack_db.exists():
-        response["msg"] = "The specified Stack to deploy: {} does not exists.".format(
-            name
-        )
-        return False, response
+        if not await stack_db.touch():
+            response["msg"] = (
+                "The Stack database: {} did not exist in directory: {}, and it could not be created.".format(
+                    stack_db.name, directory
+                )
+            )
+            return False, response
 
     stack_to_deploy = await stack_db.get(name)
     if not stack_to_deploy:

@@ -14,26 +14,44 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from corc.core.orchestration.pool.models import Pool, Instance
+from corc.core.defaults import POOL
+from corc.core.storage.dictdatabase import DictDatabase
+from corc.core.orchestration.pool.models import Instance, find_instance_by_name
 
 
 async def add_instance(pool_name, instance_name, **kwargs):
     response = {}
 
     directory = kwargs.get("directory", None)
-    pool = Pool(pool_name, directory=directory)
-    if not await pool.exists():
-        response["msg"] = f"Pool does not exist: {pool.name}"
+    pool_db = DictDatabase(POOL, directory=directory)
+    if not await pool_db.exists():
+        if not await pool_db.touch():
+            response["msg"] = (
+                "The Pool database: {} did not exist in directory: {}, and it could not be created.".format(
+                    pool_db.name, directory
+                )
+            )
+            return False, response
+
+    pool = await pool_db.get(pool_name)
+    if not pool:
+        response["msg"] = "The Pool: {} does not exist in the database.".format(
+            pool_name
+        )
         return False, response
 
-    if await pool.get(instance_name):
-        response["msg"] = "Instance already exists in pool."
+    if find_instance_by_name(pool["instances"], instance_name):
+        response["msg"] = "An Instance with name: {} already exists in Pool.".format(
+            instance_name
+        )
         return False, response
 
-    added = await pool.add(Instance(instance_name, **kwargs))
-    if not added:
-        response["msg"] = "Failed to add instance to pool."
-        return False, response
+    pool["instances"].append(Instance(instance_name, **kwargs))
+    if not await pool_db.update(pool_name, pool):
+        response["msg"] = "Failed to update the Pool: {} with a new Instance.".format(
+            pool_name
+        )
+        return
 
-    response["msg"] = "Added instance to pool."
+    response["msg"] = "Added Instance with name {} to pool.".format(instance_name)
     return True, response

@@ -1,14 +1,3 @@
-pools:
-  pool01:
-    instances:
-      - instance01
-      - instance02
-      - instance03
-  pool02:
-    instances:
-      - instance01
-      - instance05
-
 instances:
   - instance01:
     plan: default_plan

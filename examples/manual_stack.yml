@@ -1,19 +1,3 @@
-pools:
-  pool01:
-    instances:
-      - instance01
-      - instance02
-      - instance03
-  pool02:
-    instances:
-      - instance01
-      - instance05
-      - instance06
-      - instance07
-      - instance08
-      - instance09
-      - instance10
-
 instances:
   instance01:
     provider:
@@ -26,3 +10,7 @@ instances:
       kwargs:
         memory_size: 2048mib
         num_vcpus: 2
+  instance02:
+    plan: default_plan
+  instance[03-05]:
+    plan: default_plan

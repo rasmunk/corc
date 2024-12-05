@@ -26,6 +26,10 @@ def valid_remove_group(parser):
     remove_group(parser)
 
 
+def valid_show_group(parser):
+    show_group(parser)
+
+
 def valid_list_group(parser):
     ls_group(parser)
 
@@ -34,6 +38,12 @@ def create_group(parser):
     pool_group = parser.add_argument_group(title="Pool create arguments")
     pool_group.add_argument(
         "name", action=PositionalArgumentsAction, help="The name of the pool"
+    )
+    pool_group.add_argument(
+        "-cf",
+        "--config-file",
+        dest="{}_config_file".format(POOL),
+        help="The path to a file that contains a Pool configuration.",
     )
     pool_group.add_argument(
         "-d",

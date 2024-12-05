@@ -14,21 +14,30 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from corc.core.orchestration.pool.models import Pool
+from corc.core.defaults import POOL
+from corc.core.storage.dictdatabase import DictDatabase
 
 
-async def remove(*args, **kwargs):
+async def remove(name, directory=None):
     response = {}
-    pool = Pool(*args, **kwargs)
-    exists = await pool.exists()
-    if not exists:
-        response["msg"] = f"Pool does already not exist: {pool.name}."
+
+    pool_db = DictDatabase(POOL, directory=directory)
+    if not await pool_db.exists():
+        if not await pool_db.touch():
+            response["msg"] = (
+                "The Pool database: {} did not exist in directory: {}, and it could not be created.".format(
+                    pool_db.name, directory
+                )
+            )
+            return False, response
+
+    if not await pool_db.get(name):
+        response["msg"] = f"The Plan: {name} does not exist in the database."
         return True, response
 
-    removed = await pool.remove_persistence()
-    if not removed:
-        response["msg"] = f"Failed to remove pool: {pool.name}."
+    if not await pool_db.remove(name):
+        response["msg"] = f"Failed to remove pool: {name}."
         return False, response
 
-    response["msg"] = f"Removed pool: {pool.name}."
+    response["msg"] = f"Removed pool: {name}."
     return True, response

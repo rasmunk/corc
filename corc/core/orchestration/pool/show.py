@@ -14,16 +14,28 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from corc.core.orchestration.pool.models import Pool
+from corc.core.defaults import POOL
+from corc.core.storage.dictdatabase import DictDatabase
 
 
-async def show(*args, **kwargs):
+async def show(name, directory=None):
     response = {}
-    pool = Pool(*args, **kwargs)
-    if not await pool.exists():
-        response["msg"] = f"Pool does not exist: {pool.name}."
+
+    pool_db = DictDatabase(POOL, directory=directory)
+    if not await pool_db.exists():
+        if not await pool_db.touch():
+            response["msg"] = (
+                "The Pool database: {} did not exist in directory: {}, and it could not be created.".format(
+                    pool_db.name, directory
+                )
+            )
+            return False, response
+
+    pool = await pool_db.get(name)
+    if not pool:
+        response["msg"] = f"The Pool: {name} does not exist in the database."
         return False, response
 
-    response["members"] = await pool.items()
+    response["pool"] = pool
     response["msg"] = "Pool members."
     return True, response

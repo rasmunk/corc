@@ -15,6 +15,7 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 import asyncio
+from corc.core.defaults import STACK
 from corc.core.storage.dictdatabase import DictDatabase
 from corc.core.helpers import import_from_module
 from corc.core.plugins.plugin import discover, import_plugin
@@ -121,12 +122,15 @@ async def get_instance(instance_id, instance_details):
 async def destroy(name, directory=None):
     response = {}
 
-    stack_db = DictDatabase(name, directory=directory)
+    stack_db = DictDatabase(STACK, directory=directory)
     if not await stack_db.exists():
-        response["msg"] = (
-            "The Stack {} does not exist, so it can't be destroyed.".format(name)
-        )
-        return False, response
+        if not await stack_db.touch():
+            response["msg"] = (
+                "The Stack database: {} did not exist in directory: {}, and it could not be created.".format(
+                    stack_db.name, directory
+                )
+            )
+            return False, response
 
     stack = await stack_db.get(name)
     if not stack:

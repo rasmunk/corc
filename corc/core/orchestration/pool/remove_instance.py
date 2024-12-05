@@ -14,19 +14,54 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from corc.core.orchestration.pool.models import Pool
+from corc.core.defaults import POOL
+from corc.core.storage.dictdatabase import DictDatabase
+from corc.core.orchestration.pool.models import (
+    find_instance_by_id,
+    remove_instance_from_list,
+)
 
 
 async def remove_instance(pool_name, node_id, **kwargs):
     response = {}
 
-    pool = Pool(pool_name, **kwargs)
-    if not await pool.exists():
-        response["msg"] = f"Pool does not exist: {pool.name}"
+    directory = kwargs.get("directory", None)
+    pool_db = DictDatabase(POOL, directory=directory)
+    if not await pool_db.exists():
+        if not await pool_db.touch():
+            response["msg"] = (
+                "The Pool database: {} did not exist in directory: {}, and it could not be created.".format(
+                    pool_db.name, directory
+                )
+            )
+            return False, response
+
+    pool = await pool_db.get(pool_name)
+    if not pool:
+        response["msg"] = "The Pool: {} does not exist in the database.".format(
+            pool_name
+        )
         return False, response
 
-    if not await pool.remove(node_id):
-        response["msg"] = "Failed to remove node from pool."
+    if not find_instance_by_id(pool["instances"], node_id):
+        response["msg"] = "An Instance with the id: {} is not in the Pool.".format(
+            node_id
+        )
+        return False, response
 
-    response["msg"] = "Removed node from pool."
+    updated_instances = remove_instance_from_list(pool["instances"], node_id)
+    if not updated_instances:
+        response["msg"] = "Failed to remove Instance: {} from Pool.".format(node_id)
+        return False, response
+
+    pool["instances"] = updated_instances
+    if not await pool_db.update(pool_name, pool):
+        response["msg"] = (
+            "Failed to save the Pool: {} after the Instance with id: {} was removed.".format(
+                pool_name, node_id
+            )
+        )
+        return False, response
+
+    response["msg"] = "Removed Instance: {} from Pool.".format(node_id)
     return True, response

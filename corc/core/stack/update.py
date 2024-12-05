@@ -14,6 +14,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
+from corc.core.defaults import STACK
 from corc.core.storage.dictdatabase import DictDatabase
 from corc.core.stack.config import (
     get_stack_config,
@@ -25,14 +26,15 @@ from corc.core.stack.config import (
 async def update(name, config_file=None, directory=None):
     response = {}
 
-    stack_db = DictDatabase(name, directory=directory)
+    stack_db = DictDatabase(STACK, directory=directory)
     if not await stack_db.exists():
-        response["msg"] = (
-            "The Stack: {} database does not exist in directory: {}.".format(
-                name, directory
+        if not await stack_db.touch():
+            response["msg"] = (
+                "The Stack database: {} did not exist in directory: {}, and it could not be created.".format(
+                    stack_db.name, directory
+                )
             )
-        )
-        return False, response
+            return False, response
 
     stack_to_update = await stack_db.get(name)
     if not stack_to_update:

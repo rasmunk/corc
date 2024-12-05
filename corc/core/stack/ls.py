@@ -14,21 +14,29 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from corc.core.defaults import default_persistence_path
-from corc.core.storage.dictdatabase import discover_databases
+from corc.core.defaults import STACK
+from corc.core.storage.dictdatabase import DictDatabase
 
 
 async def ls(*args, directory=None):
-    if not directory:
-        directory = default_persistence_path
     response = {}
 
-    stacks = await discover_databases(directory)
+    stack_db = DictDatabase(STACK, directory=directory)
+    if not await stack_db.exists():
+        if not await stack_db.touch():
+            response["msg"] = (
+                "The Stack database: {} did not exist in directory: {}, and it could not be created.".format(
+                    stack_db.name, directory
+                )
+            )
+            return False, response
+
+    stacks = await stack_db.items()
     if not stacks:
         response["stacks"] = []
-        response["msg"] = "No stacks found."
+        response["msg"] = "No Stacks found."
         return True, response
 
-    response["stacks"] = stacks
-    response["msg"] = "Found stacks."
+    response["stacks"] = [stack["id"] for stack in stacks]
+    response["msg"] = "Found Stacks."
     return True, response

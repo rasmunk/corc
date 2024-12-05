@@ -23,15 +23,20 @@ async def ls(*args, directory=None):
 
     plan_db = DictDatabase(PLAN, directory=directory)
     if not await plan_db.exists():
-        response["msg"] = "The Plan database {} does not exist.".format(plan_db.name)
-        return False, response
+        if not await plan_db.touch():
+            response["msg"] = (
+                "The Plan database: {} did not exist in directory: {}, and it could not be created.".format(
+                    plan_db.name, directory
+                )
+            )
+            return False, response
 
     plans = await plan_db.items()
     if not plans:
         response["plans"] = []
-        response["msg"] = "No plans found."
+        response["msg"] = "No Plans found."
         return True, response
 
     response["plans"] = [plan["id"] for plan in plans]
-    response["msg"] = "Found plans."
+    response["msg"] = "Found Plans."
     return True, response

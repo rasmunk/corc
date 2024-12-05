@@ -14,6 +14,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
+from corc.core.defaults import STACK
 from corc.core.storage.dictdatabase import DictDatabase
 from corc.core.stack.config import (
     get_stack_config,
@@ -25,7 +26,7 @@ from corc.core.stack.config import (
 async def create(name, config_file=None, directory=None):
     response = {}
 
-    stack_db = DictDatabase(name, directory=directory)
+    stack_db = DictDatabase(STACK, directory=directory)
     if not await stack_db.exists():
         if not await stack_db.touch():
             response["msg"] = (
@@ -41,8 +42,7 @@ async def create(name, config_file=None, directory=None):
         )
         return False, response
 
-    stack = {"id": name, "config": {}, "instances": {}, "pools": {}}
-
+    stack = {"id": name, "config": {}}
     # Load the stack configuration file
     if config_file:
         stack_config = await get_stack_config(config_file)

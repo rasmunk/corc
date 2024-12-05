@@ -14,22 +14,30 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from corc.core.orchestration.pool.models import Pool
+from corc.core.defaults import POOL
+from corc.core.storage.dictdatabase import DictDatabase
 
 
-async def create(*args, **kwargs):
+async def create(name, config_file=None, directory=None):
     response = {}
-    pool = Pool(*args, **kwargs)
-    if await pool.exists():
-        response["pool"] = pool
-        response["msg"] = "Pool already exists."
-        return True, response
 
-    created = await pool.touch()
-    if not created:
-        response["msg"] = "Failed to create pool."
+    pool_db = DictDatabase(POOL, directory=directory)
+    if not await pool_db.exists():
+        if not await pool_db.touch():
+            response["msg"] = (
+                "The Pool database: {} did not exist in directory: {}, and it could not be created.".format(
+                    pool_db.name, directory
+                )
+            )
+            return False, response
+
+    if await pool_db.get(name):
+        response["msg"] = (
+            "The Pool: {} already exists and therefore can't be created.".format(name)
+        )
         return False, response
 
+    pool = {"id": name, "instances": []}
     response["pool"] = pool
     response["msg"] = "Created pool successfully."
     return True, response

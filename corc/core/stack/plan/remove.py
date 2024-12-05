@@ -23,8 +23,11 @@ async def remove(name, directory=None):
 
     plan_db = DictDatabase(PLAN, directory=directory)
     if not await plan_db.exists():
-        response["msg"] = f"The Plan database does not exist in directory: {directory}."
-        return True, response
+        if not await plan_db.touch():
+            response["msg"] = (
+                f"The Plan database: {plan_db.name} did not exist in directory: {directory}, and it could not be created."
+            )
+            return False, response
 
     if not await plan_db.get(name):
         response["msg"] = f"The Plan: {name} does not exist in the database."

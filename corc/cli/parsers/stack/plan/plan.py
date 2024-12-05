@@ -60,17 +60,17 @@ def apply_group(parser):
 
 
 def create_group(parser):
-    stack_group = parser.add_argument_group(title="Plan create arguments")
-    stack_group.add_argument(
+    plan_group = parser.add_argument_group(title="Plan create arguments")
+    plan_group.add_argument(
         "name", action=PositionalArgumentsAction, help="The name of the Plan"
     )
-    stack_group.add_argument(
+    plan_group.add_argument(
         "-cf",
         "--config-file",
         dest="{}_config_file".format(PLAN),
         help="The path to a file that contains a Plan configuration that should be associated with the Plan that is created.",
     )
-    stack_group.add_argument(
+    plan_group.add_argument(
         "-d",
         "--directory",
         dest="{}_directory".format(PLAN),
@@ -80,17 +80,17 @@ def create_group(parser):
 
 
 def update_group(parser):
-    stack_group = parser.add_argument_group(title="Plan update arguments")
-    stack_group.add_argument(
+    plan_group = parser.add_argument_group(title="Plan update arguments")
+    plan_group.add_argument(
         "name", action=PositionalArgumentsAction, help="The name of the Plan."
     )
-    stack_group.add_argument(
+    plan_group.add_argument(
         "-cf",
         "--config-file",
         dest="{}_config_file".format(PLAN),
         help="The path to a file that contains a Plan configuration that should be used to update the Plan with.",
     )
-    stack_group.add_argument(
+    plan_group.add_argument(
         "-d",
         "--directory",
         dest="{}_directory".format(PLAN),
@@ -100,13 +100,13 @@ def update_group(parser):
 
 
 def remove_group(parser):
-    stack_group = parser.add_argument_group(title="Plan remove arguments")
-    stack_group.add_argument(
+    plan_group = parser.add_argument_group(title="Plan remove arguments")
+    plan_group.add_argument(
         "name",
         action=PositionalArgumentsAction,
         help="The name of the Plan that should be removed.",
     )
-    stack_group.add_argument(
+    plan_group.add_argument(
         "-d",
         "--directory",
         dest="{}_directory".format(PLAN),
@@ -116,13 +116,13 @@ def remove_group(parser):
 
 
 def deploy_group(parser):
-    stack_group = parser.add_argument_group(title="Plan deploy arguments")
-    stack_group.add_argument(
+    plan_group = parser.add_argument_group(title="Plan deploy arguments")
+    plan_group.add_argument(
         "name",
         action=PositionalArgumentsAction,
         help="The name of the Plan that should be deployed.",
     )
-    stack_group.add_argument(
+    plan_group.add_argument(
         "-d",
         "--directory",
         dest="{}_directory".format(PLAN),
@@ -132,13 +132,13 @@ def deploy_group(parser):
 
 
 def destroy_group(parser):
-    stack_group = parser.add_argument_group(title="Plan to destroy")
-    stack_group.add_argument(
+    plan_group = parser.add_argument_group(title="Plan to destroy")
+    plan_group.add_argument(
         "name",
         action=PositionalArgumentsAction,
         help="The name of the Plan that should be destroyed.",
     )
-    stack_group.add_argument(
+    plan_group.add_argument(
         "-d",
         "--directory",
         dest="{}_directory".format(PLAN),
@@ -148,13 +148,13 @@ def destroy_group(parser):
 
 
 def show_group(parser):
-    stack_group = parser.add_argument_group(title="Plan show arguments")
-    stack_group.add_argument(
+    plan_group = parser.add_argument_group(title="Plan show arguments")
+    plan_group.add_argument(
         "name",
         action=PositionalArgumentsAction,
         help="The name of the Plan.",
     )
-    stack_group.add_argument(
+    plan_group.add_argument(
         "-d",
         "--directory",
         dest="{}_directory".format(PLAN),
@@ -164,8 +164,8 @@ def show_group(parser):
 
 
 def ls_group(parser):
-    stack_group = parser.add_argument_group(title="Plan list arguments")
-    stack_group.add_argument(
+    plan_group = parser.add_argument_group(title="Plan list arguments")
+    plan_group.add_argument(
         "-d",
         "--directory",
         dest="{}_directory".format(PLAN),
