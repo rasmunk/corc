@@ -96,8 +96,15 @@ async def deploy(name, directory=None):
         return False, response
 
     deploy_instances = stack_to_deploy["config"]["instances"]
-    # prepared_instances_configs
-    _ = [prepare_instance_config(instance_name, instance_details, directory=directory)]
+    prepared_instances_configs = []
+
+    prepare_configs_tasks = [
+        prepare_instance_config(instance_name, instance_details, directory=directory)
+        for instance_name, instance_details in deploy_instances.items()
+    ]
+    for success, details in await asyncio.gather(*prepare_configs_tasks):
+        if success:
+            prepared_instances_configs.append(details)
 
     provision_tasks = [
         provision_instance(instance_name, instance_details)

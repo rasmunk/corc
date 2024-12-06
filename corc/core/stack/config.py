@@ -101,8 +101,6 @@ async def get_stack_config_instances(stack_config):
                         "name": unrolled_instance,
                     }
                 }
-                # TODO, if the instance config is a plan, discover the plan and recursively prepare it
-
                 templated_instance_config = await recursively_prepare_instance_config(
                     instance_template_values, instance_config
                 )
@@ -138,22 +136,24 @@ async def discover_plan(plan_name, directory=None):
     if not directory:
         directory = default_persistence_path
 
-    success, response = await show(plan, directory)
+    success, response = await show(plan_name, directory)
     if not success:
         return False, response["msg"]
     return True, response["plan"]
 
 
 async def prepare_instance_plan(plan):
+    initializer = plan.get("initializer", {})
+    orchestrator = plan.get("orchestrator", {})
+    configurer = plan.get("configurer", {})
 
-    initializers = plan.get("initializers", {})
-    orchestrators = plan.get("orchestrators", {})
-    configurers = plan.get("configurers", {})
+    # TODO, recuresively expand the plan
+    recursively_prepare_instance_config()
 
     return True, {
-        "initializers": initializers,
-        "orchestrators": orchestrators,
-        "configurers": configurers,
+        "initializer": initializer,
+        "orchestrator": orchestrator,
+        "configurer": configurer,
     }
 
 
@@ -172,11 +172,16 @@ async def prepare_instance_config(instance_name, instance_config, directory=None
         )
         if not success_discover:
             return False, response_discover
-        instance_config = response_discover
+        plan = response_discover
+
+        success_prepare, response_prepare = await prepare_instance_plan(plan)
+        if not success_prepare:
+            return False, response_prepare
+        instance_config = response_prepare
 
     success, response = await extract_instance_config(instance_name, instance_config)
     if not success:
         return False, response
-    instance_config = response
 
-    return True, instance_config
+    instance_config = response
+    return True, {instance_name: instance_config}
