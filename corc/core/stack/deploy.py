@@ -20,6 +20,7 @@ from corc.core.defaults import STACK
 from corc.core.storage.dictdatabase import DictDatabase
 from corc.core.helpers import import_from_module
 from corc.core.plugins.plugin import discover, import_plugin
+from corc.core.stack.config import prepare_instance_config
 
 
 async def provision_instance(instance_name, instance_details):
@@ -95,6 +96,9 @@ async def deploy(name, directory=None):
         return False, response
 
     deploy_instances = stack_to_deploy["config"]["instances"]
+    # prepared_instances_configs
+    _ = [prepare_instance_config(instance_name, instance_details, directory=directory)]
+
     provision_tasks = [
         provision_instance(instance_name, instance_details)
         for instance_name, instance_details in deploy_instances.items()

@@ -15,7 +15,9 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 import jinja2
+from corc.core.defaults import default_persistence_path
 from corc.utils.io import load_yaml, exists
+from corc.core.stack.plan.show import show
 
 
 async def get_stack_config(config_file):
@@ -25,16 +27,7 @@ async def get_stack_config(config_file):
     return load_yaml(config_file)
 
 
-# Extract the instance configuration, either the provider and settings
-# are required for the instance to be deployed.
-# Otherwise the a plan deployment configuration must be provided.
 async def extract_instance_config(instance_name, instance_kwargs):
-    plan = instance_kwargs.get("plan", None)
-    if plan:
-        return True, {
-            "plan": plan,
-        }
-
     provider = instance_kwargs.get("provider", None)
     if not provider:
         return False, {
@@ -135,3 +128,55 @@ async def get_stack_config_instances(stack_config):
 
 async def get_stack_config_pools(stack_config):
     return stack_config.get("pools", {})
+
+
+async def extract_instance_plan(instance_name, instance_config):
+    return True, instance_config.get("plan", {})
+
+
+async def discover_plan(plan_name, directory=None):
+    if not directory:
+        directory = default_persistence_path
+
+    success, response = await show(plan, directory)
+    if not success:
+        return False, response["msg"]
+    return True, response["plan"]
+
+
+async def prepare_instance_plan(plan):
+
+    initializers = plan.get("initializers", {})
+    orchestrators = plan.get("orchestrators", {})
+    configurers = plan.get("configurers", {})
+
+    return True, {
+        "initializers": initializers,
+        "orchestrators": orchestrators,
+        "configurers": configurers,
+    }
+
+
+async def prepare_instance_config(instance_name, instance_config, directory=None):
+    if not directory:
+        directory = default_persistence_path
+
+    if "plan" in instance_config:
+        success_extract, response_extract = await extract_instance_plan(
+            instance_name, instance_config
+        )
+        if not success_extract:
+            return False, response_extract
+        success_discover, response_discover = await discover_plan(
+            response_extract, directory=directory
+        )
+        if not success_discover:
+            return False, response_discover
+        instance_config = response_discover
+
+    success, response = await extract_instance_config(instance_name, instance_config)
+    if not success:
+        return False, response
+    instance_config = response
+
+    return True, instance_config
