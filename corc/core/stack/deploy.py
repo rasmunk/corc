@@ -96,19 +96,33 @@ async def deploy(name, directory=None):
         return False, response
 
     deploy_instances = stack_to_deploy["config"]["instances"]
-    prepared_instances_configs = []
+    prepared_instances_configs = {}
 
     prepare_configs_tasks = [
         prepare_instance_config(instance_name, instance_details, directory=directory)
         for instance_name, instance_details in deploy_instances.items()
     ]
-    for success, details in await asyncio.gather(*prepare_configs_tasks):
-        if success:
-            prepared_instances_configs.append(details)
 
+    for prepare_success, prepare_response in await asyncio.gather(
+        *prepare_configs_tasks
+    ):
+        if prepare_success:
+            instance_name, instance_details = (
+                prepare_response["instance_name"],
+                prepare_response["instance_config"],
+            )
+            prepared_instances_configs[instance_name] = instance_details
+        else:
+            print(
+                "Failed to prepare instance: {} response: {}.".format(
+                    prepare_success, prepare_response
+                )
+            )
+
+    print("Prepared instances configs: {}".format(prepared_instances_configs))
     provision_tasks = [
         provision_instance(instance_name, instance_details)
-        for instance_name, instance_details in deploy_instances.items()
+        for instance_name, instance_details in prepared_instances_configs.items()
     ]
     for success, details in await asyncio.gather(*provision_tasks):
         if success:

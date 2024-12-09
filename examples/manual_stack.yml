@@ -1,5 +1,5 @@
 instances:
-  instance01:
+  instance[01-02]:
     provider:
       name: libvirt_provider
       driver: libvirt
@@ -10,7 +10,7 @@ instances:
       kwargs:
         memory_size: 2048mib
         num_vcpus: 2
-  instance02:
+  instance03:
     plan: default_plan
-  instance[03-05]:
+  instance[04-05]:
     plan: default_plan

@@ -43,7 +43,7 @@ async def create(name, config_file=None, directory=None):
         )
         return False, response
 
-    plan = {"id": name, "initalizers": {}, "orchestrators": {}, "configurers": {}}
+    plan = {"id": name, "initializers": {}, "orchestrators": {}, "configurers": {}}
 
     # Load the plan configuration file
     if config_file:

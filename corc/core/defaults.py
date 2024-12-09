@@ -54,11 +54,20 @@ POOL_CLI = {POOL: POOL_OPERATIONS}
 PERSISTENCE = "persistence"
 
 PLAN = "plan"
-PLAN_OPERATIONS = ["apply", "create", "remove", "show", "ls", "update"]
+PLAN_OPERATIONS = ["create", "remove", "show", "ls", "update"]
 PLAN_CLI = {PLAN: PLAN_OPERATIONS}
 
 STACK = "stack"
-STACK_OPERATIONS = ["create", "remove", "update", "show", "ls", PLAN_CLI]
+STACK_OPERATIONS = [
+    "create",
+    "deploy",
+    "destroy",
+    "remove",
+    "update",
+    "show",
+    "ls",
+    PLAN_CLI,
+]
 STACK_CLI = {STACK: STACK_OPERATIONS}
 
 SWARM = "swarm"

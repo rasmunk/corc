@@ -28,6 +28,11 @@ async def get_stack_config(config_file):
 
 
 async def extract_instance_config(instance_name, instance_kwargs):
+    # An instance config should either be a plan or a provider and settings
+    plan = instance_kwargs.get("plan", None)
+    if plan:
+        return True, {"plan": plan}
+
     provider = instance_kwargs.get("provider", None)
     if not provider:
         return False, {
@@ -96,15 +101,7 @@ async def get_stack_config_instances(stack_config):
                 if not success:
                     return False, response
                 instance_config = response
-                instance_template_values = {
-                    "instance": {
-                        "name": unrolled_instance,
-                    }
-                }
-                templated_instance_config = await recursively_prepare_instance_config(
-                    instance_template_values, instance_config
-                )
-                deploy_instance_configs[unrolled_instance] = templated_instance_config
+                deploy_instance_configs[unrolled_instance] = instance_config
         else:
             success, response = await extract_instance_config(
                 instance_name, instance_kwargs
@@ -112,15 +109,7 @@ async def get_stack_config_instances(stack_config):
             if not success:
                 return False, response
             instance_config = response
-            instance_template_values = {
-                "instance": {
-                    "name": instance_name,
-                }
-            }
-            templated_instance_config = await recursively_prepare_instance_config(
-                instance_template_values, instance_config
-            )
-            deploy_instance_configs[instance_name] = templated_instance_config
+            deploy_instance_configs[instance_name] = instance_config
     return True, deploy_instance_configs
 
 
@@ -128,33 +117,54 @@ async def get_stack_config_pools(stack_config):
     return stack_config.get("pools", {})
 
 
-async def extract_instance_plan(instance_name, instance_config):
-    return True, instance_config.get("plan", {})
+async def extract_instance_plan(instance_config):
+    plan = instance_config.get("plan", {})
+    if not plan:
+        return False, {"plan": {}, "msg": "No plan found in instance configuration."}
+    return True, {"plan": plan}
 
 
 async def discover_plan(plan_name, directory=None):
     if not directory:
         directory = default_persistence_path
 
-    success, response = await show(plan_name, directory)
+    success, response = await show(plan_name, directory=directory)
     if not success:
-        return False, response["msg"]
-    return True, response["plan"]
+        return False, response
+    return True, response
 
 
-async def prepare_instance_plan(plan):
+async def prepare_instance_plan(instance_name, instance_config, plan):
     initializer = plan.get("initializer", {})
     orchestrator = plan.get("orchestrator", {})
     configurer = plan.get("configurer", {})
 
-    # TODO, recuresively expand the plan
-    recursively_prepare_instance_config()
+    templated_instance_config = {"instance": {"name": instance_name}}
+    templated_initiailizer_config = await recursively_prepare_instance_config(
+        templated_instance_config, initializer
+    )
+
+    templated_orchestrator_config = await recursively_prepare_instance_config(
+        templated_instance_config, orchestrator
+    )
+
+    templated_configurer_config = await recursively_prepare_instance_config(
+        templated_instance_config, configurer
+    )
 
     return True, {
-        "initializer": initializer,
-        "orchestrator": orchestrator,
-        "configurer": configurer,
+        "initializer": templated_initiailizer_config,
+        "orchestrator": templated_orchestrator_config,
+        "configurer": templated_configurer_config,
     }
+
+
+async def prepare_instance(instance_name, instance_config):
+    template_instance_vars = {"instance": {"name": instance_name}}
+    templated_instance_config = await recursively_prepare_instance_config(
+        template_instance_vars, instance_config
+    )
+    return True, templated_instance_config
 
 
 async def prepare_instance_config(instance_name, instance_config, directory=None):
@@ -162,21 +172,38 @@ async def prepare_instance_config(instance_name, instance_config, directory=None
         directory = default_persistence_path
 
     if "plan" in instance_config:
-        success_extract, response_extract = await extract_instance_plan(
-            instance_name, instance_config
-        )
+        success_extract, response_extract = await extract_instance_plan(instance_config)
         if not success_extract:
             return False, response_extract
+
+        plan_name = response_extract["plan"]
         success_discover, response_discover = await discover_plan(
-            response_extract, directory=directory
+            plan_name, directory=directory
         )
         if not success_discover:
             return False, response_discover
-        plan = response_discover
 
-        success_prepare, response_prepare = await prepare_instance_plan(plan)
+        plan = response_discover
+        success_prepare, response_prepare = await prepare_instance_plan(
+            instance_name, instance_config, plan
+        )
         if not success_prepare:
-            return False, response_prepare
+            return False, {
+                "msg": "Failed to prepare the instance plan for: {}.".format(
+                    instance_name
+                )
+            }
+        instance_config = response_prepare
+    else:
+        success_prepare, response_prepare = await prepare_instance(
+            instance_name, instance_config
+        )
+        if not success_prepare:
+            return False, {
+                "msg": "Failed to prepare the instance config for: {}.".format(
+                    instance_name
+                )
+            }
         instance_config = response_prepare
 
     success, response = await extract_instance_config(instance_name, instance_config)
@@ -184,4 +211,4 @@ async def prepare_instance_config(instance_name, instance_config, directory=None
         return False, response
 
     instance_config = response
-    return True, {instance_name: instance_config}
+    return True, {"instance_name": instance_name, "instance_config": instance_config}
