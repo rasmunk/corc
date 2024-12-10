@@ -16,11 +16,7 @@
 
 from corc.core.defaults import STACK
 from corc.core.storage.dictdatabase import DictDatabase
-from corc.core.stack.config import (
-    get_stack_config,
-    get_stack_config_instances,
-    get_stack_config_pools,
-)
+from corc.core.stack.config import get_stack_config, get_stack_config_instances
 
 
 async def update(name, config_file=None, directory=None):
@@ -52,9 +48,6 @@ async def update(name, config_file=None, directory=None):
             config_file
         )
         return False, response
-
-    # Extract the pool configurations
-    stack_to_update["config"]["pools"] = await get_stack_config_pools(stack_config)
 
     # Extract the instance configurations
     instances_success, instances_response = await get_stack_config_instances(

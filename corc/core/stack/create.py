@@ -16,11 +16,7 @@
 
 from corc.core.defaults import STACK
 from corc.core.storage.dictdatabase import DictDatabase
-from corc.core.stack.config import (
-    get_stack_config,
-    get_stack_config_instances,
-    get_stack_config_pools,
-)
+from corc.core.stack.config import get_stack_config, get_stack_config_instances
 
 
 async def create(name, config_file=None, directory=None):
@@ -42,7 +38,7 @@ async def create(name, config_file=None, directory=None):
         )
         return False, response
 
-    stack = {"id": name, "config": {}}
+    stack = {"id": name, "config": {}, "instances": {}}
     # Load the stack configuration file
     if config_file:
         stack_config = await get_stack_config(config_file)
@@ -51,9 +47,6 @@ async def create(name, config_file=None, directory=None):
                 config_file
             )
             return False, response
-
-        # Extract the pool configurations
-        stack["config"]["pools"] = await get_stack_config_pools(stack_config)
 
         # Extract the instance configurations
         instances_success, instances_response = await get_stack_config_instances(
