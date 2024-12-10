@@ -127,11 +127,7 @@ async def extract_instance_plan(instance_config):
 async def discover_plan(plan_name, directory=None):
     if not directory:
         directory = default_persistence_path
-
-    success, response = await show(plan_name, directory=directory)
-    if not success:
-        return False, response
-    return True, response
+    return await show(plan_name, directory=directory)
 
 
 async def prepare_instance_plan(instance_name, instance_config, plan):
@@ -165,50 +161,3 @@ async def prepare_instance(instance_name, instance_config):
         template_instance_vars, instance_config
     )
     return True, templated_instance_config
-
-
-async def prepare_instance_config(instance_name, instance_config, directory=None):
-    if not directory:
-        directory = default_persistence_path
-
-    if "plan" in instance_config:
-        success_extract, response_extract = await extract_instance_plan(instance_config)
-        if not success_extract:
-            return False, response_extract
-
-        plan_name = response_extract["plan"]
-        success_discover, response_discover = await discover_plan(
-            plan_name, directory=directory
-        )
-        if not success_discover:
-            return False, response_discover
-
-        plan = response_discover
-        success_prepare, response_prepare = await prepare_instance_plan(
-            instance_name, instance_config, plan
-        )
-        if not success_prepare:
-            return False, {
-                "msg": "Failed to prepare the instance plan for: {}.".format(
-                    instance_name
-                )
-            }
-        instance_config = response_prepare
-    else:
-        success_prepare, response_prepare = await prepare_instance(
-            instance_name, instance_config
-        )
-        if not success_prepare:
-            return False, {
-                "msg": "Failed to prepare the instance config for: {}.".format(
-                    instance_name
-                )
-            }
-        instance_config = response_prepare
-
-    success, response = await extract_instance_config(instance_name, instance_config)
-    if not success:
-        return False, response
-
-    instance_config = response
-    return True, {"instance_name": instance_name, "instance_config": instance_config}
