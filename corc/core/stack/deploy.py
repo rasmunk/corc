@@ -181,20 +181,21 @@ async def deploy(name, directory=None):
                 )
             )
 
-    initialize_tasks = [
-        initialize_instance(instance_name, instance_details)
-        for instance_name, instance_details in prepared_instances_configs.items()
-    ]
+    # TODO, add the ability to initialize the instances
+    # initialize_tasks = [
+    #     initialize_instance(instance_name, instance_details)
+    #     for instance_name, instance_details in prepared_instances_configs.items()
+    # ]
 
-    for initialize_success, initialize_response in await asyncio.gather(
-        *initialize_tasks
-    ):
-        if not initialize_success:
-            print(
-                "Failed to initialize instance: {} - {}".format(
-                    initialize_response["name"], initialize_response["msg"]
-                )
-            )
+    # for initialize_success, initialize_response in await asyncio.gather(
+    #     *initialize_tasks
+    # ):
+    #     if not initialize_success:
+    #         print(
+    #             "Failed to initialize instance: {} - {}".format(
+    #                 initialize_response["name"], initialize_response["msg"]
+    #             )
+    #         )
 
     provision_tasks = [
         provision_instance(instance_name, instance_details)
@@ -212,19 +213,20 @@ async def deploy(name, directory=None):
                 )
             )
 
-    configurer_tasks = [
-        configure_instance(instance_name, instance_details)
-        for instance_name, instance_details in prepared_instances_configs.items()
-    ]
-    for configurer_success, configurer_response in await asyncio.gather(
-        *configurer_tasks
-    ):
-        if not configurer_success:
-            print(
-                "Failed to configure instance: {} - {}".format(
-                    configurer_response["name"], configurer_response["msg"]
-                )
-            )
+    # TODO add the ability to configure the instances
+    # configurer_tasks = [
+    #     configure_instance(instance_name, instance_details)
+    #     for instance_name, instance_details in prepared_instances_configs.items()
+    # ]
+    # for configurer_success, configurer_response in await asyncio.gather(
+    #     *configurer_tasks
+    # ):
+    #     if not configurer_success:
+    #         print(
+    #             "Failed to configure instance: {} - {}".format(
+    #                 configurer_response["name"], configurer_response["msg"]
+    #             )
+    #         )
 
     if not await stack_db.update(name, stack_to_deploy):
         response["msg"] = "Failed to update stack: {}.".format(name)
