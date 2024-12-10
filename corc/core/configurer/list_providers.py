@@ -14,32 +14,21 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from corc.cli.parsers.configurer.configurer import (
-    add_provider_group,
-    list_providers_group,
-    remove_provider_group,
-)
+from corc.core.defaults import CONFIGURER
+from corc.core.plugins.plugin import get_plugins, PLUGIN_ENTRYPOINT_BASE
 
 
-def add_provider_groups(parser):
-    add_provider_group(parser)
+async def list_providers():
+    """Add a particular provider to corc."""
+    # Make the provider configuration directory
+    response = {}
+    plugin_type = "{}.{}".format(PLUGIN_ENTRYPOINT_BASE, CONFIGURER)
+    installed_providers = get_plugins(plugin_type=plugin_type)
+    if not installed_providers:
+        response["providers"] = []
+        response["msg"] = "No providers found."
+        return True, response
 
-    provider_groups = []
-    argument_groups = []
-    return provider_groups, argument_groups
-
-
-def list_providers_groups(parser):
-    list_providers_group(parser)
-
-    provider_groups = []
-    argument_groups = []
-    return provider_groups, argument_groups
-
-
-def remove_provider_groups(parser):
-    remove_provider_group(parser)
-
-    provider_groups = []
-    argument_groups = []
-    return provider_groups, argument_groups
+    response["providers"] = [plugin.name for plugin in installed_providers]
+    response["msg"] = "Found providers."
+    return True, response

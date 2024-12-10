@@ -14,8 +14,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
+from corc.core.defaults import PROVIDER_NAME
 from corc.core.orchestration.defaults import (
-    ORCHESTRATION_PROVIDER_NAME,
     SUPPORTED_ORCHESTRATION_PROVIDERS,
 )
 from corc.core.plugins.plugin import load
@@ -28,7 +28,7 @@ def add_provider_group(parser):
         ",".join(SUPPORTED_ORCHESTRATION_PROVIDERS).lower().split(",")
     )
     parser.add_argument(
-        ORCHESTRATION_PROVIDER_NAME,
+        PROVIDER_NAME,
         choices=lower_supported_providers,
         action=PositionalArgumentsAction,
     )
@@ -49,7 +49,7 @@ def remove_provider_group(parser):
             installed_providers.append(provider)
 
     parser.add_argument(
-        ORCHESTRATION_PROVIDER_NAME,
+        PROVIDER_NAME,
         choices=installed_providers,
         action=PositionalArgumentsAction,
     )

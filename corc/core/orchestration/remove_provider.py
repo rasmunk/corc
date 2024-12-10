@@ -14,6 +14,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
+from corc.core.defaults import ORCHESTRATION
 from corc.core.plugins.storage import remove
 
 
@@ -21,7 +22,7 @@ async def remove_provider(provider_name):
     """Remove a particular provider from corc."""
     # Make the provider configuration directory
 
-    removed = remove("orchestration", provider_name)
+    removed = remove(ORCHESTRATION, provider_name)
     if not removed:
         return False, {"msg": "Failed to remove the provider: {}".format(provider_name)}
     return True, {"msg": "Removed the provider: {}".format(provider_name)}

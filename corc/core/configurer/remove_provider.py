@@ -14,32 +14,15 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from corc.cli.parsers.configurer.configurer import (
-    add_provider_group,
-    list_providers_group,
-    remove_provider_group,
-)
+from corc.core.defaults import CONFIGURER
+from corc.core.plugins.storage import remove
 
 
-def add_provider_groups(parser):
-    add_provider_group(parser)
+async def remove_provider(provider_name):
+    """Remove a particular provider from corc."""
+    # Make the provider configuration directory
 
-    provider_groups = []
-    argument_groups = []
-    return provider_groups, argument_groups
-
-
-def list_providers_groups(parser):
-    list_providers_group(parser)
-
-    provider_groups = []
-    argument_groups = []
-    return provider_groups, argument_groups
-
-
-def remove_provider_groups(parser):
-    remove_provider_group(parser)
-
-    provider_groups = []
-    argument_groups = []
-    return provider_groups, argument_groups
+    removed = remove(CONFIGURER, provider_name)
+    if not removed:
+        return False, {"msg": "Failed to remove the provider: {}".format(provider_name)}
+    return True, {"msg": "Removed the provider: {}".format(provider_name)}

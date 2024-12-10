@@ -14,22 +14,40 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
+from corc.core.defaults import PROVIDER_NAME
 from corc.core.configurer.defaults import SUPPORTED_CONFIGURER_PROVIDERS
+from corc.core.plugins.plugin import load
+from corc.cli.parsers.actions import PositionalArgumentsAction
 
 
 def add_provider_group(parser):
-    provider_group = parser.add_argument_group(
-        title="Add configurer provider arguments"
+    # Add the general orchestration providers
+    lower_supported_providers = (
+        ",".join(SUPPORTED_CONFIGURER_PROVIDERS).lower().split(",")
     )
-    providers = provider_group.add_argument_group()
-    for configurer_provider in SUPPORTED_CONFIGURER_PROVIDERS:
-        providers.add_argument(configurer_provider)
+    parser.add_argument(
+        PROVIDER_NAME,
+        choices=lower_supported_providers,
+        action=PositionalArgumentsAction,
+    )
+
+
+def list_providers_group(parser):
+    pass
 
 
 def remove_provider_group(parser):
-    provider_group = parser.add_argument_group(
-        title="Add configurer provider arguments"
+    lower_supported_providers = (
+        ",".join(SUPPORTED_CONFIGURER_PROVIDERS).lower().split(",")
     )
-    providers = provider_group.add_argument_group()
-    for configurer_provider in SUPPORTED_CONFIGURER_PROVIDERS:
-        providers.add_argument(configurer_provider)
+
+    installed_providers = []
+    for provider in lower_supported_providers:
+        if load(provider):
+            installed_providers.append(provider)
+
+    parser.add_argument(
+        PROVIDER_NAME,
+        choices=installed_providers,
+        action=PositionalArgumentsAction,
+    )

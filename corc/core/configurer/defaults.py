@@ -15,4 +15,5 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 # Supported providers
-SUPPORTED_CONFIGURER_PROVIDERS = []
+CONFIGURE_VM_IMAGE = "configure_vm_image"
+SUPPORTED_CONFIGURER_PROVIDERS = [CONFIGURE_VM_IMAGE]

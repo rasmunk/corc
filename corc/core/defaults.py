@@ -20,6 +20,7 @@ import os
 PACKAGE_NAME = "corc"
 
 PROVIDER = "provider"
+PROVIDER_NAME = "provider_name"
 
 # Profile group defaults
 PROFILE = "profile"
@@ -44,7 +45,7 @@ STORAGE = "storage"
 DETAILS = "details"
 
 CONFIGURER = "configurer"
-CONFIGURER_OPERATIONS = ["add_provider", "remove_provider"]
+CONFIGURER_OPERATIONS = ["add_provider", "remove_provider", "list_providers"]
 CONFIGURER_CLI = {CONFIGURER: CONFIGURER_OPERATIONS}
 
 POOL = "pool"
