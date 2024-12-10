@@ -21,12 +21,15 @@ from corc.core.storage.dictdatabase import DictDatabase
 from corc.core.helpers import import_from_module
 from corc.core.plugins.plugin import discover, import_plugin
 from corc.core.stack.config import (
-    extract_instance_config,
-    extract_instance_plan,
-    discover_plan,
+    get_instance_config_plan_name,
+    get_plan,
     prepare_instance_plan,
     prepare_instance,
 )
+
+
+async def initialize_instance(instance_name, instance_details):
+    pass
 
 
 async def provision_instance(instance_name, instance_details):
@@ -83,13 +86,15 @@ async def provision_instance(instance_name, instance_details):
     )
 
 
-async def prepare_instance_config(instance_name, instance_config, directory=None):
+async def prepare_stack_instance(instance_name, instance_config, directory=None):
     if not directory:
         directory = default_persistence_path
 
     if "plan" in instance_config:
-        success_extract, response_extract = await extract_instance_plan(instance_config)
-        if not success_extract:
+        get_name_success, get_name_response = await get_instance_config_plan_name(
+            instance_config
+        )
+        if not get_name_success:
             return False, {
                 "name": instance_name,
                 "msg": "Failed to extract the plan from the config: {}.".format(
@@ -97,17 +102,17 @@ async def prepare_instance_config(instance_name, instance_config, directory=None
                 ),
             }
 
-        plan_name = response_extract["plan"]
-        success_discover, response_discover = await discover_plan(
+        plan_name = get_name_response["name"]
+        get_plan_success, get_plan_response = await get_plan(
             plan_name, directory=directory
         )
-        if not success_discover:
+        if not get_plan_success:
             return False, {
                 "name": instance_name,
                 "msg": "Failed to discover the plan: {}.".format(plan_name),
             }
 
-        plan = response_discover
+        plan = get_plan_response["plan"]
         success_prepare, response_prepare = await prepare_instance_plan(
             instance_name, instance_config, plan
         )
@@ -118,7 +123,6 @@ async def prepare_instance_config(instance_name, instance_config, directory=None
                     instance_config, plan
                 ),
             }
-        instance_config = response_prepare
     else:
         success_prepare, response_prepare = await prepare_instance(
             instance_name, instance_config
@@ -132,14 +136,6 @@ async def prepare_instance_config(instance_name, instance_config, directory=None
             }
         instance_config = response_prepare
 
-    success, response = await extract_instance_config(instance_name, instance_config)
-    if not success:
-        return False, {
-            "name": instance_name,
-            "msg": "Failed to extract the instance config: {}.".format(instance_config),
-        }
-
-    instance_config = response
     return True, {"name": instance_name, "config": instance_config}
 
 
@@ -165,7 +161,7 @@ async def deploy(name, directory=None):
     prepared_instances_configs = {}
 
     prepare_configs_tasks = [
-        prepare_instance_config(instance_name, instance_details, directory=directory)
+        prepare_stack_instance(instance_name, instance_details, directory=directory)
         for instance_name, instance_details in deploy_instances.items()
     ]
 
@@ -185,6 +181,21 @@ async def deploy(name, directory=None):
                 )
             )
 
+    initialize_tasks = [
+        initialize_instance(instance_name, instance_details)
+        for instance_name, instance_details in prepared_instances_configs.items()
+    ]
+
+    for initialize_success, initialize_response in await asyncio.gather(
+        *initialize_tasks
+    ):
+        if not initialize_success:
+            print(
+                "Failed to initialize instance: {} - {}".format(
+                    initialize_response["name"], initialize_response["msg"]
+                )
+            )
+
     provision_tasks = [
         provision_instance(instance_name, instance_details)
         for instance_name, instance_details in prepared_instances_configs.items()
@@ -198,6 +209,20 @@ async def deploy(name, directory=None):
             print(
                 "Failed to provision instance: {} - {}".format(
                     provision_response["name"], provision_response["msg"]
+                )
+            )
+
+    configurer_tasks = [
+        configure_instance(instance_name, instance_details)
+        for instance_name, instance_details in prepared_instances_configs.items()
+    ]
+    for configurer_success, configurer_response in await asyncio.gather(
+        *configurer_tasks
+    ):
+        if not configurer_success:
+            print(
+                "Failed to configure instance: {} - {}".format(
+                    configurer_response["name"], configurer_response["msg"]
                 )
             )
 

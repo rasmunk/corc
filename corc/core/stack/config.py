@@ -17,6 +17,8 @@
 import jinja2
 from corc.core.defaults import default_persistence_path
 from corc.utils.io import load_yaml, exists
+from corc.core.stack.plan.defaults import INITIALIZER, ORCHESTRATOR, CONFIGURER
+from corc.core.stack.plan.config import get_component_config
 from corc.core.stack.plan.show import show
 
 
@@ -51,19 +53,19 @@ async def extract_instance_config(instance_name, instance_kwargs):
     }
 
 
-async def recursively_prepare_instance_config(template_vars, instance_config):
+async def recursively_prepare_stack_instance(template_vars, instance_config):
     output_dict = {}
     # TODO, augment to support recursive templating
     if isinstance(instance_config, list):
         templated_list = []
         for config in instance_config:
             templated_list.append(
-                await recursively_prepare_instance_config(template_vars, config)
+                await recursively_prepare_stack_instance(template_vars, config)
             )
         return templated_list
     elif isinstance(instance_config, dict):
         for key, value in instance_config.items():
-            output_dict[key] = await recursively_prepare_instance_config(
+            output_dict[key] = await recursively_prepare_stack_instance(
                 template_vars, value
             )
     elif isinstance(instance_config, str):
@@ -117,47 +119,47 @@ async def get_stack_config_pools(stack_config):
     return stack_config.get("pools", {})
 
 
-async def extract_instance_plan(instance_config):
-    plan = instance_config.get("plan", {})
-    if not plan:
-        return False, {"plan": {}, "msg": "No plan found in instance configuration."}
-    return True, {"plan": plan}
+async def get_instance_config_plan_name(instance_config):
+    plan_name = instance_config.get("plan", {})
+    if not plan_name:
+        return False, {"msg": "No plan found in instance configuration."}
+    return True, {"name": plan_name}
 
 
-async def discover_plan(plan_name, directory=None):
+async def get_plan(plan_name, directory=None):
     if not directory:
         directory = default_persistence_path
     return await show(plan_name, directory=directory)
 
 
 async def prepare_instance_plan(instance_name, instance_config, plan):
-    initializer = plan.get("initializer", {})
-    orchestrator = plan.get("orchestrator", {})
-    configurer = plan.get("configurer", {})
+    initializer = get_component_config(INITIALIZER, plan)
+    orchestrator = get_component_config(ORCHESTRATOR, plan)
+    configurer = get_component_config(CONFIGURER, plan)
 
     templated_instance_config = {"instance": {"name": instance_name}}
-    templated_initiailizer_config = await recursively_prepare_instance_config(
+    templated_initiailizer_config = await recursively_prepare_stack_instance(
         templated_instance_config, initializer
     )
 
-    templated_orchestrator_config = await recursively_prepare_instance_config(
+    templated_orchestrator_config = await recursively_prepare_stack_instance(
         templated_instance_config, orchestrator
     )
 
-    templated_configurer_config = await recursively_prepare_instance_config(
+    templated_configurer_config = await recursively_prepare_stack_instance(
         templated_instance_config, configurer
     )
 
     return True, {
-        "initializer": templated_initiailizer_config,
-        "orchestrator": templated_orchestrator_config,
-        "configurer": templated_configurer_config,
+        INITIALIZER: templated_initiailizer_config,
+        ORCHESTRATOR: templated_orchestrator_config,
+        CONFIGURER: templated_configurer_config,
     }
 
 
 async def prepare_instance(instance_name, instance_config):
     template_instance_vars = {"instance": {"name": instance_name}}
-    templated_instance_config = await recursively_prepare_instance_config(
+    templated_instance_config = await recursively_prepare_stack_instance(
         template_instance_vars, instance_config
     )
     return True, templated_instance_config

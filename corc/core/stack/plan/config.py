@@ -24,16 +24,17 @@ async def get_plan_config(config_file):
     return load_yaml(config_file)
 
 
-async def get_plan_initalizers(config):
-    # Extract the plan config initializers
-    return config.get("initializers", {})
+def get_component_config(component, config):
+    return config.get(component, {})
 
 
-async def get_plan_orchestrators(config):
-    # Extract the plan config orchestrators
-    return config.get("orchestrators", {})
+def validate_plan_component(component, config):
+    provider = config.get("provider", None)
+    if not provider:
+        return False, {"msg": "Provider is required for the: {}.".format(component)}
 
+    settings = config.get("settings", None)
+    if not settings:
+        return False, {"msg": "Settings is required for the: {}.".format(component)}
 
-async def get_plan_configurers(config):
-    # Extract the plan config configurers
-    return config.get("configurers", {})
+    return True, {}

@@ -6,11 +6,11 @@ instances:
     settings:
       args:
         - "{{ instance.name }}"
-        - /path/to/predefined/image/file/{{ instance.name }}.qcow2
+        - /var/lib/libvirt/images/{{ instance.name }}.qcow2
       kwargs:
         memory_size: 2048mib
         num_vcpus: 2
   instance03:
-    plan: default_plan
+    plan: test_plan
   instance[04-05]:
-    plan: default_plan
+    plan: test_plan

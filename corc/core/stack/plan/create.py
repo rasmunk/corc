@@ -16,11 +16,11 @@
 
 from corc.core.defaults import PLAN
 from corc.core.storage.dictdatabase import DictDatabase
+from corc.core.stack.plan.defaults import INITIALIZER, ORCHESTRATOR, CONFIGURER
 from corc.core.stack.plan.config import (
     get_plan_config,
-    get_plan_initalizers,
-    get_plan_orchestrators,
-    get_plan_configurers,
+    get_component_config,
+    validate_plan_component,
 )
 
 
@@ -43,7 +43,7 @@ async def create(name, config_file=None, directory=None):
         )
         return False, response
 
-    plan = {"id": name, "initializers": {}, "orchestrators": {}, "configurers": {}}
+    plan = {"id": name, "initializer": {}, "orchestrator": {}, "configurer": {}}
 
     # Load the plan configuration file
     if config_file:
@@ -54,10 +54,14 @@ async def create(name, config_file=None, directory=None):
             )
             return False, response
 
-        # Extract the pool configurations
-        plan["initializers"] = await get_plan_initalizers(plan_config)
-        plan["orchestrators"] = await get_plan_orchestrators(plan_config)
-        plan["configurers"] = await get_plan_configurers(plan_config)
+        for component in [INITIALIZER, ORCHESTRATOR, CONFIGURER]:
+            component_config = get_component_config(component, plan_config)
+            # Validate the plan components
+            validate_success, validate_response = validate_plan_component(
+                component, component_config
+            )
+            if not validate_success:
+                return False, validate_response
 
     if not await plan_db.add(plan):
         response["msg"] = (
