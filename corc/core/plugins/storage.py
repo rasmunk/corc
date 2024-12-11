@@ -26,7 +26,7 @@ def pip_install(plugin_name):
     """Install a particular plugin using pip"""
     cmd = ["pip", "install", plugin_name]
     result = run(cmd, capture_output=True)
-    if result["error"]:
+    if result["error"] and result["error"] != b"":
         print(
             "Failed to install plugin: {}, error: {}".format(
                 plugin_name, result["error"]
