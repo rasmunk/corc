@@ -44,6 +44,10 @@ STORAGE = "storage"
 # To get extra information about an entity
 DETAILS = "details"
 
+INITIALIZER = "initializer"
+INITIALIZER_OPERATIONS = ["add_provider", "remove_provider", "list_providers"]
+INITIALIZER_CLI = {INITIALIZER: INITIALIZER_OPERATIONS}
+
 CONFIGURER = "configurer"
 CONFIGURER_OPERATIONS = ["add_provider", "remove_provider", "list_providers"]
 CONFIGURER_CLI = {CONFIGURER: CONFIGURER_OPERATIONS}
@@ -92,7 +96,13 @@ ORCHESTRATION_OPERATIONS = [
 ORCHESTRATION_CLI = {ORCHESTRATION: ORCHESTRATION_OPERATIONS}
 
 # List of functionality that corc supports
-CORC_CLI_STRUCTURE = [CONFIGURER_CLI, ORCHESTRATION_CLI, STACK_CLI, SWARM_CLI]
+CORC_CLI_STRUCTURE = [
+    INITIALIZER_CLI,
+    CONFIGURER_CLI,
+    ORCHESTRATION_CLI,
+    STACK_CLI,
+    SWARM_CLI,
+]
 
 # Default state directory
 default_base_path = os.path.join(os.path.expanduser("~"), ".{}".format(PACKAGE_NAME))
