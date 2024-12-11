@@ -40,19 +40,38 @@ class Plugin:
         }
 
 
-def get_plugins(plugin_type=PLUGIN_ENTRYPOINT_BASE):
+def get_python_entrypoints(entry_point_group):
     """Get all the installed plugins on the system"""
     # Python 3.9 and below does not support group selection
     # https://docs.python.org/3.9/library/importlib.metadata.html#entry-points
     if sys.version_info <= (3, 10):
-        installed_entrypoints = entry_points()
-        installed_plugins = installed_entrypoints.get(plugin_type, [])
+        available_entrypoints = entry_points()
+        found_entrypoints = available_entrypoints.get(entry_point_group, [])
     else:
         # https://docs.python.org/3.10/library/importlib.metadata.html#entry-points
-        installed_plugins = entry_points(group=plugin_type)
+        found_entrypoints = entry_points(group=entry_point_group)
+    return found_entrypoints
+
+
+def get_plugins(plugin_type=PLUGIN_ENTRYPOINT_BASE):
+    """Get all the installed plugins on the system"""
+    installed_plugins = get_python_entrypoints(plugin_type)
     return [
         Plugin(plugin.name, plugin.group, plugin.module) for plugin in installed_plugins
     ]
+
+
+def get_plugin_cli_module_path_and_name(
+    plugin_name, plugin_type=PLUGIN_ENTRYPOINT_BASE
+):
+    """Get the module path for the cli module in a particular plugin"""
+    console_scripts_entrypoints = get_python_entrypoints("console_scripts")
+    for console_script in console_scripts_entrypoints:
+        # Get the module path for the console script and remove the function name within the module after the colon
+        module_path, function_name = console_script.value.split(":")
+        if module_path.startswith(plugin_name):
+            return module_path, function_name
+    return False, False
 
 
 def discover(plugin_name, plugin_type=PLUGIN_ENTRYPOINT_BASE):

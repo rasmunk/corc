@@ -21,7 +21,12 @@ import sys
 from corc.core.defaults import PACKAGE_NAME, CORC_CLI_STRUCTURE
 from corc.cli.helpers import cli_exec, import_from_module
 from corc.utils.format import error_print
-from corc.core.plugins.plugin import get_plugins, import_plugin, PLUGIN_ENTRYPOINT_BASE
+from corc.core.plugins.plugin import (
+    get_plugins,
+    import_plugin,
+    PLUGIN_ENTRYPOINT_BASE,
+    get_plugin_cli_module_path_and_name,
+)
 
 from corc.cli.return_codes import SUCCESS, FAILURE
 
@@ -183,10 +188,18 @@ def cli(commands):
             for plugin in type_plugins:
                 function_provider = function_parser.add_parser(plugin.name)
                 function_cli_parser = function_provider.add_subparsers(title="COMMAND")
-                cli_module_path = "{}.{}.{}".format(plugin.name, "cli", "cli")
-                imported_cli_module = import_plugin(cli_module_path, return_module=True)
-                if imported_cli_module:
-                    imported_cli_module.cli(function_cli_parser)
+                cli_module_path, cli_module_function_name = (
+                    get_plugin_cli_module_path_and_name(plugin.name)
+                )
+                if cli_module_path and cli_module_function_name:
+                    imported_cli_module = import_plugin(
+                        cli_module_path, return_module=True
+                    )
+                    if imported_cli_module:
+                        plugin_cli_function = getattr(
+                            imported_cli_module, cli_module_function_name
+                        )
+                        plugin_cli_function(function_cli_parser)
 
 
 if __name__ == "__main__":
