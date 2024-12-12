@@ -62,10 +62,12 @@ def get_plugins(plugin_type=PLUGIN_ENTRYPOINT_BASE):
 
 
 def get_plugin_cli_module_path_and_name(
-    plugin_name, plugin_type=PLUGIN_ENTRYPOINT_BASE
+    plugin_name,
+    plugin_type=PLUGIN_ENTRYPOINT_BASE,
+    plugin_cli_entrypoint="console_scripts"
 ):
     """Get the module path for the cli module in a particular plugin"""
-    console_scripts_entrypoints = get_python_entrypoints("console_scripts")
+    console_scripts_entrypoints = get_python_entrypoints(plugin_cli_entrypoint)
     for console_script in console_scripts_entrypoints:
         # Get the module path for the console script and remove the function name within the module after the colon
         module_path, function_name = console_script.value.split(":")
