@@ -177,8 +177,10 @@ def cli(commands):
                 corc_cli_type,
                 corc_cli_operations,
                 function_parser,
-                module_core_prefix="corc.core.{}".format(corc_cli_type),
-                module_cli_prefix="corc.cli.input_groups.{}".format(corc_cli_type),
+                module_core_prefix="{}.core.{}".format(PACKAGE_NAME, corc_cli_type),
+                module_cli_prefix="{}.cli.input_groups.{}".format(
+                    PACKAGE_NAME, corc_cli_type
+                ),
             )
             # Load in the installed plugins and their CLIs
             plugin_entrypoint_type = "{}.{}".format(
@@ -189,7 +191,10 @@ def cli(commands):
                 function_provider = function_parser.add_parser(plugin.name)
                 function_cli_parser = function_provider.add_subparsers(title="COMMAND")
                 cli_module_path, cli_module_function_name = (
-                    get_plugin_cli_module_path_and_name(plugin.name)
+                    get_plugin_cli_module_path_and_name(
+                        plugin.name,
+                        plugin_cli_entrypoint="{}.cli".format(PLUGIN_ENTRYPOINT_BASE),
+                    )
                 )
                 if cli_module_path and cli_module_function_name:
                     imported_cli_module = import_plugin(
