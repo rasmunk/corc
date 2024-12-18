@@ -19,7 +19,12 @@ from corc.utils.io import makedirs, exists, removedirs
 from corc.utils.job import run
 from corc.core.config import config_exists, save_config, load_config
 from corc.core.plugins.defaults import default_plugins_dir
-from corc.core.plugins.plugin import import_plugin, discover
+from corc.core.plugins.plugin import (
+    import_plugin,
+    discover,
+    PLUGIN_ENTRYPOINT_BASE,
+    get_plugin_module_path_and_name,
+)
 
 
 def pip_install(plugin_name):
@@ -80,12 +85,33 @@ def install(plugin_type, plugin_name, plugin_directory=default_plugins_dir):
     # Check if a configuration already exists
     plugin_config_path = os.path.join(plugin_directory_path, "config")
     if not config_exists(plugin_config_path):
-        # Generate a new plugin configuration
-        configuration_module_path = "{}.config".format(plugin_name)
-        imported_plugin_module = import_plugin(
-            configuration_module_path, return_module=True
+        # Generate a new plugin configuration if available
+        # Expects that the plugin defines the following entrypoint:
+        # corc.plugins.config = [plugin_name=plugin_name.path.to.config_module:function_name]
+        config_module_path, config_module_function_name = (
+            get_plugin_module_path_and_name(
+                plugin_name,
+                plugin_module_entrypoint="{}.config".format(PLUGIN_ENTRYPOINT_BASE),
+            )
         )
-        default_plugin_config = imported_plugin_module.generate_default_config()
+        if not config_module_path and not config_module_function_name:
+            # No configuration module/function was implemented by the plugin
+            # Therefore, no configuration will be generated
+            return True
+
+        if config_module_path and not config_module_function_name:
+            # A configuration module was implemented but not a function
+            # Therefore, no configuration will be generated
+            return True
+
+        imported_plugin_module = import_plugin(config_module_path, return_module=True)
+        if not imported_plugin_module:
+            return False
+
+        gen_default_config_function = getattr(
+            imported_plugin_module, config_module_function_name
+        )
+        default_plugin_config = gen_default_config_function()
         return save_config(default_plugin_config, path=plugin_config_path)
     return True
 
