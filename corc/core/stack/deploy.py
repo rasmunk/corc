@@ -19,70 +19,72 @@ import asyncio
 from corc.core.defaults import STACK, default_persistence_path
 from corc.core.storage.dictdatabase import DictDatabase
 from corc.core.helpers import import_from_module
-from corc.core.plugins.plugin import discover, import_plugin
+from corc.core.plugins.plugin import import_plugin, load, PLUGIN_ENTRYPOINT_BASE
 from corc.core.stack.config import (
     get_instance_config_plan_name,
     get_plan,
     prepare_instance_plan,
     prepare_instance,
 )
+from corc.core.stack.plan.defaults import INITIALIZER, ORCHESTRATOR, CONFIGURER
 
 
-async def initialize_instance(instance_name, instance_details):
-    pass
+def init_driver(driver_name, *args, **kwargs):
+
+    return True, driver
 
 
-async def provision_instance(instance_name, instance_details):
-    plugin_driver = discover(instance_details["provider"]["name"])
-    if not plugin_driver:
+def init_plugin_and_driver(
+    plugin_name, plugin_type, driver_name, *driver_args, **driver_kwargs
+):
+    plugin = load(plugin_name, plugin_type=plugin_type)
+    if not plugin:
         return False, {
-            "name": instance_name,
-            "msg": "Provider: {} is not installed.".format(
-                instance_details["provider"]["name"]
-            ),
-        }
-
-    driver_args = []
-    if "args" in instance_details["provider"] and instance_details["provider"]["args"]:
-        driver_args = instance_details["provider"]["args"]
-
-    driver_kwargs = {}
-    if (
-        "kwargs" in instance_details["provider"]
-        and instance_details["provider"]["kwargs"]
-    ):
-        driver_kwargs = instance_details["provider"]["kwargs"]
-
-    plugin_module = import_plugin(plugin_driver.name, return_module=True)
-    if not plugin_module:
-        return False, {
-            "name": instance_name,
-            "msg": "Failed to load plugin: {}.".format(
-                instance_details["provider"]["name"]
-            ),
+            "msg": "Plugin: {} could not be loaded.".format(plugin_name),
         }
 
     driver_client_func = import_from_module(
-        "{}.{}".format(plugin_driver.name, "client"), "client", "new_client"
+        "{}.{}".format(plugin.name, "client"), "client", "new_client"
     )
-    driver = driver_client_func(
-        instance_details["provider"]["driver"], *driver_args, **driver_kwargs
-    )
+
+    driver = driver_client_func(driver_name, *driver_args, **driver_kwargs)
     if not driver:
         return False, {
-            "name": instance_name,
-            "msg": "Failed to create client for provider driver: {}.".format(
-                instance_details["provider"]["driver"]
-            ),
+            "msg": "Failed to create client provider driver: {}.".format(driver_name),
         }
 
+    return True, {"plugin": plugin, "driver": driver}
+
+
+# async def configure_instance(instance_name, configurer_config):
+#     pass
+
+
+# async def initialize_instance(instance_name, initializer_config):
+#     pass
+
+
+async def provision_instance(instance_name, orchestrator_config):
+    init_success, response = init_plugin_and_driver(
+        orchestrator_config["provider"]["name"],
+        ORCHESTRATOR,
+        orchestrator_config["provider"]["driver"],
+        *orchestrator_config["provider"].get("args", []),
+        **orchestrator_config["provider"].get("kwargs", {})
+    )
+    if not init_success:
+        return False, {"name": instance_name, "msg": response["msg"]}
+
+    plugin = response["plugin"]
+    driver = response["driver"]
+
     provider_create_func = import_from_module(
-        "{}.{}".format(plugin_driver.module, "create"), "create", "create"
+        "{}.{}".format(plugin.module, "create"), "create", "create"
     )
     return await provider_create_func(
         driver,
-        *instance_details["settings"]["args"],
-        **instance_details["settings"]["kwargs"]
+        *orchestrator_config["settings"]["args"],
+        **orchestrator_config["settings"]["kwargs"]
     )
 
 
@@ -106,6 +108,7 @@ async def prepare_stack_instance(instance_name, instance_config, directory=None)
         get_plan_success, get_plan_response = await get_plan(
             plan_name, directory=directory
         )
+
         if not get_plan_success:
             return False, {
                 "name": instance_name,
@@ -123,6 +126,7 @@ async def prepare_stack_instance(instance_name, instance_config, directory=None)
                     instance_config, plan
                 ),
             }
+        instance_config = response_prepare
     else:
         success_prepare, response_prepare = await prepare_instance(
             instance_name, instance_config
@@ -182,24 +186,26 @@ async def deploy(name, directory=None):
             )
 
     # TODO, add the ability to initialize the instances
-    # initialize_tasks = [
-    #     initialize_instance(instance_name, instance_details)
-    #     for instance_name, instance_details in prepared_instances_configs.items()
-    # ]
+    initialize_tasks = [
+        initialize_instance(instance_name, instance_details[INITIALIZER])
+        for instance_name, instance_details in prepared_instances_configs.items()
+        if INITIALIZER in instance_details
+    ]
 
-    # for initialize_success, initialize_response in await asyncio.gather(
-    #     *initialize_tasks
-    # ):
-    #     if not initialize_success:
-    #         print(
-    #             "Failed to initialize instance: {} - {}".format(
-    #                 initialize_response["name"], initialize_response["msg"]
-    #             )
-    #         )
+    for initialize_success, initialize_response in await asyncio.gather(
+        *initialize_tasks
+    ):
+        if not initialize_success:
+            print(
+                "Failed to initialize instance: {} - {}".format(
+                    initialize_response["name"], initialize_response["msg"]
+                )
+            )
 
     provision_tasks = [
-        provision_instance(instance_name, instance_details)
+        provision_instance(instance_name, instance_details[ORCHESTRATOR])
         for instance_name, instance_details in prepared_instances_configs.items()
+        if ORCHESTRATOR in instance_details
     ]
     for provision_success, provision_response in await asyncio.gather(*provision_tasks):
         if provision_success:
@@ -214,19 +220,20 @@ async def deploy(name, directory=None):
             )
 
     # TODO add the ability to configure the instances
-    # configurer_tasks = [
-    #     configure_instance(instance_name, instance_details)
-    #     for instance_name, instance_details in prepared_instances_configs.items()
-    # ]
-    # for configurer_success, configurer_response in await asyncio.gather(
-    #     *configurer_tasks
-    # ):
-    #     if not configurer_success:
-    #         print(
-    #             "Failed to configure instance: {} - {}".format(
-    #                 configurer_response["name"], configurer_response["msg"]
-    #             )
-    #         )
+    configurer_tasks = [
+        configure_instance(instance_name, instance_details[CONFIGURER])
+        for instance_name, instance_details in prepared_instances_configs.items()
+        if CONFIGURER in instance_details
+    ]
+    for configurer_success, configurer_response in await asyncio.gather(
+        *configurer_tasks
+    ):
+        if not configurer_success:
+            print(
+                "Failed to configure instance: {} - {}".format(
+                    configurer_response["name"], configurer_response["msg"]
+                )
+            )
 
     if not await stack_db.update(name, stack_to_deploy):
         response["msg"] = "Failed to update stack: {}.".format(name)

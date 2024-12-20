@@ -18,6 +18,7 @@ import sys
 from importlib.metadata import entry_points, import_module
 from corc.utils.io import removedirs
 from corc.core.defaults import PACKAGE_NAME
+from corc.core.plugins.storage import load_plugin_storage, remove_plugin_storage
 
 PLUGIN_ENTRYPOINT_BASE = "{}.plugins".format(PACKAGE_NAME)
 
@@ -97,7 +98,7 @@ def import_plugin(plugin_name, return_module=False):
     return True
 
 
-def remove_plugin(plugin_name, plugin_type=PLUGIN_ENTRYPOINT_BASE):
+def remove(plugin_name, plugin_type=PLUGIN_ENTRYPOINT_BASE):
     """Remove a particular plugin module"""
     plugin = discover(plugin_name, plugin_type=plugin_type)
     if not plugin:
@@ -106,7 +107,7 @@ def remove_plugin(plugin_name, plugin_type=PLUGIN_ENTRYPOINT_BASE):
         return removedirs(plugin.module.__file__)
     if hasattr(plugin.module, "__path__"):
         return removedirs(plugin.module.__path__)
-    return False
+    return remove_plugin_storage(plugin_type, plugin.name)
 
 
 def load(plugin_name, plugin_type=PLUGIN_ENTRYPOINT_BASE):
@@ -117,4 +118,5 @@ def load(plugin_name, plugin_type=PLUGIN_ENTRYPOINT_BASE):
     # Import the discovered plugin
     if not import_plugin(plugin.name):
         return False
+    plugin.config = load_plugin_storage(plugin_type, plugin.name)
     return plugin

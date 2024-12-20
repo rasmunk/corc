@@ -15,13 +15,12 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 from corc.core.defaults import CONFIGURER
-from corc.core.plugins.storage import remove
+from corc.core.plugins.plugin import remove
 
 
 async def remove_provider(provider_name):
     """Remove a particular provider from corc."""
     # Make the provider configuration directory
-
     removed = remove(CONFIGURER, provider_name)
     if not removed:
         return False, {"msg": "Failed to remove the provider: {}".format(provider_name)}

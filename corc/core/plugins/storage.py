@@ -116,29 +116,19 @@ def install(plugin_type, plugin_name, plugin_directory=default_plugins_dir):
     return True
 
 
-def load(plugin_type, plugin_name, plugin_directory=default_plugins_dir):
-    """Load a particular plugin"""
-    plugin = discover(plugin_name)
-    if not plugin:
-        return False
-    if not import_plugin(plugin.module):
-        return False
-    # Load plugin config
+def load_plugin_storage(plugin_type, plugin_name, plugin_directory=default_plugins_dir):
     plugin_config_path = os.path.join(
         plugin_directory, plugin_type, plugin_name, "config"
     )
     if config_exists(plugin_config_path):
-        plugin.config = load_config(plugin_config_path)
-    return plugin
+        return load_config(plugin_config_path)
+    return None
 
 
-def remove(plugin_type, plugin_name, plugin_directory=default_plugins_dir):
+def remove_plugin_storage(
+    plugin_type, plugin_name, plugin_directory=default_plugins_dir
+):
     """Remove a particular plugin"""
-    plugin = discover(plugin_name)
-    if not plugin:
-        print("Not loaded plugin: {} - {}".format(plugin_name, plugin_directory))
-        return True
-
     module_uninstalled = pip_uninstall(plugin_name)
     if not module_uninstalled:
         print("Failed to uninstall plugin: {}".format(plugin_name))
@@ -149,7 +139,7 @@ def remove(plugin_type, plugin_name, plugin_directory=default_plugins_dir):
         print("Directory not exists: {}".format(plugin_type_directory_path))
         return True
 
-    plugin_directory_path = os.path.join(plugin_type_directory_path, plugin.name)
+    plugin_directory_path = os.path.join(plugin_type_directory_path, plugin_name)
     if not exists(plugin_directory_path):
         print("Directory not exists: {}".format(plugin_directory_path))
         return True
