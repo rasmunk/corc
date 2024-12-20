@@ -44,11 +44,11 @@ def init_plugin(plugin_name, plugin_type):
     return True, plugin
 
 
-def init_driver(driver_name, *args, **kwargs):
+def init_plugin_driver(plugin_name, driver_name, *args, **kwargs):
     driver_client_func = import_from_module(
-        "{}.{}".format(plugin.name, "client"), "client", "new_client"
+        "{}.{}".format(plugin_name, "client"), "client", "new_client"
     )
-    driver = driver_client_func(driver_name, *driver_args, **driver_kwargs)
+    driver = driver_client_func(driver_name, *args, **kwargs)
     if not driver:
         return False, {
             "msg": "Failed to create client provider driver: {}.".format(driver_name),
@@ -64,11 +64,11 @@ def init_plugin_and_driver(
     if not init_plugin_success:
         return False, init_plugin_response
 
-    init_driver_success, init_driver_response = init_driver(
-        driver_name, *driver_args, **driver_kwargs
+    init_driver_success, init_driver_response = init_plugin_driver(
+        plugin_name, driver_name, *driver_args, **driver_kwargs
     )
 
-    return True, {"plugin": plugin, "driver": driver}
+    return True, {"plugin": init_plugin_response, "driver": init_driver_response}
 
 
 async def initialize_instance(instance_name, initializer_config):
@@ -114,7 +114,7 @@ async def initialize_instance(instance_name, initializer_config):
 
 async def configure_instance(instance_name, configurer_config):
     init_plugin_success, init_plugin_response = init_plugin(
-        initializer_config["provider"]["name"], CONFIGURER
+        configurer_config["provider"]["name"], CONFIGURER
     )
     if not init_plugin_success:
         return False, {"name": instance_name, "msg": init_plugin_response["msg"]}
