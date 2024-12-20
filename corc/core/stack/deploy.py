@@ -118,7 +118,38 @@ async def configure_instance(instance_name, configurer_config):
     )
     if not init_plugin_success:
         return False, {"name": instance_name, "msg": init_plugin_response["msg"]}
-    # TODO call the configurer function
+
+    configurer_module_path, configurer_module_function_name = (
+        get_plugin_module_path_and_name(
+            configurer_config["provider"]["name"],
+            plugin_module_entrypoint="{}.{}".format(PLUGIN_ENTRYPOINT_BASE, CONFIGURER),
+        )
+    )
+
+    if not configurer_module_path:
+        return False, {
+            "name": instance_name,
+            "msg": "Failed to find the configurer module path for plugin: {}.".format(
+                configurer_config["provider"]["name"]
+            ),
+        }
+
+    if not configurer_module_function_name:
+        return False, {
+            "name": instance_name,
+            "msg": "Failed to find the configurer module function name for plugin: {}.".format(
+                configurer_config["provider"]["name"]
+            ),
+        }
+
+    imported_configurer_module = import_plugin(
+        configurer_module_path, return_module=True
+    )
+
+    configurer_function = getattr(
+        imported_configurer_module, configurer_module_function_name
+    )
+    return await configurer_function(configurer_config)
 
 
 async def provision_instance(instance_name, orchestrator_config):
