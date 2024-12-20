@@ -1,7 +1,6 @@
 initializer:
   provider:
     name: gen-vm-image
-    driver: gen-vm-image
   settings:
     args:
       - "{{ instance.name }}"
@@ -24,7 +23,6 @@ orchestrator:
 configurer:
   provider:
     name: configure-vm-image
-    driver: configure-vm-image
   settings:
     args:
       - /var/lib/libvirt/images/{{ instance.name }}.qcow2

@@ -29,7 +29,25 @@ from corc.core.stack.config import (
 from corc.core.stack.plan.defaults import INITIALIZER, ORCHESTRATOR, CONFIGURER
 
 
+def init_plugin(plugin_name, plugin_type):
+    plugin = load(plugin_name, plugin_type=plugin_type)
+    if not plugin:
+        return False, {
+            "msg": "Plugin: {} could not be loaded.".format(plugin_name),
+        }
+
+    return True, plugin
+
+
 def init_driver(driver_name, *args, **kwargs):
+    driver_client_func = import_from_module(
+        "{}.{}".format(plugin.name, "client"), "client", "new_client"
+    )
+    driver = driver_client_func(driver_name, *driver_args, **driver_kwargs)
+    if not driver:
+        return False, {
+            "msg": "Failed to create client provider driver: {}.".format(driver_name),
+        }
 
     return True, driver
 
@@ -37,31 +55,33 @@ def init_driver(driver_name, *args, **kwargs):
 def init_plugin_and_driver(
     plugin_name, plugin_type, driver_name, *driver_args, **driver_kwargs
 ):
-    plugin = load(plugin_name, plugin_type=plugin_type)
-    if not plugin:
-        return False, {
-            "msg": "Plugin: {} could not be loaded.".format(plugin_name),
-        }
+    init_plugin_success, init_plugin_response  = init_plugin(plugin_name, plugin_type)
+    if not init_plugin_success:
+        return False, init_plugin_response
 
-    driver_client_func = import_from_module(
-        "{}.{}".format(plugin.name, "client"), "client", "new_client"
+    init_driver_success, init_driver_response = init_driver(
+        driver_name, *driver_args, **driver_kwargs
     )
-
-    driver = driver_client_func(driver_name, *driver_args, **driver_kwargs)
-    if not driver:
-        return False, {
-            "msg": "Failed to create client provider driver: {}.".format(driver_name),
-        }
 
     return True, {"plugin": plugin, "driver": driver}
 
 
-# async def configure_instance(instance_name, configurer_config):
-#     pass
+async def initialize_instance(instance_name, initializer_config):
+    init_plugin_success, init_plugin_response = init_plugin(
+        initializer_config["provider"]["name"], INITIALIZER
+    )
+    if not init_plugin_success:
+        return False, {"name": instance_name, "msg": init_plugin_response["msg"]}
+    # TODO call the initializer function
 
 
-# async def initialize_instance(instance_name, initializer_config):
-#     pass
+async def configure_instance(instance_name, configurer_config):
+    init_plugin_success, init_plugin_response = init_plugin(
+        initializer_config["provider"]["name"], CONFIGURER
+    )
+    if not init_plugin_success:
+        return False, {"name": instance_name, "msg": init_plugin_response["msg"]}
+    # TODO call the configurer function
 
 
 async def provision_instance(instance_name, orchestrator_config):
