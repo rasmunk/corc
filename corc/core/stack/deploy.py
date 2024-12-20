@@ -19,7 +19,12 @@ import asyncio
 from corc.core.defaults import STACK, default_persistence_path
 from corc.core.storage.dictdatabase import DictDatabase
 from corc.core.helpers import import_from_module
-from corc.core.plugins.plugin import import_plugin, load, PLUGIN_ENTRYPOINT_BASE
+from corc.core.plugins.plugin import (
+    import_plugin,
+    load,
+    PLUGIN_ENTRYPOINT_BASE,
+    get_plugin_module_path_and_name,
+)
 from corc.core.stack.config import (
     get_instance_config_plan_name,
     get_plan,
@@ -55,7 +60,7 @@ def init_driver(driver_name, *args, **kwargs):
 def init_plugin_and_driver(
     plugin_name, plugin_type, driver_name, *driver_args, **driver_kwargs
 ):
-    init_plugin_success, init_plugin_response  = init_plugin(plugin_name, plugin_type)
+    init_plugin_success, init_plugin_response = init_plugin(plugin_name, plugin_type)
     if not init_plugin_success:
         return False, init_plugin_response
 
@@ -72,7 +77,39 @@ async def initialize_instance(instance_name, initializer_config):
     )
     if not init_plugin_success:
         return False, {"name": instance_name, "msg": init_plugin_response["msg"]}
-    # TODO call the initializer function
+
+    initializer_module_path, initializer_module_function_name = (
+        get_plugin_module_path_and_name(
+            initializer_config["provider"]["name"],
+            plugin_module_entrypoint="{}.{}".format(
+                PLUGIN_ENTRYPOINT_BASE, INITIALIZER
+            ),
+        )
+    )
+    if not initializer_module_path:
+        return False, {
+            "name": instance_name,
+            "msg": "Failed to find the initializer module path for plugin: {}.".format(
+                initializer_config["provider"]["name"]
+            ),
+        }
+
+    if not initializer_module_function_name:
+        return False, {
+            "name": instance_name,
+            "msg": "Failed to find the initializer module function name for plugin: {}.".format(
+                initializer_config["provider"]["name"]
+            ),
+        }
+
+    imported_initializer_module = import_plugin(
+        initializer_module_path, return_module=True
+    )
+
+    initializer_function = getattr(
+        imported_initializer_module, initializer_module_function_name
+    )
+    return await initializer_function(initializer_config)
 
 
 async def configure_instance(instance_name, configurer_config):

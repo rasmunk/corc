@@ -67,10 +67,10 @@ def get_plugin_module_path_and_name(
     plugin_module_entrypoint="console_scripts",
 ):
     """Get the module path for a module in a particular plugin"""
-    console_scripts_entrypoints = get_python_entrypoints(plugin_module_entrypoint)
-    for console_script in console_scripts_entrypoints:
+    entrypoints = get_python_entrypoints(plugin_module_entrypoint)
+    for entrypoint in entrypoints:
         # Get the module path for the console script and remove the function name within the module after the colon
-        module_path, function_name = console_script.value.split(":")
+        module_path, function_name = entrypoint.value.split(":")
         if module_path.startswith(plugin_name):
             return module_path, function_name
     return False, False
