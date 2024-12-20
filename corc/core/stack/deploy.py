@@ -273,7 +273,6 @@ async def deploy(name, directory=None):
                 )
             )
 
-    # TODO, add the ability to initialize the instances
     initialize_tasks = [
         initialize_instance(instance_name, instance_details[INITIALIZER])
         for instance_name, instance_details in prepared_instances_configs.items()
@@ -307,7 +306,6 @@ async def deploy(name, directory=None):
                 )
             )
 
-    # TODO add the ability to configure the instances
     configurer_tasks = [
         configure_instance(instance_name, instance_details[CONFIGURER])
         for instance_name, instance_details in prepared_instances_configs.items()
