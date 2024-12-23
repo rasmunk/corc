@@ -62,6 +62,7 @@ async def create(name, config_file=None, directory=None):
             )
             if not validate_success:
                 return False, validate_response
+            plan[component] = component_config
 
     if not await plan_db.add(plan):
         response["msg"] = (

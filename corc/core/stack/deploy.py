@@ -16,6 +16,7 @@
 
 # Description: Deploy the stack
 import asyncio
+import inspect
 from corc.core.defaults import STACK, default_persistence_path
 from corc.core.storage.dictdatabase import DictDatabase
 from corc.core.helpers import import_from_module
@@ -23,7 +24,7 @@ from corc.core.plugins.plugin import (
     import_plugin,
     load,
     PLUGIN_ENTRYPOINT_BASE,
-    get_plugin_module_path_and_name,
+    get_plugin_module_path_and_func,
 )
 from corc.core.stack.config import (
     get_instance_config_plan_name,
@@ -35,7 +36,7 @@ from corc.core.stack.plan.defaults import INITIALIZER, ORCHESTRATOR, CONFIGURER
 
 
 def init_plugin(plugin_name, plugin_type):
-    plugin = load(plugin_name, plugin_type=plugin_type)
+    plugin = load(plugin_name)
     if not plugin:
         return False, {
             "msg": "Plugin: {} could not be loaded.".format(plugin_name),
@@ -79,7 +80,7 @@ async def initialize_instance(instance_name, initializer_config):
         return False, {"name": instance_name, "msg": init_plugin_response["msg"]}
 
     initializer_module_path, initializer_module_function_name = (
-        get_plugin_module_path_and_name(
+        get_plugin_module_path_and_func(
             initializer_config["provider"]["name"],
             plugin_module_entrypoint="{}.{}".format(
                 PLUGIN_ENTRYPOINT_BASE, INITIALIZER
@@ -109,7 +110,15 @@ async def initialize_instance(instance_name, initializer_config):
     initializer_function = getattr(
         imported_initializer_module, initializer_module_function_name
     )
-    return await initializer_function(initializer_config)
+    if inspect.iscoroutinefunction(initializer_function):
+        return await initializer_function(
+            *initializer_config["settings"]["args"],
+            **initializer_config["settings"]["kwargs"],
+        )
+    return initializer_function(
+        *initializer_config["settings"]["args"],
+        **initializer_config["settings"]["kwargs"],
+    )
 
 
 async def configure_instance(instance_name, configurer_config):
@@ -120,7 +129,7 @@ async def configure_instance(instance_name, configurer_config):
         return False, {"name": instance_name, "msg": init_plugin_response["msg"]}
 
     configurer_module_path, configurer_module_function_name = (
-        get_plugin_module_path_and_name(
+        get_plugin_module_path_and_func(
             configurer_config["provider"]["name"],
             plugin_module_entrypoint="{}.{}".format(PLUGIN_ENTRYPOINT_BASE, CONFIGURER),
         )
@@ -149,7 +158,15 @@ async def configure_instance(instance_name, configurer_config):
     configurer_function = getattr(
         imported_configurer_module, configurer_module_function_name
     )
-    return await configurer_function(configurer_config)
+    if inspect.iscoroutinefunction(configurer_function):
+        return await configurer_function(
+            *configurer_config["provider"]["args"],
+            **configurer_config["provider"]["kwargs"],
+        )
+    return configurer_function(
+        *configurer_config["provider"]["args"],
+        **configurer_config["provider"]["kwargs"],
+    )
 
 
 async def provision_instance(instance_name, orchestrator_config):
@@ -158,7 +175,7 @@ async def provision_instance(instance_name, orchestrator_config):
         ORCHESTRATOR,
         orchestrator_config["provider"]["driver"],
         *orchestrator_config["provider"].get("args", []),
-        **orchestrator_config["provider"].get("kwargs", {})
+        **orchestrator_config["provider"].get("kwargs", {}),
     )
     if not init_success:
         return False, {"name": instance_name, "msg": response["msg"]}
@@ -169,10 +186,16 @@ async def provision_instance(instance_name, orchestrator_config):
     provider_create_func = import_from_module(
         "{}.{}".format(plugin.module, "create"), "create", "create"
     )
-    return await provider_create_func(
+    if inspect.iscoroutinefunction(provider_create_func):
+        return await provider_create_func(
+            driver,
+            *orchestrator_config["settings"]["args"],
+            **orchestrator_config["settings"]["kwargs"],
+        )
+    return provider_create_func(
         driver,
         *orchestrator_config["settings"]["args"],
-        **orchestrator_config["settings"]["kwargs"]
+        **orchestrator_config["settings"]["kwargs"],
     )
 
 
@@ -285,7 +308,7 @@ async def deploy(name, directory=None):
         if not initialize_success:
             print(
                 "Failed to initialize instance: {} - {}".format(
-                    initialize_response["name"], initialize_response["msg"]
+                    initialize_success, initialize_response
                 )
             )
 

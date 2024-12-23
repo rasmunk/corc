@@ -70,7 +70,7 @@ def get_plugins(plugin_type=PLUGIN_ENTRYPOINT_BASE):
     ]
 
 
-def get_plugin_module_path_and_name(
+def get_plugin_module_path_and_func(
     plugin_name,
     plugin_module_entrypoint="console_scripts",
 ):
@@ -78,7 +78,10 @@ def get_plugin_module_path_and_name(
     entrypoints = get_python_entrypoints(plugin_module_entrypoint)
     for entrypoint in entrypoints:
         # Get the module path for the console script and remove the function name within the module after the colon
-        module_path, function_name = entrypoint.value.split(":")
+        module_function_split = entrypoint.value.split(":")
+        module_path, function_name = module_function_split[0], False
+        if len(module_function_split) > 1:
+            function_name = module_function_split[1]
         if module_path.startswith(plugin_name):
             return module_path, function_name
     return False, False
@@ -150,7 +153,7 @@ def install(plugin_type, plugin_name, plugin_directory=default_plugins_dir):
         # Expects that the plugin defines the following entrypoint:
         # corc.plugins.config = [plugin_name=plugin_name.path.to.config_module:function_name]
         config_module_path, config_module_function_name = (
-            get_plugin_module_path_and_name(
+            get_plugin_module_path_and_func(
                 plugin_name,
                 plugin_module_entrypoint="{}.config".format(PLUGIN_ENTRYPOINT_BASE),
             )

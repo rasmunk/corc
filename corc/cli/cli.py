@@ -25,7 +25,7 @@ from corc.core.plugins.plugin import (
     get_plugins,
     import_plugin,
     PLUGIN_ENTRYPOINT_BASE,
-    get_plugin_module_path_and_name,
+    get_plugin_module_path_and_func,
 )
 
 from corc.cli.return_codes import SUCCESS, FAILURE
@@ -191,7 +191,7 @@ def cli(commands):
                 function_provider = function_parser.add_parser(plugin.name)
                 function_cli_parser = function_provider.add_subparsers(title="COMMAND")
                 cli_module_path, cli_module_function_name = (
-                    get_plugin_module_path_and_name(
+                    get_plugin_module_path_and_func(
                         plugin.name,
                         plugin_module_entrypoint="{}.cli".format(
                             PLUGIN_ENTRYPOINT_BASE
