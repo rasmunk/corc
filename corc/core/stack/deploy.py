@@ -16,7 +16,9 @@
 
 # Description: Deploy the stack
 import asyncio
+import errno
 import inspect
+from corc.utils.format import error_print
 from corc.core.defaults import STACK, default_persistence_path
 from corc.core.storage.dictdatabase import DictDatabase
 from corc.core.helpers import import_from_module
@@ -70,6 +72,41 @@ def init_plugin_and_driver(
     )
 
     return True, {"plugin": init_plugin_response, "driver": init_driver_response}
+
+
+def interpret_plugin_response(plugin_type, plugin_return_code, plugin_response):
+    if isinstance(plugin_return_code, bool):
+        if plugin_return_code:
+            return True, plugin_response
+        else:
+            return False, "Failed executing plugin type: {} response: {}".format(
+                plugin_type, plugin_response
+            )
+
+    if isinstance(plugin_return_code, int):
+        if plugin_return_code == 0:
+            return True, plugin_response
+
+        if plugin_return_code in errno.errorcode:
+            return (
+                False,
+                "Failed executing plugin type: {} return code: {}, response: {} - error {}".format(
+                    plugin_type,
+                    plugin_return_code,
+                    plugin_response,
+                    errno.errorcode[plugin_return_code],
+                ),
+            )
+        else:
+            return (
+                False,
+                "Failed executing plugin type: {} return code: {}, response: {}".format(
+                    plugin_type, plugin_return_code, plugin_response
+                ),
+            )
+    return False, "Failed to interpret plugin result type: {} response: {}".format(
+        plugin_type, plugin_response
+    )
 
 
 async def initialize_instance(instance_name, initializer_config):
@@ -305,12 +342,11 @@ async def deploy(name, directory=None):
     for initialize_success, initialize_response in await asyncio.gather(
         *initialize_tasks
     ):
-        if not initialize_success:
-            print(
-                "Failed to initialize instance: {} - {}".format(
-                    initialize_success, initialize_response
-                )
-            )
+        parsed_code, parsed_response = interpret_plugin_response(
+            INITIALIZER, initialize_success, initialize_response
+        )
+        if not parsed_code:
+            error_print(parsed_response)
 
     provision_tasks = [
         provision_instance(instance_name, instance_details[ORCHESTRATOR])
@@ -337,12 +373,11 @@ async def deploy(name, directory=None):
     for configurer_success, configurer_response in await asyncio.gather(
         *configurer_tasks
     ):
-        if not configurer_success:
-            print(
-                "Failed to configure instance: {} - {}".format(
-                    configurer_response["name"], configurer_response["msg"]
-                )
-            )
+        parsed_code, parsed_response = interpret_plugin_response(
+            CONFIGURER, configurer_success, configurer_response
+        )
+        if not parsed_code:
+            error_print(parsed_response)
 
     if not await stack_db.update(name, stack_to_deploy):
         response["msg"] = "Failed to update stack: {}.".format(name)
