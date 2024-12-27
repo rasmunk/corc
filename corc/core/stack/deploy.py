@@ -197,12 +197,12 @@ async def configure_instance(instance_name, configurer_config):
     )
     if inspect.iscoroutinefunction(configurer_function):
         return await configurer_function(
-            *configurer_config["provider"]["args"],
-            **configurer_config["provider"]["kwargs"],
+            *configurer_config["settings"].get("args", []),
+            **configurer_config["settings"].get("kwargs", {}),
         )
     return configurer_function(
-        *configurer_config["provider"]["args"],
-        **configurer_config["provider"]["kwargs"],
+        *configurer_config["settings"].get("args", []),
+        **configurer_config["settings"].get("kwargs", {}),
     )
 
 
