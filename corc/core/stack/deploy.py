@@ -401,9 +401,10 @@ async def deploy(name, directory=None):
                 if not plugin_success:
                     error_print(parsed_response)
                 else:
-                    stack_to_deploy["instances"][parsed_response["instance"].name] = (
-                        parsed_response["instance"]
-                    )
+                    stack_to_deploy["instances"][provision_response["name"]] = {
+                        "plugin_response": parsed_response["instance"],
+                        "configured": False,
+                    }
             else:
                 error_print(
                     "The {} plugin did not respond with any result for instance: {}".format(
@@ -421,6 +422,8 @@ async def deploy(name, directory=None):
         configure_instance(instance_name, instance_details[CONFIGURER])
         for instance_name, instance_details in prepared_instances_configs.items()
         if CONFIGURER in instance_details
+        and instance_name in stack_to_deploy["instances"]
+        and not stack_to_deploy["instances"][instance_name].get("configured", False)
     ]
     for configurer_success, configurer_response in await asyncio.gather(
         *configurer_tasks
@@ -435,10 +438,9 @@ async def deploy(name, directory=None):
                 if not plugin_success:
                     error_print(parsed_response)
                 else:
-                    # TODO, mark the stack_to_deploy instance as having been configured when
-                    # completed to avoid configuring a previously configured instance such as a live
-                    # stack instance
-                    pass
+                    stack_to_deploy["instances"][configurer_response["name"]][
+                        "configured"
+                    ] = True
             else:
                 error_print(
                     "The {} plugin did not respond with any result for instance: {}".format(

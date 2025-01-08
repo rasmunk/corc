@@ -1,12 +1,16 @@
 initializer:
   provider:
-    name: gen-vm-image
+    name: gen_vm_image
   settings:
     args:
       - "{{ instance.name }}"
-      - /path/to/predefined/image/file/{{ instance.name }}.qcow2
+      - 30G
     kwargs:
-      disk_size: 20gib
+      input: https://dl.rockylinux.org/pub/rocky/9/images/x86_64/Rocky-9-GenericCloud-Base.latest.x86_64.qcow2
+      input_checksum_type: sha256
+      input_checksum: 069493fdc807300a22176540e9171fcff2227a92b40a7985a0c1c9e21aeebf57
+      output_format: qcow2
+      output_directory: /var/lib/libvirt/images
 
 orchestrator:
   provider:
@@ -15,14 +19,16 @@ orchestrator:
   settings:
     args:
       - "{{ instance.name }}"
-      - /path/to/predefined/image/file/{{ instance.name }}.qcow2
+      - /var/lib/libvirt/images/{{ instance.name }}.qcow2
     kwargs:
       memory_size: 2048mib
       num_vcpus: 2
 
 configurer:
   provider:
-    name: configure-vm-image
+    name: configure_vm_image
   settings:
     args:
       - /var/lib/libvirt/images/{{ instance.name }}.qcow2
+    kwargs:
+      configure_vm_name: "{{ instance.name }}-configure-vm"
