@@ -444,7 +444,7 @@ async def deploy(name, directory=None):
             else:
                 error_print(
                     "The {} plugin did not respond with any result for instance: {}".format(
-                        CONFIGURER, provision_response["name"]
+                        CONFIGURER, configurer_response["name"]
                     )
                 )
         else:
