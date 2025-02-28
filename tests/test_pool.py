@@ -16,7 +16,10 @@
 
 import os
 import unittest
-from corc.core.orchestration.pool.models import Pool, Instance
+from corc.core.defaults import POOL
+from corc.core.storage.dictdatabase import DictDatabase
+from corc.core.orchestration.pool.models import Instance
+from corc.core.orchestration.pool.create import create
 from corc.core.orchestration.pool.add_instance import add_instance
 from corc.core.orchestration.pool.remove_instance import remove_instance
 from corc.utils.io import exists, makedirs, removedirs
@@ -35,24 +38,34 @@ class TestPool(unittest.IsolatedAsyncioTestCase):
 
     async def asyncTearDown(self):
         # Ensure that any pool is destroyed
-        pool = Pool(self.name)
-        for node in await pool.items():
+        pool_db = DictDatabase(POOL)
+        for node in await pool_db.items():
             removed, response = await remove_instance(self.name, node.id)
             self.assertTrue(removed)
-        self.assertTrue(await pool.flush())
-        self.assertEqual(len(await pool.items()), 0)
-        self.assertTrue(await pool.remove_persistence())
+        self.assertTrue(await pool_db.flush())
+        self.assertEqual(len(await pool_db.items()), 0)
+        self.assertTrue(await pool_db.remove_persistence())
 
         if exists(CURRENT_TEST_DIR):
             self.assertTrue(removedirs(CURRENT_TEST_DIR, recursive=True))
 
     async def test_dummy_pool(self):
-        pool = Pool(self.name, directory=CURRENT_TEST_DIR)
+        pool_db = DictDatabase(POOL, directory=CURRENT_TEST_DIR)
+        self.assertIsNotNone(pool_db)
+        self.assertEqual(pool_db.name, POOL)
+        self.assertEqual(pool_db.directory, CURRENT_TEST_DIR)
+        self.assertTrue(await pool_db.touch())
+        self.assertTrue(await pool_db.exists())
+        self.assertTrue(await pool_db.flush())
+        self.assertTrue(await pool_db.is_empty())
+
+        created_pool, created_response = await create(
+            self.name, directory=CURRENT_TEST_DIR
+        )
+        self.assertTrue(created_pool)
+        pool = await pool_db.get(self.name)
         self.assertIsNotNone(pool)
-        self.assertEqual(pool.name, self.name)
-        self.assertEqual(pool.directory, CURRENT_TEST_DIR)
-        self.assertTrue(await pool.touch())
-        self.assertTrue(await pool.exists())
+        self.assertEqual(pool["id"], self.name)
 
         instance_name_1 = "dummy-test-name-1"
         instance_kwargs_1 = {
@@ -76,21 +89,22 @@ class TestPool(unittest.IsolatedAsyncioTestCase):
         }
 
         created1, response1 = await add_instance(
-            self.name, instance_name_1, **instance_kwargs_1
+            pool["id"], instance_name_1, **instance_kwargs_1
         )
         self.assertTrue(created1)
 
         created2, response2 = await add_instance(
-            self.name, instance_name_2, **instance_kwargs_2
+            pool["id"], instance_name_2, **instance_kwargs_2
         )
         self.assertTrue(created2)
 
         created3, response3 = await add_instance(
-            self.name, instance_name_3, **instance_kwargs_3
+            pool["id"], instance_name_3, **instance_kwargs_3
         )
         self.assertTrue(created3)
 
-        instances = sorted(await pool.items(), key=lambda instance: instance.name)
+        pool_items = await pool_db.items()
+        instances = sorted(await pool_db.items(), key=lambda instance: instance.name)
         self.assertEqual(len(instances), 3)
 
         for instance in instances:
@@ -108,7 +122,7 @@ class TestPool(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(instances[2].config["image"], instance_kwargs_3["image"])
         self.assertEqual(instances[2].config["size"], instance_kwargs_3["size"])
 
-        self.assertTrue(await pool.remove(instances[0].id))
-        self.assertTrue(await pool.remove(instances[1].id))
-        self.assertTrue(await pool.remove(instances[2].id))
-        self.assertEqual(len(await pool.items()), 0)
+        self.assertTrue(await pool_db.remove(instances[0].id))
+        self.assertTrue(await pool_db.remove(instances[1].id))
+        self.assertTrue(await pool_db.remove(instances[2].id))
+        self.assertEqual(len(await pool_db.items()), 0)
