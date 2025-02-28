@@ -74,6 +74,10 @@ class DictDatabase:
         with shelve.open(self._shelve_path) as db:
             return [item for item in db.values()]
 
+    async def keys(self):
+        with shelve.open(self._shelve_path) as db:
+            return [key for key in db.keys()]
+
     async def add(self, item):
         _id = None
         if hasattr(item, "id"):
