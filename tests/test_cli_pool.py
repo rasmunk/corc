@@ -48,13 +48,13 @@ class TestCliDictDatabase(unittest.IsolatedAsyncioTestCase):
 
     async def asyncTearDown(self):
         # Ensure that any pool is destroyed
-        pool = DictDatabase(self.name, directory=CURRENT_TEST_DIR)
-        for node in await pool.items():
-            removed, response = await remove_instance(self.client, node.id)
+        pool_db = DictDatabase(self.name, directory=CURRENT_TEST_DIR)
+        for node in await pool_db.items():
+            removed, response = await remove_instance(self.name, node.id)
             self.assertTrue(removed)
-        self.assertTrue(await pool.flush())
-        self.assertEqual(len(await pool.items()), 0)
-        self.assertTrue(await pool.remove_persistence())
+        self.assertTrue(await pool_db.flush())
+        self.assertEqual(len(await pool_db.items()), 0)
+        self.assertTrue(await pool_db.remove_persistence())
 
         if exists(CURRENT_TEST_DIR):
             self.assertTrue(removedirs(CURRENT_TEST_DIR, recursive=True))

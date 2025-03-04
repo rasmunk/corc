@@ -149,4 +149,7 @@ class TestPool(unittest.IsolatedAsyncioTestCase):
             self.name, instances[2].id, directory=CURRENT_TEST_DIR
         )
         self.assertTrue(removed3)
-        self.assertEqual(len(await updated_pool.items()), 0)
+
+        new_pool_state  = await pool_db.get(self.name)
+        self.assertIn("instances", new_pool_state)
+        self.assertEqual(len(new_pool_state["instances"]), 0)

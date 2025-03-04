@@ -50,7 +50,7 @@ async def remove_instance(pool_name, node_id, **kwargs):
         return False, response
 
     updated_instances = remove_instance_from_list(pool["instances"], node_id)
-    if not updated_instances:
+    if not isinstance(updated_instances, list):
         response["msg"] = "Failed to remove Instance: {} from Pool.".format(node_id)
         return False, response
 
