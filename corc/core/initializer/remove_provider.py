@@ -15,7 +15,7 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 from corc.core.defaults import INITIALIZER
-from corc.core.plugins.storage import remove
+from corc.core.plugins.plugin import remove
 
 
 async def remove_provider(provider_name):

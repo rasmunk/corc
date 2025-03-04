@@ -68,7 +68,7 @@ async def remove_instance(pool_name, instance_name, **kwargs):
         )
         return False, response
 
-    response["msg"] = "Removed Instance: {} with id from Pool.".format(
+    response["msg"] = "Removed Instance: {} with id: {} from Pool.".format(
         instance.name, instance.id
     )
     return True, response

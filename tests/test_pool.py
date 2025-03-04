@@ -135,15 +135,15 @@ class TestPool(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(instances[2].config["size"], instance_kwargs_3["size"])
 
         removed1, response1 = await remove_instance(
-            self.name, instances[0].id, directory=CURRENT_TEST_DIR
+            self.name, instances[0].name, directory=CURRENT_TEST_DIR
         )
         self.assertTrue(removed1)
         removed2, response2 = await remove_instance(
-            self.name, instances[1].id, directory=CURRENT_TEST_DIR
+            self.name, instances[1].name, directory=CURRENT_TEST_DIR
         )
         self.assertTrue(removed2)
         removed3, response3 = await remove_instance(
-            self.name, instances[2].id, directory=CURRENT_TEST_DIR
+            self.name, instances[2].name, directory=CURRENT_TEST_DIR
         )
         self.assertTrue(removed3)
 
