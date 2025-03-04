@@ -46,8 +46,8 @@ TEST_BASIC_INSTANCES_EXPECTED = {
         },
         "settings": {
             "args": [
-                "instance01",
-                "/path/to/predefined/image/file/instance01.qcow2",
+                "{{ instance.name }}",
+                "/path/to/predefined/image/file/{{ instance.name }}.qcow2",
             ],
             "kwargs": {"memory_size": "1024mib", "num_vcpus": 1},
         },
