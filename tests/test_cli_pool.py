@@ -22,9 +22,10 @@ import json
 from io import StringIO
 from unittest.mock import patch
 from corc.cli.cli import main
+from corc.core.defaults import POOL
 from corc.cli.return_codes import SUCCESS
 from corc.core.storage.dictdatabase import DictDatabase
-from corc.core.orchestration.pool.remove_instance import remove_instance
+from corc.core.orchestration.pool.create import create
 from corc.utils.io import exists, makedirs, removedirs
 
 # Because the main function spawns an event loop, we cannot execute the
@@ -48,10 +49,7 @@ class TestCliDictDatabase(unittest.IsolatedAsyncioTestCase):
 
     async def asyncTearDown(self):
         # Ensure that any pool is destroyed
-        pool_db = DictDatabase(self.name, directory=CURRENT_TEST_DIR)
-        for node in await pool_db.items():
-            removed, response = await remove_instance(self.name, node.id)
-            self.assertTrue(removed)
+        pool_db = DictDatabase(POOL, directory=CURRENT_TEST_DIR)
         self.assertTrue(await pool_db.flush())
         self.assertEqual(len(await pool_db.items()), 0)
         self.assertTrue(await pool_db.remove_persistence())
@@ -69,22 +67,6 @@ class TestCliDictDatabase(unittest.IsolatedAsyncioTestCase):
             return_code = e.code
         self.assertEqual(return_code, SUCCESS)
 
-    async def test_pool_persistence_path(self):
-        test_id = str(uuid.uuid4())
-        name = f"{self.name}-{test_id}"
-        create_pool_args = copy.deepcopy(self.base_args)
-        create_pool_args.extend(["create", name, "--directory", CURRENT_TEST_DIR])
-
-        return_code = execute_func_in_future(main, create_pool_args)
-        self.assertEqual(return_code, SUCCESS)
-
-        pool = DictDatabase(name, directory=CURRENT_TEST_DIR)
-        self.assertIsNotNone(pool)
-        self.assertEqual(pool.name, name)
-
-        # Verify that the persistence database exists in the expected path
-        self.assertTrue(exists(pool.get_database_path()))
-
     async def test_dummy_pool_create(self):
         test_id = str(uuid.uuid4())
         name = f"{self.name}-{test_id}"
@@ -94,31 +76,25 @@ class TestCliDictDatabase(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(return_code, SUCCESS)
 
         # Check that the pool exists
-        pool = DictDatabase(name, directory=CURRENT_TEST_DIR)
+        pool_db = DictDatabase(POOL, directory=CURRENT_TEST_DIR)
+        pool = await pool_db.get(name)
         self.assertIsNotNone(pool)
-        self.assertEqual(pool.name, name)
-        self.assertTrue(exists(pool.get_database_path()))
-
-        # Remove and validate that it is gone
-        self.assertTrue(await pool.flush())
-        self.assertTrue(await pool.remove_persistence())
-        self.assertFalse(await pool.exists())
+        self.assertEqual(pool["id"], name)
 
     async def test_dummy_pool_remove(self):
         # Create a pool that can be removed by the CLI
         test_id = str(uuid.uuid4())
         pool_name = "dummy-remove-test-{}".format(test_id)
-        remove_pool = DictDatabase(pool_name, directory=CURRENT_TEST_DIR)
-        self.assertTrue(await remove_pool.touch())
-        self.assertTrue(exists(remove_pool.get_database_path()))
+
+        created_pool, created_response = await create(
+            pool_name, directory=CURRENT_TEST_DIR
+        )
+        self.assertTrue(created_pool)
 
         remove_pool_args = copy.deepcopy(self.base_args)
         remove_pool_args.extend(["remove", pool_name, "--directory", CURRENT_TEST_DIR])
-
         return_code = execute_func_in_future(main, remove_pool_args)
         self.assertEqual(return_code, SUCCESS)
-        self.assertFalse(await remove_pool.exists())
-        self.assertFalse(exists(remove_pool.get_database_path()))
 
     @patch("sys.stdout", new_callable=StringIO)
     async def test_dummy_pool_list_empty(self, mock_stdout):
@@ -133,25 +109,28 @@ class TestCliDictDatabase(unittest.IsolatedAsyncioTestCase):
     async def test_dummy_pool_create_multiple(self):
         test_id = str(uuid.uuid4())
         # Add pools
-        pool1, pool2, pool3 = (
-            DictDatabase(f"{test_id}-{self.name}-1", directory=CURRENT_TEST_DIR),
-            DictDatabase(f"{test_id}-{self.name}-2", directory=CURRENT_TEST_DIR),
-            DictDatabase(f"{test_id}-{self.name}-3", directory=CURRENT_TEST_DIR),
-        )
-        pools = [pool1, pool2, pool3]
+        pools = [
+            {"name": f"{test_id}-{self.name}-1", "directory": CURRENT_TEST_DIR},
+            {"name": f"{test_id}-{self.name}-2", "directory": CURRENT_TEST_DIR},
+            {"name": f"{test_id}-{self.name}-3", "directory": CURRENT_TEST_DIR},
+        ]
         for pool in pools:
             create_pool_args = copy.deepcopy(self.base_args)
             create_pool_args.extend(
-                ["create", pool.name, "--directory", pool.directory]
+                ["create", pool["name"], "--directory", pool["directory"]]
             )
 
             return_code = execute_func_in_future(main, create_pool_args)
             self.assertEqual(return_code, SUCCESS)
 
         for pool in pools:
-            # Check that the pool exists
-            self.assertIsNotNone(pool)
-            self.assertTrue(await pool.exists())
+            list_pool_args = copy.deepcopy(self.base_args)
+            list_pool_args.extend(
+                ["show", pool["name"], "--directory", pool["directory"]]
+            )
+
+            return_code = execute_func_in_future(main, list_pool_args)
+            self.assertEqual(return_code, SUCCESS)
 
     async def test_dummy_pool_remove_multiple(self):
         test_id = str(uuid.uuid4())
@@ -186,9 +165,6 @@ class TestCliDictDatabase(unittest.IsolatedAsyncioTestCase):
         return_code = execute_func_in_future(main, create_pool_args)
         self.assertEqual(return_code, SUCCESS)
 
-        created_pool = DictDatabase(name, directory=CURRENT_TEST_DIR)
-        self.assertTrue(created_pool.get_database_path())
-
         # Add instance to the pool
         add_instance_args = copy.deepcopy(self.base_args)
         instance_name = f"dummy-instance-{test_id}"
@@ -206,9 +182,6 @@ class TestCliDictDatabase(unittest.IsolatedAsyncioTestCase):
         create_pool_args.extend(["create", name, "--directory", CURRENT_TEST_DIR])
         return_code = execute_func_in_future(main, create_pool_args)
         self.assertEqual(return_code, SUCCESS)
-
-        created_pool = DictDatabase(name, directory=CURRENT_TEST_DIR)
-        self.assertTrue(exists(created_pool.get_database_path()))
 
         # Add instance to the pool
         add_instance_args = copy.deepcopy(self.base_args)

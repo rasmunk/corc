@@ -38,10 +38,7 @@ class TestPool(unittest.IsolatedAsyncioTestCase):
 
     async def asyncTearDown(self):
         # Ensure that any pool is destroyed
-        pool_db = DictDatabase(POOL)
-        for node in await pool_db.items():
-            removed, response = await remove_instance(self.name, node.id)
-            self.assertTrue(removed)
+        pool_db = DictDatabase(POOL, directory=CURRENT_TEST_DIR)
         self.assertTrue(await pool_db.flush())
         self.assertEqual(len(await pool_db.items()), 0)
         self.assertTrue(await pool_db.remove_persistence())
@@ -150,6 +147,6 @@ class TestPool(unittest.IsolatedAsyncioTestCase):
         )
         self.assertTrue(removed3)
 
-        new_pool_state  = await pool_db.get(self.name)
+        new_pool_state = await pool_db.get(self.name)
         self.assertIn("instances", new_pool_state)
         self.assertEqual(len(new_pool_state["instances"]), 0)
