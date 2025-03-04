@@ -236,19 +236,17 @@ class TestCliStack(unittest.IsolatedAsyncioTestCase):
         stack = await stack_db.get(name)
         self.assertIsNotNone(stack)
         self.assertEqual(stack["id"], name)
-        # self.assertEqual(stack["config"]["pools"], TEST_BASIC_EXPECTED_POOLS)
         self.assertEqual(stack["config"]["instances"], TEST_BASIC_INSTANCES_EXPECTED)
 
         deploy_stack_args = copy.deepcopy(self.base_args)
         deploy_stack_args.extend(["deploy", name, "--directory", CURRENT_TEST_DIR])
 
-        # deploy_return_code = execute_func_in_future(main, deploy_stack_args)
-        # self.assertEqual(deploy_return_code, SUCCESS)
+        deploy_return_code = execute_func_in_future(main, deploy_stack_args)
+        self.assertEqual(deploy_return_code, SUCCESS)
 
-        # deployed_stack = await stack_db.get(name)
-        # self.assertIsNotNone(deployed_stack)
-        # self.assertEqual(deployed_stack["id"], name)
-        # self.assertEqual(deployed_stack["pools"], deployed_stack["config"]["pools"])
+        deployed_stack = await stack_db.get(name)
+        self.assertIsNotNone(deployed_stack)
+        self.assertEqual(deployed_stack["id"], name)
         # self.assertEqual(
         #     deployed_stack["instances"], deployed_stack["config"]["instances"]
         # )
