@@ -18,6 +18,8 @@
 import asyncio
 import errno
 import inspect
+import os
+from concurrent.futures.process import ProcessPoolExecutor
 from corc.utils.format import error_print
 from corc.core.defaults import STACK, default_persistence_path
 from corc.core.storage.dictdatabase import DictDatabase
@@ -164,7 +166,7 @@ async def initialize_instance(instance_name, initializer_config):
     }
 
 
-async def configure_instance(instance_name, configurer_config):
+def configure_instance(instance_name, configurer_config):
     init_plugin_success, init_plugin_response = init_plugin(
         configurer_config["provider"]["name"], CONFIGURER
     )
@@ -204,9 +206,14 @@ async def configure_instance(instance_name, configurer_config):
     if inspect.iscoroutinefunction(configurer_function):
         return True, {
             "name": instance_name,
-            "result": await configurer_function(
-                *configurer_config["settings"].get("args", []),
-                **configurer_config["settings"].get("kwargs", {}),
+            # Note, since this function is executed as a synchronous blocking process
+            # we can't return an coroutine object that can't be serialized
+            # Therefore we run a returned coroutine function synchronously via asyncio.run
+            "result": asyncio.run(
+                configurer_function(
+                    *configurer_config["settings"].get("args", []),
+                    **configurer_config["settings"].get("kwargs", {}),
+                )
             ),
         }
     return True, {
@@ -371,7 +378,11 @@ async def deploy(name, directory=None):
                 if not plugin_success:
                     error_print(parsed_response)
                 else:
-                    initialized_instances.append(initialize_response["name"])
+                    stack_to_deploy["instances"][initialize_response["name"]] = {
+                        "plugin_response": parsed_response,
+                        "initialized": True,
+                        "configured": False,
+                    }
             else:
                 error_print(
                     "The {} plugin did not respond with any result for instance: {}".format(
@@ -385,10 +396,73 @@ async def deploy(name, directory=None):
                 )
             )
 
+    loop = asyncio.get_running_loop()
+    configurer_tasks = []
+    # TODO, allow user to set the max_workers
+    with ProcessPoolExecutor(max_workers=int(os.cpu_count() / 4)) as executor:
+        for instance_name, instance_details in prepared_instances_configs.items():
+            if (
+                CONFIGURER in instance_details
+                and instance_name in stack_to_deploy["instances"]
+                and stack_to_deploy["instances"][instance_name].get(
+                    "initialized", False
+                )
+                and not stack_to_deploy["instances"][instance_name].get(
+                    "configured", False
+                )
+            ):
+                configurer_tasks.append(
+                    loop.run_in_executor(
+                        executor,
+                        configure_instance,
+                        instance_name,
+                        instance_details[CONFIGURER],
+                    )
+                )
+
+    for configurer_success, configurer_response in await asyncio.gather(
+        *configurer_tasks
+    ):
+        if configurer_success:
+            plugin_result = configurer_response.get("result", {})
+            if plugin_result:
+                plugin_return_code, plugin_response = (
+                    plugin_result[0],
+                    plugin_result[1],
+                )
+                plugin_success, parsed_response = interpret_plugin_response(
+                    CONFIGURER, plugin_return_code, plugin_response
+                )
+                if not plugin_success:
+                    error_print(parsed_response)
+                else:
+                    stack_to_deploy["instances"][configurer_response["name"]] = {
+                        "plugin_response": parsed_response,
+                        "configured": True,
+                    }
+            else:
+                error_print(
+                    "The {} plugin did not respond with any result for instance: {}".format(
+                        CONFIGURER, configurer_response["name"]
+                    )
+                )
+        else:
+            error_print(
+                "Failed to {} instance: {} - {}".format(
+                    CONFIGURER,
+                    configurer_response["name"],
+                    configurer_response["msg"],
+                )
+            )
+
     provision_tasks = [
         provision_instance(instance_name, instance_details[ORCHESTRATOR])
         for instance_name, instance_details in prepared_instances_configs.items()
-        if ORCHESTRATOR in instance_details and instance_name in initialized_instances
+        if ORCHESTRATOR in instance_details
+        and instance_name in initialized_instances
+        and instance_name in stack_to_deploy["instances"]
+        and stack_to_deploy["instances"][instance_name].get("initialized", False)
+        and stack_to_deploy["instances"][instance_name].get("provisioned", False)
     ]
     for provision_success, provision_response in await asyncio.gather(*provision_tasks):
         if provision_success:
@@ -402,8 +476,8 @@ async def deploy(name, directory=None):
                     error_print(parsed_response)
                 else:
                     stack_to_deploy["instances"][provision_response["name"]] = {
-                        "plugin_response": parsed_response["instance"],
-                        "configured": False,
+                        "plugin_response": parsed_response,
+                        "provisioned": True,
                     }
             else:
                 error_print(
@@ -415,42 +489,6 @@ async def deploy(name, directory=None):
             error_print(
                 "Failed to {} instance: {} - {}".format(
                     ORCHESTRATOR, provision_response["name"], provision_response["msg"]
-                )
-            )
-
-    configurer_tasks = [
-        configure_instance(instance_name, instance_details[CONFIGURER])
-        for instance_name, instance_details in prepared_instances_configs.items()
-        if CONFIGURER in instance_details
-        and instance_name in stack_to_deploy["instances"]
-        and not stack_to_deploy["instances"][instance_name].get("configured", False)
-    ]
-    for configurer_success, configurer_response in await asyncio.gather(
-        *configurer_tasks
-    ):
-        if configurer_success:
-            plugin_result = configurer_response.get("result", {})
-            if plugin_result:
-                plugin_return_code, plugin_response = plugin_result[0], plugin_result[1]
-                plugin_success, parsed_response = interpret_plugin_response(
-                    CONFIGURER, plugin_return_code, plugin_response
-                )
-                if not plugin_success:
-                    error_print(parsed_response)
-                else:
-                    stack_to_deploy["instances"][configurer_response["name"]][
-                        "configured"
-                    ] = True
-            else:
-                error_print(
-                    "The {} plugin did not respond with any result for instance: {}".format(
-                        CONFIGURER, configurer_response["name"]
-                    )
-                )
-        else:
-            error_print(
-                "Failed to {} instance: {} - {}".format(
-                    CONFIGURER, configurer_response["name"], configurer_response["msg"]
                 )
             )
 
