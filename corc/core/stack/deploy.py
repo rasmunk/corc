@@ -383,6 +383,9 @@ async def deploy(name, directory=None):
                         "initialized": True,
                         "configured": False,
                     }
+                    if not await stack_db.update(name, stack_to_deploy):
+                        response["msg"] = "Failed to update stack: {}.".format(name)
+                        return False, response
             else:
                 error_print(
                     "The {} plugin did not respond with any result for instance: {}".format(
@@ -436,10 +439,16 @@ async def deploy(name, directory=None):
                 if not plugin_success:
                     error_print(parsed_response)
                 else:
-                    stack_to_deploy["instances"][configurer_response["name"]] = {
-                        "plugin_response": parsed_response,
-                        "configured": True,
-                    }
+                    stack_to_deploy["instances"][configurer_response["name"]].update(
+                        {
+                            "plugin_response": parsed_response,
+                            "configured": True,
+                        }
+                    )
+
+                    if not await stack_db.update(name, stack_to_deploy):
+                        response["msg"] = "Failed to update stack: {}.".format(name)
+                        return False, response
             else:
                 error_print(
                     "The {} plugin did not respond with any result for instance: {}".format(
@@ -462,7 +471,7 @@ async def deploy(name, directory=None):
         and instance_name in initialized_instances
         and instance_name in stack_to_deploy["instances"]
         and stack_to_deploy["instances"][instance_name].get("initialized", False)
-        and stack_to_deploy["instances"][instance_name].get("provisioned", False)
+        and not stack_to_deploy["instances"][instance_name].get("provisioned", False)
     ]
     for provision_success, provision_response in await asyncio.gather(*provision_tasks):
         if provision_success:
@@ -475,10 +484,15 @@ async def deploy(name, directory=None):
                 if not plugin_success:
                     error_print(parsed_response)
                 else:
-                    stack_to_deploy["instances"][provision_response["name"]] = {
-                        "plugin_response": parsed_response,
-                        "provisioned": True,
-                    }
+                    stack_to_deploy["instances"][provision_response["name"]].update(
+                        {
+                            "plugin_response": parsed_response,
+                            "provisioned": True,
+                        }
+                    )
+                    if not await stack_db.update(name, stack_to_deploy):
+                        response["msg"] = "Failed to update stack: {}.".format(name)
+                        return False, response
             else:
                 error_print(
                     "The {} plugin did not respond with any result for instance: {}".format(
