@@ -364,7 +364,6 @@ async def deploy(name, directory=None):
         if INITIALIZER in instance_details
     ]
 
-    initialized_instances = []
     for initialize_success, initialize_response in await asyncio.gather(
         *initialize_tasks
     ):
@@ -468,7 +467,6 @@ async def deploy(name, directory=None):
         provision_instance(instance_name, instance_details[ORCHESTRATOR])
         for instance_name, instance_details in prepared_instances_configs.items()
         if ORCHESTRATOR in instance_details
-        and instance_name in initialized_instances
         and instance_name in stack_to_deploy["instances"]
         and stack_to_deploy["instances"][instance_name].get("initialized", False)
         and not stack_to_deploy["instances"][instance_name].get("provisioned", False)
