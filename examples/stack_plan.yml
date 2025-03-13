@@ -1,5 +1,3 @@
 instances:
   instance01:
     plan: test_plan
-  instance[02-05]:
-    plan: test_plan
