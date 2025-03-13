@@ -1,0 +1,39 @@
+<domain type='qemu'>
+    <name>{name}</name>
+    <memory>{memory_size}</memory>
+    <vcpu>{num_vcpus}</vcpu>
+    <os>
+        <type arch='x86_64' machine='pc'>hvm</type>
+        <boot dev='hd'/>
+    </os>
+    <cpu mode='host-model'/>
+    <devices>
+        <disk type='file' device='disk'>
+            <driver name='qemu' type='{disk_driver_type}'/>
+            <source file='{disk_image_path}'/>
+            <target dev='vda' bus='virtio'/>
+        </disk>
+	    <disk type='file' device='cdrom'>
+            <driver name='qemu' type='raw' cache='none'/>
+            <source file='{cd_iso_path}'/>
+            <target dev='sda' bus='sata'/>
+            <readonly/>
+        </disk>
+{% if extra_vm_disks is defined %}
+{% for extra_disk in extra_vm_disks %}
+        <disk type='file' device='disk'>
+            <driver name='qemu' type='raw'/>
+            <source file='{{ extra_disk.path }}' index='{{ loop.index0 + 1 }}'/>
+            <target dev='{{ extra_disk.device }}' bus='virtio'/>
+        </disk>
+{% endfor %}
+{% endif %}
+        <serial type='pty'>
+            <target port='0'/>
+            <log file='{log_file_path}' append='on'/>
+        </serial>
+        <console type='pty'>
+            <target type='serial' port='0'/>
+        </console>
+    </devices>
+</domain>

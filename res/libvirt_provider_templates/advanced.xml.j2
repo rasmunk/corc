@@ -1,0 +1,44 @@
+<domain type='kvm'>
+  <name>{name}</name>
+  <memory>{memory_size}</memory>
+  <vcpu>{num_vcpus}</vcpu>
+  <os>
+    <type arch='{{cpu_architecture | default('x86_64')}}' machine='{{machine_type | default('pc')}}'>hvm</type>
+  </os>
+  <cpu mode='host-model'/>
+  <devices>
+    <disk type='file' device='disk'>
+        <driver name='qemu' type='raw'/>
+        <source file='{disk_image_path}' index='0'/>
+        <backingStore/>
+        <target dev='vda' bus='virtio'/>
+    </disk>
+{% if extra_disks is defined and extra_disks %}
+{% for extra_disk in extra_disks %}
+    <disk type='file' device='disk'>
+        <driver name='qemu' type='raw'/>
+        <source file='{{ extra_disk.path }}' index='{{ loop.index0 + 1 }}'/>
+        <target dev='{{ extra_disk.device }}' bus='virtio'/>
+    </disk>
+{% endfor %}
+{% endif %}
+{% if network_interfaces is defined and network_interfaces %}
+{% for interface in network_interfaces %}
+{% if interface.host_interface is defined %}
+    <interface type='bridge'>
+      <source bridge='{{interface.host_interface}}'/>
+      <target dev='vnet{{loop.index0}}'/>
+      <mtu size='{{ interface.mtu | default(1500)}}'/>
+      <model type='virtio'/>
+    </interface>
+{% endif %}
+{% endfor %}
+{% endif %}
+    <serial type='pty'>
+        <target port='0'/>
+    </serial>
+    <console type='pty'>
+        <target type='serial' port='0'/>
+    </console>
+  </devices>
+</domain>
