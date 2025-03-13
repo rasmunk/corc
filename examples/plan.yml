@@ -10,7 +10,16 @@ initializer:
       input_checksum_type: sha256
       input_checksum: 069493fdc807300a22176540e9171fcff2227a92b40a7985a0c1c9e21aeebf57
       output_format: qcow2
-      output_directory: /var/lib/libvirt/images
+      output_directory: /Users/rasmunk/repos/corc/tmp/
+
+configurer:
+  provider:
+    name: configure_vm_image
+  settings:
+    args:
+      - /Users/rasmunk/repos/corc/tmp/{{ instance.name }}.qcow2
+    kwargs:
+      configure_vm_name: "{{ instance.name }}-configure-vm"
 
 orchestrator:
   provider:
@@ -19,16 +28,11 @@ orchestrator:
   settings:
     args:
       - "{{ instance.name }}"
-      - /var/lib/libvirt/images/{{ instance.name }}.qcow2
+      - /Users/rasmunk/repos/corc/tmp/{{ instance.name }}.qcow2
     kwargs:
       memory_size: 2048mib
       num_vcpus: 2
-
-configurer:
-  provider:
-    name: configure_vm_image
-  settings:
-    args:
-      - /var/lib/libvirt/images/{{ instance.name }}.qcow2
-    kwargs:
-      configure_vm_name: "{{ instance.name }}-configure-vm"
+      template_path: /Users/rasmunk/repos/corc/res/advanced.xml.j2
+      extra_tp_values:
+       network_interfaces:
+         - host_interface: en0
