@@ -19,8 +19,15 @@ from corc.core.storage.dictdatabase import DictDatabase
 from corc.core.stack.config import get_stack_config, get_stack_config_instances
 
 
-async def update(name, config_file=None, directory=None):
+async def update(name, config=None, directory=None):
     response = {}
+
+    if not config:
+        config = {}
+
+    config_file = None
+    if isinstance(config, str):
+        config_file = config
 
     stack_db = DictDatabase(STACK, directory=directory)
     if not await stack_db.exists():
@@ -41,13 +48,16 @@ async def update(name, config_file=None, directory=None):
         )
         return False, response
 
-    # Load the architecture file and deploy the stack
-    stack_config = await get_stack_config(config_file)
-    if not stack_config:
-        response["msg"] = "Failed to load the Stack configuration file: {}.".format(
-            config_file
-        )
-        return False, response
+    # Load the stack config
+    if config_file:
+        stack_config = await get_stack_config(config_file)
+        if not stack_config:
+            response["msg"] = "Failed to load the Stack configuration file: {}.".format(
+                config_file
+            )
+            return False, response
+    else:
+        stack_config = config
 
     # Extract the instance configurations
     instances_success, instances_response = await get_stack_config_instances(

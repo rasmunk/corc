@@ -19,8 +19,15 @@ from corc.core.storage.dictdatabase import DictDatabase
 from corc.core.stack.config import get_stack_config, get_stack_config_instances
 
 
-async def create(name, config_file=None, directory=None):
+async def create(name, config=None, directory=None):
     response = {}
+
+    if not config:
+        config = {}
+
+    config_file = None
+    if isinstance(config, str):
+        config_file = config
 
     stack_db = DictDatabase(STACK, directory=directory)
     if not await stack_db.exists():
@@ -47,14 +54,16 @@ async def create(name, config_file=None, directory=None):
                 config_file
             )
             return False, response
+    else:
+        stack_config = config
 
-        # Extract the instance configurations
-        instances_success, instances_response = await get_stack_config_instances(
-            stack_config
-        )
-        if not instances_success:
-            return False, instances_response
-        stack["config"]["instances"] = instances_response
+    # Extract the instance configurations
+    instances_success, instances_response = await get_stack_config_instances(
+        stack_config
+    )
+    if not instances_success:
+        return False, instances_response
+    stack["config"]["instances"] = instances_response
 
     if not await stack_db.add(stack):
         response["msg"] = (

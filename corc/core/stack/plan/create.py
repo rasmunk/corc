@@ -24,8 +24,15 @@ from corc.core.stack.plan.config import (
 )
 
 
-async def create(name, config_file=None, directory=None):
+async def create(name, config=None, directory=None):
     response = {}
+
+    if not config:
+        config = {}
+
+    config_file = None
+    if isinstance(config, str):
+        config_file = config
 
     plan_db = DictDatabase(PLAN, directory=directory)
     if not await plan_db.exists():
@@ -53,16 +60,18 @@ async def create(name, config_file=None, directory=None):
                 config_file
             )
             return False, response
+    else:
+        plan_config = config
 
-        for component in [INITIALIZER, ORCHESTRATOR, CONFIGURER]:
-            component_config = get_component_config(component, plan_config)
-            # Validate the plan components
-            validate_success, validate_response = validate_plan_component(
-                component, component_config
-            )
-            if not validate_success:
-                return False, validate_response
-            plan[component] = component_config
+    for component in [INITIALIZER, ORCHESTRATOR, CONFIGURER]:
+        component_config = get_component_config(component, plan_config)
+        # Validate the plan components
+        validate_success, validate_response = validate_plan_component(
+            component, component_config
+        )
+        if not validate_success:
+            return False, validate_response
+        plan[component] = component_config
 
     if not await plan_db.add(plan):
         response["msg"] = (
