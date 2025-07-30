@@ -63,9 +63,19 @@ class TestPool(unittest.IsolatedAsyncioTestCase):
             self.name, directory=CURRENT_TEST_DIR
         )
         self.assertTrue(created_pool)
-        self.assertTrue(created_response)
-        self.assertIn(self.name, await pool_db.keys())
-        self.assertIsNotNone(await pool_db.get(self.name))
+        self.assertIsInstance(created_response, dict)
+        self.assertIn("id", created_response)
+        pool_id = created_response["id"]
+        self.assertIn("pool", created_response)
+        self.assertIsInstance(created_response["pool"], dict)
+        self.assertIn("name", created_response["pool"])
+        self.assertEqual(self.name, created_response["pool"]["name"])
+
+        self.assertIn(pool_id, await pool_db.keys())
+        created_db_pool = await pool_db.get(pool_id)
+        self.assertIsNotNone(created_db_pool)
+        self.assertIsInstance(created_db_pool, dict)
+        self.assertEqual(created_response["pool"], created_db_pool)
 
     async def test_dummy_pool(self):
         pool_db = DictDatabase(POOL, directory=CURRENT_TEST_DIR)
@@ -75,6 +85,7 @@ class TestPool(unittest.IsolatedAsyncioTestCase):
             self.name, directory=CURRENT_TEST_DIR
         )
         self.assertTrue(created_pool)
+        pool_id = created_response["id"]
 
         instance_name_1 = "dummy-test-name-1"
         instance_kwargs_1 = {
@@ -98,21 +109,21 @@ class TestPool(unittest.IsolatedAsyncioTestCase):
         }
 
         created1, response1 = await add_instance(
-            self.name, instance_name_1, **instance_kwargs_1
+            pool_id, instance_name_1, **instance_kwargs_1
         )
         self.assertTrue(created1)
 
         created2, response2 = await add_instance(
-            self.name, instance_name_2, **instance_kwargs_2
+            pool_id, instance_name_2, **instance_kwargs_2
         )
         self.assertTrue(created2)
 
         created3, response3 = await add_instance(
-            self.name, instance_name_3, **instance_kwargs_3
+            pool_id, instance_name_3, **instance_kwargs_3
         )
         self.assertTrue(created3)
 
-        updated_pool = await pool_db.get(self.name)
+        updated_pool = await pool_db.get(pool_id)
         self.assertIn("instances", updated_pool)
         instances = sorted(
             updated_pool["instances"], key=lambda instance: instance.name
@@ -135,18 +146,18 @@ class TestPool(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(instances[2].config["size"], instance_kwargs_3["size"])
 
         removed1, response1 = await remove_instance(
-            self.name, instances[0].name, directory=CURRENT_TEST_DIR
+            pool_id, instances[0].name, directory=CURRENT_TEST_DIR
         )
         self.assertTrue(removed1)
         removed2, response2 = await remove_instance(
-            self.name, instances[1].name, directory=CURRENT_TEST_DIR
+            pool_id, instances[1].name, directory=CURRENT_TEST_DIR
         )
         self.assertTrue(removed2)
         removed3, response3 = await remove_instance(
-            self.name, instances[2].name, directory=CURRENT_TEST_DIR
+            pool_id, instances[2].name, directory=CURRENT_TEST_DIR
         )
         self.assertTrue(removed3)
 
-        new_pool_state = await pool_db.get(self.name)
+        new_pool_state = await pool_db.get(pool_id)
         self.assertIn("instances", new_pool_state)
         self.assertEqual(len(new_pool_state["instances"]), 0)

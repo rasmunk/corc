@@ -39,13 +39,7 @@ async def create(name, config=None, directory=None):
             )
             return False, response
 
-    if await stack_db.get(name):
-        response["msg"] = (
-            "The Stack: {} already exists and therefore can't be created.".format(name)
-        )
-        return False, response
-
-    stack = {"id": name, "config": {}, "instances": {}}
+    stack = {"name": name, "config": {}, "instances": {}}
     # Load the stack configuration file
     if config_file:
         stack_config = await get_stack_config(config_file)
@@ -65,7 +59,8 @@ async def create(name, config=None, directory=None):
         return False, instances_response
     stack["config"]["instances"] = instances_response
 
-    if not await stack_db.add(stack):
+    stack_id = await stack_db.add(stack)
+    if not stack_id:
         response["msg"] = (
             "Failed to save the Stack information to the database: {}".format(
                 stack_db.name
@@ -73,6 +68,7 @@ async def create(name, config=None, directory=None):
         )
         return False, response
 
+    response["id"] = stack_id
     response["stack"] = stack
     response["msg"] = "Created Stack succesfully."
     return True, response

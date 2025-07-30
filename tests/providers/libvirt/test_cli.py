@@ -26,16 +26,16 @@ class TestCLILibvirt(unittest.TestCase):
     def setUpClass(cls):
         cls.provider_name = "libvirt_provider"
 
-    @patch("sys.stdout", new_callable=StringIO)
-    def test_cli_orchestration_add_provider_libvirt(self, mock_stdout):
+    def test_cli_orchestration_add_provider_libvirt(self):
         return_code = main(["orchestration", "add_provider", self.provider_name])
         self.assertEqual(return_code, SUCCESS)
 
         # Verify that the provider is added
-        list_return_code = main(["orchestration", "list_providers"])
-        self.assertEqual(list_return_code, SUCCESS)
-        list_output = mock_stdout.getvalue()
-        self.assertIn(self.provider_name, list_output)
+        with patch("sys.stdout", new=StringIO()) as captured_stdout:
+            list_return_code = main(["orchestration", "list_providers"])
+            self.assertEqual(list_return_code, SUCCESS)
+            list_output = captured_stdout.getvalue()
+            self.assertIn(self.provider_name, list_output)
 
     def test_cli_orchestration_remove_provider_libvirt(self):
         add_return_code = main(["orchestration", "add_provider", self.provider_name])

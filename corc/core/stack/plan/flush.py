@@ -18,7 +18,7 @@ from corc.core.defaults import PLAN
 from corc.core.storage.dictdatabase import DictDatabase
 
 
-async def ls(*args, directory=None):
+async def flush(directory=None):
     response = {}
 
     plan_db = DictDatabase(PLAN, directory=directory)
@@ -31,12 +31,11 @@ async def ls(*args, directory=None):
             )
             return False, response
 
-    plans = await plan_db.items()
-    if not plans:
-        response["plans"] = {}
-        response["msg"] = "No Plans found."
-        return True, response
+    if not await plan_db.flush():
+        response["msg"] = (
+            f"Failed to flush the Plan database: {plan_db.name} in directory: {directory}."
+        )
+        return False, response
 
-    response["plans"] = plans
-    response["msg"] = "Found Plans."
+    response["msg"] = f"Flushed Plan: {plan_db.name}."
     return True, response

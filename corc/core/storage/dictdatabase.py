@@ -16,6 +16,7 @@
 
 import shelve
 import os
+import uuid
 from dbm import whichdb, _names
 from corc.core.defaults import default_persistence_path
 from corc.core.persistence import (
@@ -72,55 +73,53 @@ class DictDatabase:
 
     async def items(self):
         with shelve.open(self._shelve_path) as db:
-            return [item for item in db.values()]
+            return {item[0]: item[1] for item in db.items()}
+
+    async def values(self):
+        with shelve.open(self._shelve_path) as db:
+            return list(db.values())
 
     async def keys(self):
         with shelve.open(self._shelve_path) as db:
-            return [key for key in db.keys()]
+            return list(db.keys())
 
-    async def add(self, item):
-        _id = None
-        if hasattr(item, "id"):
-            _id = item.id
-        elif "id" in item:
-            _id = item["id"]
-        else:
-            raise AttributeError(
-                "add item must have an id attribute or a key named id."
-            )
+    async def add(self, value, key=None):
+        _id = key
+        if not key:
+            _id = str(uuid.uuid4())
 
         lock = acquire_lock(self._lock_path)
         if not lock:
             return False
         try:
             with shelve.open(self._shelve_path) as db:
-                db[_id] = item
+                db[_id] = value
+        except Exception:
+            return False
+        finally:
+            release_lock(lock)
+        return _id
+
+    async def remove(self, key):
+        lock = acquire_lock(self._lock_path)
+        if not lock:
+            return False
+        try:
+            with shelve.open(self._shelve_path) as db:
+                db.pop(key)
         except Exception:
             return False
         finally:
             release_lock(lock)
         return True
 
-    async def remove(self, item_id):
+    async def update(self, key, value):
         lock = acquire_lock(self._lock_path)
         if not lock:
             return False
         try:
             with shelve.open(self._shelve_path) as db:
-                db.pop(item_id)
-        except Exception:
-            return False
-        finally:
-            release_lock(lock)
-        return True
-
-    async def update(self, item_id, item):
-        lock = acquire_lock(self._lock_path)
-        if not lock:
-            return False
-        try:
-            with shelve.open(self._shelve_path) as db:
-                db[item_id] = item
+                db[key] = value
         except Exception:
             return False
         finally:
@@ -143,9 +142,9 @@ class DictDatabase:
             release_lock(lock)
         return True
 
-    async def get(self, item_id):
+    async def get(self, key):
         with shelve.open(self._shelve_path) as db:
-            return db.get(item_id)
+            return db.get(key)
 
     async def find(self, key, value):
         with shelve.open(self._shelve_path) as db:
@@ -162,7 +161,7 @@ class DictDatabase:
 
         try:
             with shelve.open(self._shelve_path) as db:
-                [db.pop(item_id) for item_id in db.keys()]
+                [db.pop(key) for key in db.keys()]
         except Exception:
             return False
         finally:

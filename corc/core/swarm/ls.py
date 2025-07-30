@@ -40,6 +40,12 @@ async def ls(*args, directory=None):
         )
         return True, response
 
-    response["swarms"] = await swarm_db.items()
+    swarms = await swarm_db.items()
+    if not swarms:
+        response["swarms"] = []
+        response["msg"] = "No swarms found."
+        return True, response
+
+    response["swarms"] = swarms
     response["msg"] = "Found swarms."
     return True, response

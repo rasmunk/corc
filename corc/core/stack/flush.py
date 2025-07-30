@@ -14,29 +14,28 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from corc.core.defaults import PLAN
+from corc.core.defaults import STACK
 from corc.core.storage.dictdatabase import DictDatabase
 
 
-async def ls(*args, directory=None):
+async def flush(directory=None):
     response = {}
 
-    plan_db = DictDatabase(PLAN, directory=directory)
-    if not await plan_db.exists():
-        if not await plan_db.touch():
+    stack_db = DictDatabase(STACK, directory=directory)
+    if not await stack_db.exists():
+        if not await stack_db.touch():
             response["msg"] = (
-                "The Plan database: {} did not exist in directory: {}, and it could not be created.".format(
-                    plan_db.name, directory
+                "The Stack database: {} did not exist in directory: {}, and it could not be created.".format(
+                    stack_db.name, directory
                 )
             )
             return False, response
 
-    plans = await plan_db.items()
-    if not plans:
-        response["plans"] = {}
-        response["msg"] = "No Plans found."
-        return True, response
+    if not await stack_db.flush():
+        response["msg"] = (
+            f"Failed to flush the Stack database: {stack_db.name} in directory: {directory}."
+        )
+        return False, response
 
-    response["plans"] = plans
-    response["msg"] = "Found Plans."
+    response["msg"] = f"Flushed Stack: {stack_db.name}."
     return True, response

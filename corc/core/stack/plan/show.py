@@ -18,7 +18,7 @@ from corc.core.defaults import PLAN
 from corc.core.storage.dictdatabase import DictDatabase
 
 
-async def show(name, directory=None):
+async def show(plan_id, directory=None):
     response = {}
 
     plan_db = DictDatabase(PLAN, directory=directory)
@@ -26,11 +26,12 @@ async def show(name, directory=None):
         response["msg"] = "The Plan database {} does not exist.".format(plan_db.name)
         return False, response
 
-    plan = await plan_db.get(name)
+    plan = await plan_db.get(plan_id)
     if not plan:
-        response["msg"] = "The Plan {} does not exist in the database.".format(name)
+        response["msg"] = "The Plan {} does not exist in the database.".format(plan_id)
         return False, response
 
+    response["id"] = plan_id
     response["plan"] = plan
     response["msg"] = "Plan details."
     return True, response

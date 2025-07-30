@@ -18,7 +18,7 @@ from corc.core.defaults import STACK
 from corc.core.storage.dictdatabase import DictDatabase
 
 
-async def show(name, directory=None):
+async def show(stack_id, directory=None):
     response = {}
 
     stack_db = DictDatabase(STACK, directory=directory)
@@ -31,11 +31,14 @@ async def show(name, directory=None):
             )
             return False, response
 
-    stack = await stack_db.get(name)
+    stack = await stack_db.get(stack_id)
     if not stack:
-        response["msg"] = "The Stack {} does not exist in the database.".format(name)
+        response["msg"] = "The Stack {} does not exist in the database.".format(
+            stack_id
+        )
         return False, response
 
+    response["id"] = stack_id
     response["stack"] = stack
     response["msg"] = "Stack details."
     return True, response

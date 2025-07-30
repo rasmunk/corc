@@ -18,7 +18,7 @@ from corc.core.defaults import POOL
 from corc.core.storage.dictdatabase import DictDatabase
 
 
-async def show(name, directory=None):
+async def show(pool_id, directory=None):
     response = {}
 
     pool_db = DictDatabase(POOL, directory=directory)
@@ -31,11 +31,12 @@ async def show(name, directory=None):
             )
             return False, response
 
-    pool = await pool_db.get(name)
+    pool = await pool_db.get(pool_id)
     if not pool:
-        response["msg"] = f"The Pool: {name} does not exist in the database."
+        response["msg"] = f"The Pool: {pool_id} does not exist in the database."
         return False, response
 
+    response["id"] = pool_id
     response["pool"] = pool
-    response["msg"] = "Pool members."
+    response["msg"] = "Pool details."
     return True, response

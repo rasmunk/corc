@@ -22,7 +22,7 @@ from corc.core.orchestration.pool.models import (
 )
 
 
-async def remove_instance(pool_name, instance_name, **kwargs):
+async def remove_instance(pool_id, instance_name, **kwargs):
     response = {}
 
     directory = kwargs.get("directory", None)
@@ -36,11 +36,9 @@ async def remove_instance(pool_name, instance_name, **kwargs):
             )
             return False, response
 
-    pool = await pool_db.get(pool_name)
+    pool = await pool_db.get(pool_id)
     if not pool:
-        response["msg"] = "The Pool: {} does not exist in the database.".format(
-            pool_name
-        )
+        response["msg"] = "The Pool: {} does not exist in the database.".format(pool_id)
         return False, response
 
     instance = find_instance_by_name(pool["instances"], instance_name)
@@ -60,10 +58,10 @@ async def remove_instance(pool_name, instance_name, **kwargs):
         return False, response
 
     pool["instances"] = updated_instances
-    if not await pool_db.update(pool_name, pool):
+    if not await pool_db.update(pool_id, pool):
         response["msg"] = (
             "Failed to save the Pool: {} after the Instance with name: {} and id: {} was removed.".format(
-                pool_name, instance.name, instance.id
+                pool_id, instance.name, instance.id
             )
         )
         return False, response

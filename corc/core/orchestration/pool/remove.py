@@ -18,7 +18,7 @@ from corc.core.defaults import POOL
 from corc.core.storage.dictdatabase import DictDatabase
 
 
-async def remove(name, directory=None):
+async def remove(pool_id, directory=None):
     response = {}
 
     pool_db = DictDatabase(POOL, directory=directory)
@@ -31,13 +31,13 @@ async def remove(name, directory=None):
             )
             return False, response
 
-    if not await pool_db.get(name):
-        response["msg"] = f"The Plan: {name} does not exist in the database."
+    if not await pool_db.get(pool_id):
+        response["msg"] = f"The Plan: {pool_id} does not exist in the database."
         return True, response
 
-    if not await pool_db.remove(name):
-        response["msg"] = f"Failed to remove pool: {name}."
+    if not await pool_db.remove(pool_id):
+        response["msg"] = f"Failed to remove pool: {pool_id}."
         return False, response
 
-    response["msg"] = f"Removed pool: {name}."
+    response["msg"] = f"Removed pool: {pool_id}."
     return True, response

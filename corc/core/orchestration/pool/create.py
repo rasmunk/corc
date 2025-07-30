@@ -37,11 +37,18 @@ async def create(name, config_file=None, directory=None):
         )
         return False, response
 
-    pool = {"id": name, "instances": []}
-    if not await pool_db.add(pool):
-        response["msg"] = "Failed to create pool: {}.".format(name)
+    pool = {"name": name, "instances": []}
+
+    pool_id = await pool_db.add(pool)
+    if not pool_id:
+        response["msg"] = (
+            "Failed to save the Pool information to the database: {}.".format(
+                pool_db.name
+            )
+        )
         return False, response
 
+    response["id"] = pool_id
     response["pool"] = pool
     response["msg"] = "Created pool successfully."
     return True, response

@@ -15,9 +15,12 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 import os
+import copy
 import unittest
 import uuid
-import copy
+import json
+from io import StringIO
+from unittest.mock import patch
 from corc.cli.return_codes import SUCCESS, FAILURE
 from corc.cli.cli import main
 from corc.core.defaults import STACK
@@ -92,32 +95,32 @@ class TestCliStack(unittest.IsolatedAsyncioTestCase):
         create_stack_args.extend(["create", name, "--directory", CURRENT_TEST_DIR])
 
         # Create the stack
-        return_code = execute_func_in_future(main, create_stack_args)
-        self.assertEqual(return_code, SUCCESS)
+        stack_id = None
+        with patch("sys.stdout", new=StringIO()) as captured_stdout:
+            return_code = execute_func_in_future(main, create_stack_args)
+            self.assertEqual(return_code, SUCCESS)
+            created_response = json.loads(captured_stdout.getvalue())
+            stack_id = created_response["id"]
 
         # Check that the stack exists
         stack_db = DictDatabase(STACK, directory=CURRENT_TEST_DIR)
         self.assertTrue(await stack_db.exists())
 
-        stack = await stack_db.get(name)
+        stack = await stack_db.get(stack_id)
         self.assertIsNotNone(stack)
         self.assertIsInstance(stack, dict)
 
         # Validate each expected key and default value
-        self.assertIn("id", stack)
-        self.assertEqual(stack["id"], name)
+        self.assertIn("name", stack)
+        self.assertEqual(stack["name"], name)
 
         self.assertIn("config", stack)
         self.assertIsInstance(stack["config"], dict)
-        self.assertDictEqual(stack["config"], {})
+        self.assertDictEqual(stack["config"], {"instances": {}})
 
         self.assertIn("instances", stack)
         self.assertIsInstance(stack["instances"], dict)
         self.assertDictEqual(stack["instances"], {})
-
-        # self.assertIn("pools", stack)
-        # self.assertIsInstance(stack["pools"], dict)
-        # self.assertDictEqual(stack["pools"], {})
 
     async def test_dummy_stack_create_with_config_file(self):
         test_id = str(uuid.uuid4())
@@ -128,16 +131,19 @@ class TestCliStack(unittest.IsolatedAsyncioTestCase):
         create_stack_args.extend(["--config-file", TEST_BASIC_STACK_FILE])
 
         # Create the stack
-        return_code = execute_func_in_future(main, create_stack_args)
-        self.assertEqual(return_code, SUCCESS)
+        stack_id = None
+        with patch("sys.stdout", new=StringIO()) as captured_stdout:
+            return_code = execute_func_in_future(main, create_stack_args)
+            self.assertEqual(return_code, SUCCESS)
+            created_response = json.loads(captured_stdout.getvalue())
+            stack_id = created_response["id"]
 
         # Check that the stack exists
         stack_db = DictDatabase(STACK, directory=CURRENT_TEST_DIR)
         self.assertTrue(await stack_db.exists())
 
-        stack = await stack_db.get(name)
+        stack = await stack_db.get(stack_id)
         self.assertIsNotNone(stack)
-        self.assertEqual(stack["id"], name)
 
         self.assertIn("config", stack)
         # self.assertIn("pools", stack["config"])
@@ -154,12 +160,16 @@ class TestCliStack(unittest.IsolatedAsyncioTestCase):
         create_stack_args.extend(["create", name, "--directory", CURRENT_TEST_DIR])
 
         # Create the stack
-        create_return_code = execute_func_in_future(main, create_stack_args)
-        self.assertEqual(create_return_code, SUCCESS)
+        stack_id = None
+        with patch("sys.stdout", new=StringIO()) as captured_stdout:
+            return_code = execute_func_in_future(main, create_stack_args)
+            self.assertEqual(return_code, SUCCESS)
+            created_response = json.loads(captured_stdout.getvalue())
+            stack_id = created_response["id"]
 
         # Update the stack
         update_stack_args = copy.deepcopy(self.base_args)
-        update_stack_args.extend(["update", name, "--directory", CURRENT_TEST_DIR])
+        update_stack_args.extend(["update", stack_id, "--directory", CURRENT_TEST_DIR])
         update_stack_args.extend(["--config-file", TEST_BASIC_STACK_FILE])
         update_return_code = execute_func_in_future(main, update_stack_args)
         self.assertEqual(update_return_code, SUCCESS)
@@ -168,7 +178,7 @@ class TestCliStack(unittest.IsolatedAsyncioTestCase):
         stack_db = DictDatabase(STACK, directory=CURRENT_TEST_DIR)
         self.assertTrue(await stack_db.exists())
 
-        stack = await stack_db.get(name)
+        stack = await stack_db.get(stack_id)
         self.assertIsNotNone(stack)
 
         self.assertIn("config", stack)
@@ -185,19 +195,30 @@ class TestCliStack(unittest.IsolatedAsyncioTestCase):
         # Create stack instance to be removed
         create_stack_args = copy.deepcopy(self.base_args)
         create_stack_args.extend(["create", name, "--directory", CURRENT_TEST_DIR])
-        return_code = execute_func_in_future(main, create_stack_args)
-        self.assertEqual(return_code, SUCCESS)
+
+        # Create the stack
+        stack_id = None
+        with patch("sys.stdout", new=StringIO()) as captured_stdout:
+            return_code = execute_func_in_future(main, create_stack_args)
+            self.assertEqual(return_code, SUCCESS)
+            created_response = json.loads(captured_stdout.getvalue())
+            stack_id = created_response["id"]
 
         remove_stack_args = copy.deepcopy(self.base_args)
-        remove_stack_args.extend(["remove", name, "--directory", CURRENT_TEST_DIR])
+        remove_stack_args.extend(["remove", stack_id, "--directory", CURRENT_TEST_DIR])
         return_code = execute_func_in_future(main, remove_stack_args)
         self.assertEqual(return_code, SUCCESS)
 
         # Verify that the stack is removed
         show_stack_args = copy.deepcopy(self.base_args)
-        show_stack_args.extend(["show", name, "--directory", CURRENT_TEST_DIR])
-        show_return_code = execute_func_in_future(main, show_stack_args)
-        self.assertEqual(show_return_code, FAILURE)
+        show_stack_args.extend(["show", stack_id, "--directory", CURRENT_TEST_DIR])
+
+        with patch("sys.stderr", new=StringIO()) as captured_stdout:
+            show_return_code = execute_func_in_future(main, show_stack_args)
+            self.assertEqual(show_return_code, FAILURE)
+            output = json.loads(captured_stdout.getvalue())
+            self.assertIsInstance(output, dict)
+            self.assertEqual(output["status"], "failed")
 
     async def test_dummy_stack_ls(self):
         test_id = str(uuid.uuid4())
@@ -207,16 +228,26 @@ class TestCliStack(unittest.IsolatedAsyncioTestCase):
         create_stack_args.extend(["create", name, "--directory", CURRENT_TEST_DIR])
 
         # Create the stack
-        create_return_code = execute_func_in_future(main, create_stack_args)
-        self.assertEqual(create_return_code, SUCCESS)
+        stack_id = None
+        with patch("sys.stdout", new=StringIO()) as captured_stdout:
+            create_return_code = execute_func_in_future(main, create_stack_args)
+            self.assertEqual(create_return_code, SUCCESS)
+            created_response = json.loads(captured_stdout.getvalue())
+            stack_id = created_response["id"]
 
         # Check that the stack exists
         ls_stack_args = copy.deepcopy(self.base_args)
         ls_stack_args.extend(["ls", "--directory", CURRENT_TEST_DIR])
 
-        ls_return_code = execute_func_in_future(main, ls_stack_args)
-        self.assertEqual(ls_return_code, SUCCESS)
-        # TODO, validate the output aswell
+        with patch("sys.stdout", new=StringIO()) as captured_stdout:
+            ls_return_code = execute_func_in_future(main, ls_stack_args)
+            self.assertEqual(ls_return_code, SUCCESS)
+            output = json.loads(captured_stdout.getvalue())
+            self.assertIsInstance(output, dict)
+            self.assertEqual(output["status"], "success")
+            self.assertIn("stacks", output)
+            self.assertIsInstance(output["stacks"], dict)
+            self.assertIn(stack_id, output["stacks"])
 
     async def test_dummy_stack_deploy(self):
         test_id = str(uuid.uuid4())
@@ -226,16 +257,21 @@ class TestCliStack(unittest.IsolatedAsyncioTestCase):
         create_stack_args.extend(["create", name, "--directory", CURRENT_TEST_DIR])
         create_stack_args.extend(["--config-file", TEST_BASIC_STACK_FILE])
 
-        return_code = execute_func_in_future(main, create_stack_args)
-        self.assertEqual(return_code, SUCCESS)
+        # Create the stack
+        stack_id = None
+        with patch("sys.stdout", new=StringIO()) as captured_stdout:
+            return_code = execute_func_in_future(main, create_stack_args)
+            self.assertEqual(return_code, SUCCESS)
+            created_response = json.loads(captured_stdout.getvalue())
+            stack_id = created_response["id"]
 
         # Check that the stack exists
         stack_db = DictDatabase(STACK, directory=CURRENT_TEST_DIR)
         self.assertTrue(await stack_db.exists())
 
-        stack = await stack_db.get(name)
+        stack = await stack_db.get(stack_id)
         self.assertIsNotNone(stack)
-        self.assertEqual(stack["id"], name)
+        self.assertIsInstance(stack, dict)
         self.assertEqual(stack["config"]["instances"], TEST_BASIC_INSTANCES_EXPECTED)
 
         deploy_stack_args = copy.deepcopy(self.base_args)
@@ -244,9 +280,9 @@ class TestCliStack(unittest.IsolatedAsyncioTestCase):
         deploy_return_code = execute_func_in_future(main, deploy_stack_args)
         self.assertEqual(deploy_return_code, SUCCESS)
 
-        deployed_stack = await stack_db.get(name)
+        deployed_stack = await stack_db.get(stack_id)
         self.assertIsNotNone(deployed_stack)
-        self.assertEqual(deployed_stack["id"], name)
+        self.assertIsInstance(deployed_stack, dict)
         # self.assertEqual(
         #     deployed_stack["instances"], deployed_stack["config"]["instances"]
         # )
@@ -291,15 +327,19 @@ class TestCliStack(unittest.IsolatedAsyncioTestCase):
         create_stack_args.extend(["create", name, "--directory", CURRENT_TEST_DIR])
 
         # Create the stack
-        return_code = execute_func_in_future(main, create_stack_args)
-        self.assertEqual(return_code, SUCCESS)
+        stack_id = None
+        with patch("sys.stdout", new=StringIO()) as captured_stdout:
+            return_code = execute_func_in_future(main, create_stack_args)
+            self.assertEqual(return_code, SUCCESS)
+            created_response = json.loads(captured_stdout.getvalue())
+            stack_id = created_response["id"]
 
         # Check that the stack exists
         stack_db = DictDatabase(STACK, directory=CURRENT_TEST_DIR)
         self.assertTrue(await stack_db.exists())
 
         show_stack_args = copy.deepcopy(self.base_args)
-        show_stack_args.extend(["show", name, "--directory", CURRENT_TEST_DIR])
+        show_stack_args.extend(["show", stack_id, "--directory", CURRENT_TEST_DIR])
 
         show_return_code = execute_func_in_future(main, show_stack_args)
         self.assertEqual(show_return_code, SUCCESS)

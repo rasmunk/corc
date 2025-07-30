@@ -25,7 +25,7 @@ async def ls(*args, directory=None):
     if not await pool_db.exists():
         if not await pool_db.touch():
             response["msg"] = (
-                "The Stack database: {} did not exist in directory: {}, and it could not be created.".format(
+                "The Pool database: {} did not exist in directory: {}, and it could not be created.".format(
                     pool_db.name, directory
                 )
             )
@@ -37,6 +37,6 @@ async def ls(*args, directory=None):
         response["msg"] = "No pools found."
         return True, response
 
-    response["pools"] = [pool["id"] for pool in pools]
+    response["pools"] = pools
     response["msg"] = "Found pools."
     return True, response

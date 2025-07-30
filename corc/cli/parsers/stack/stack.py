@@ -54,7 +54,7 @@ def create_group(parser):
     stack_group.add_argument(
         "-cf",
         "--config-file",
-        dest="{}_config_file".format(STACK),
+        dest="{}_config".format(STACK),
         help="The path to a file that contains a Stack configuration that should be associated with the Stack that is created.",
     )
     stack_group.add_argument(
@@ -74,7 +74,7 @@ def update_group(parser):
     stack_group.add_argument(
         "-cf",
         "--config-file",
-        dest="{}_config_file".format(STACK),
+        dest="{}_config".format(STACK),
         help="The path to a file that contains a Stack configuration that should be used to update the Stack with.",
     )
     stack_group.add_argument(

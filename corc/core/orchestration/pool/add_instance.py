@@ -19,7 +19,7 @@ from corc.core.storage.dictdatabase import DictDatabase
 from corc.core.orchestration.pool.models import Instance, find_instance_by_name
 
 
-async def add_instance(pool_name, instance_name, **kwargs):
+async def add_instance(pool_id, instance_name, **kwargs):
     response = {}
 
     directory = kwargs.get("directory", None)
@@ -33,11 +33,9 @@ async def add_instance(pool_name, instance_name, **kwargs):
             )
             return False, response
 
-    pool = await pool_db.get(pool_name)
+    pool = await pool_db.get(pool_id)
     if not pool:
-        response["msg"] = "The Pool: {} does not exist in the database.".format(
-            pool_name
-        )
+        response["msg"] = "The Pool: {} does not exist in the database.".format(pool_id)
         return False, response
 
     if find_instance_by_name(pool["instances"], instance_name):
@@ -47,9 +45,9 @@ async def add_instance(pool_name, instance_name, **kwargs):
         return False, response
 
     pool["instances"].append(Instance(instance_name, **kwargs))
-    if not await pool_db.update(pool_name, pool):
+    if not await pool_db.update(pool_id, pool):
         response["msg"] = "Failed to update the Pool: {} with a new Instance.".format(
-            pool_name
+            pool_id
         )
         return
 

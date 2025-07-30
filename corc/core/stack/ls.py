@@ -33,10 +33,10 @@ async def ls(*args, directory=None):
 
     stacks = await stack_db.items()
     if not stacks:
-        response["stacks"] = []
+        response["stacks"] = {}
         response["msg"] = "No Stacks found."
         return True, response
 
-    response["stacks"] = [stack["id"] for stack in stacks]
+    response["stacks"] = stacks
     response["msg"] = "Found Stacks."
     return True, response

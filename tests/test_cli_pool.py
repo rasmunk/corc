@@ -23,7 +23,7 @@ from io import StringIO
 from unittest.mock import patch
 from corc.cli.cli import main
 from corc.core.defaults import POOL
-from corc.cli.return_codes import SUCCESS
+from corc.cli.return_codes import SUCCESS, FAILURE
 from corc.core.storage.dictdatabase import DictDatabase
 from corc.core.orchestration.pool.create import create
 from corc.utils.io import exists, makedirs, removedirs
@@ -72,14 +72,26 @@ class TestCliDictDatabase(unittest.IsolatedAsyncioTestCase):
         name = f"{self.name}-{test_id}"
         create_pool_args = copy.deepcopy(self.base_args)
         create_pool_args.extend(["create", name, "--directory", CURRENT_TEST_DIR])
-        return_code = execute_func_in_future(main, create_pool_args)
-        self.assertEqual(return_code, SUCCESS)
 
-        # Check that the pool exists
-        pool_db = DictDatabase(POOL, directory=CURRENT_TEST_DIR)
-        pool = await pool_db.get(name)
-        self.assertIsNotNone(pool)
-        self.assertEqual(pool["id"], name)
+        with patch("sys.stdout", new=StringIO()) as captured_stdout:
+            return_code = execute_func_in_future(main, create_pool_args)
+            self.assertEqual(return_code, SUCCESS)
+
+            created_response = json.loads(captured_stdout.getvalue())
+            self.assertIsInstance(created_response, dict)
+            self.assertIn("id", created_response)
+            pool_id = created_response["id"]
+            self.assertIn("pool", created_response)
+            self.assertIsInstance(created_response["pool"], dict)
+            self.assertIn("name", created_response["pool"])
+            self.assertEqual(name, created_response["pool"]["name"])
+
+            # Check that the pool exists
+            pool_db = DictDatabase(POOL, directory=CURRENT_TEST_DIR)
+            created_db_pool = await pool_db.get(pool_id)
+            self.assertIsNotNone(created_db_pool)
+            self.assertIsInstance(created_db_pool, dict)
+            self.assertEqual(created_response["pool"], created_db_pool)
 
     async def test_dummy_pool_remove(self):
         # Create a pool that can be removed by the CLI
@@ -93,18 +105,27 @@ class TestCliDictDatabase(unittest.IsolatedAsyncioTestCase):
 
         remove_pool_args = copy.deepcopy(self.base_args)
         remove_pool_args.extend(["remove", pool_name, "--directory", CURRENT_TEST_DIR])
-        return_code = execute_func_in_future(main, remove_pool_args)
-        self.assertEqual(return_code, SUCCESS)
+        remove_return_code = execute_func_in_future(main, remove_pool_args)
+        self.assertEqual(remove_return_code, SUCCESS)
 
-    @patch("sys.stdout", new_callable=StringIO)
-    async def test_dummy_pool_list_empty(self, mock_stdout):
+        show_pool_args = copy.deepcopy(self.base_args)
+        show_pool_args.extend(["show", pool_name, "--directory", CURRENT_TEST_DIR])
+        with patch("sys.stderr", new=StringIO()) as captured_stdout:
+            show_return_code = execute_func_in_future(main, show_pool_args)
+            self.assertEqual(show_return_code, FAILURE)
+            output = json.loads(captured_stdout.getvalue())
+            self.assertIsInstance(output, dict)
+            self.assertEqual(output["status"], "failed")
+
+    async def test_dummy_pool_list_empty(self):
         list_pools_args = copy.deepcopy(self.base_args)
         list_pools_args.extend(["ls", "--directory", CURRENT_TEST_DIR])
 
-        list_return_code = execute_func_in_future(main, list_pools_args)
-        self.assertEqual(list_return_code, SUCCESS)
-        list_output = mock_stdout.getvalue()
-        self.assertListEqual(json.loads(list_output)["pools"], [])
+        with patch("sys.stdout", new=StringIO()) as captured_stdout:
+            list_return_code = execute_func_in_future(main, list_pools_args)
+            self.assertEqual(list_return_code, SUCCESS)
+            list_output = captured_stdout.getvalue()
+            self.assertListEqual(json.loads(list_output)["pools"], [])
 
     async def test_dummy_pool_create_multiple(self):
         test_id = str(uuid.uuid4())
@@ -114,20 +135,22 @@ class TestCliDictDatabase(unittest.IsolatedAsyncioTestCase):
             {"name": f"{test_id}-{self.name}-2", "directory": CURRENT_TEST_DIR},
             {"name": f"{test_id}-{self.name}-3", "directory": CURRENT_TEST_DIR},
         ]
+
+        created_pools = []
         for pool in pools:
             create_pool_args = copy.deepcopy(self.base_args)
             create_pool_args.extend(
                 ["create", pool["name"], "--directory", pool["directory"]]
             )
+            with patch("sys.stdout", new=StringIO()) as captured_stdout:
+                return_code = execute_func_in_future(main, create_pool_args)
+                self.assertEqual(return_code, SUCCESS)
+                created_output = json.loads(captured_stdout.getvalue())
+                created_pools.append(created_output)
 
-            return_code = execute_func_in_future(main, create_pool_args)
-            self.assertEqual(return_code, SUCCESS)
-
-        for pool in pools:
+        for pool in created_pools:
             list_pool_args = copy.deepcopy(self.base_args)
-            list_pool_args.extend(
-                ["show", pool["name"], "--directory", pool["directory"]]
-            )
+            list_pool_args.extend(["show", pool["id"], "--directory", CURRENT_TEST_DIR])
 
             return_code = execute_func_in_future(main, list_pool_args)
             self.assertEqual(return_code, SUCCESS)
@@ -141,17 +164,24 @@ class TestCliDictDatabase(unittest.IsolatedAsyncioTestCase):
             f"{test_id}-{self.name}-3",
         )
         pools = [pool1, pool2, pool3]
+
+        created_pools = []
         for pool in pools:
             create_pool_args = copy.deepcopy(self.base_args)
             create_pool_args.extend(["create", pool, "--directory", CURRENT_TEST_DIR])
 
-            return_code = execute_func_in_future(main, create_pool_args)
-            self.assertEqual(return_code, SUCCESS)
+            with patch("sys.stdout", new=StringIO()) as captured_stdout:
+                return_code = execute_func_in_future(main, create_pool_args)
+                self.assertEqual(return_code, SUCCESS)
+                created_output = json.loads(captured_stdout.getvalue())
+                created_pools.append(created_output)
 
-        for pool in pools:
+        for pool in created_pools:
             # Remove pools
             remove_pool_args = copy.deepcopy(self.base_args)
-            remove_pool_args.extend(["remove", pool, "--directory", CURRENT_TEST_DIR])
+            remove_pool_args.extend(
+                ["remove", pool["id"], "--directory", CURRENT_TEST_DIR]
+            )
 
             return_code = execute_func_in_future(main, remove_pool_args)
             self.assertEqual(return_code, SUCCESS)
@@ -160,16 +190,20 @@ class TestCliDictDatabase(unittest.IsolatedAsyncioTestCase):
         test_id = str(uuid.uuid4())
         name = f"{self.name}-{test_id}"
         # Create the pool
+        pool_id = None
         create_pool_args = copy.deepcopy(self.base_args)
         create_pool_args.extend(["create", name, "--directory", CURRENT_TEST_DIR])
-        return_code = execute_func_in_future(main, create_pool_args)
-        self.assertEqual(return_code, SUCCESS)
+        with patch("sys.stdout", new=StringIO()) as captured_stdout:
+            return_code = execute_func_in_future(main, create_pool_args)
+            self.assertEqual(return_code, SUCCESS)
+            created_output = json.loads(captured_stdout.getvalue())
+            pool_id = created_output["id"]
 
         # Add instance to the pool
         add_instance_args = copy.deepcopy(self.base_args)
         instance_name = f"dummy-instance-{test_id}"
         add_instance_args.extend(
-            ["add_instance", name, instance_name, "--directory", CURRENT_TEST_DIR]
+            ["add_instance", pool_id, instance_name, "--directory", CURRENT_TEST_DIR]
         )
         return_code = execute_func_in_future(main, add_instance_args)
         self.assertEqual(return_code, SUCCESS)
@@ -178,16 +212,20 @@ class TestCliDictDatabase(unittest.IsolatedAsyncioTestCase):
         test_id = str(uuid.uuid4())
         name = f"{self.name}-{test_id}"
         # Create the pool
+        pool_id = None
         create_pool_args = copy.deepcopy(self.base_args)
         create_pool_args.extend(["create", name, "--directory", CURRENT_TEST_DIR])
-        return_code = execute_func_in_future(main, create_pool_args)
-        self.assertEqual(return_code, SUCCESS)
+        with patch("sys.stdout", new=StringIO()) as captured_stdout:
+            return_code = execute_func_in_future(main, create_pool_args)
+            self.assertEqual(return_code, SUCCESS)
+            created_output = json.loads(captured_stdout.getvalue())
+            pool_id = created_output["id"]
 
         # Add instance to the pool
         add_instance_args = copy.deepcopy(self.base_args)
         instance_name = f"dummy-instance-{test_id}"
         add_instance_args.extend(
-            ["add_instance", name, instance_name, "--directory", CURRENT_TEST_DIR]
+            ["add_instance", pool_id, instance_name, "--directory", CURRENT_TEST_DIR]
         )
         return_code = execute_func_in_future(main, add_instance_args)
         self.assertEqual(return_code, SUCCESS)
@@ -195,7 +233,7 @@ class TestCliDictDatabase(unittest.IsolatedAsyncioTestCase):
         # Remove instance from the pool
         remove_instance_args = copy.deepcopy(self.base_args)
         remove_instance_args.extend(
-            ["remove_instance", name, instance_name, "--directory", CURRENT_TEST_DIR]
+            ["remove_instance", pool_id, instance_name, "--directory", CURRENT_TEST_DIR]
         )
         return_code = execute_func_in_future(main, remove_instance_args)
         self.assertEqual(return_code, SUCCESS)

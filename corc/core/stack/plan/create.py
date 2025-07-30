@@ -50,7 +50,7 @@ async def create(name, config=None, directory=None):
         )
         return False, response
 
-    plan = {"id": name, "initializer": {}, "orchestrator": {}, "configurer": {}}
+    plan = {"name": name, "initializer": {}, "orchestrator": {}, "configurer": {}}
 
     # Load the plan configuration file
     if config_file:
@@ -73,7 +73,8 @@ async def create(name, config=None, directory=None):
             return False, validate_response
         plan[component] = component_config
 
-    if not await plan_db.add(plan):
+    plan_id = await plan_db.add(plan)
+    if not plan_id:
         response["msg"] = (
             "Failed to save the Plan information to the database: {}".format(
                 plan_db.name
@@ -81,6 +82,7 @@ async def create(name, config=None, directory=None):
         )
         return False, response
 
+    response["id"] = plan_id
     response["plan"] = plan
     response["msg"] = "Created Plan succesfully."
     return True, response
