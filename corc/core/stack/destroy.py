@@ -119,7 +119,7 @@ async def get_instance(instance_id, instance_details):
     return await provider_get_func(driver, instance_id)
 
 
-async def destroy(name, directory=None):
+async def destroy(stack_id, directory=None):
     response = {}
 
     stack_db = DictDatabase(STACK, directory=directory)
@@ -132,9 +132,9 @@ async def destroy(name, directory=None):
             )
             return False, response
 
-    stack = await stack_db.get(name)
+    stack = await stack_db.get(stack_id)
     if not stack:
-        response["msg"] = "Stack: {} does not exist.".format(name)
+        response["msg"] = "Stack: {} does not exist.".format(stack_id)
         return False, response
 
     remove_instance_details = {}
@@ -159,20 +159,20 @@ async def destroy(name, directory=None):
             print("Failed to shutdown Instance: {}.".format(details["id"]))
 
     # Persist the changes to the stack
-    updated = await stack_db.update(name, stack)
+    updated = await stack_db.update(stack_id, stack)
     if not updated:
         response["msg"] = "Failed to update Stack: {} after removing Instances".format(
-            name
+            stack_id
         )
         return False, response
 
-    if not await stack_db.remove(name):
-        response["msg"] = "Failed to remove Stack: {}.".format(name)
+    if not await stack_db.remove(stack_id):
+        response["msg"] = "Failed to remove Stack: {}.".format(stack_id)
         return False, response
 
     if await stack_db.is_empty() and not await stack_db.remove_persistence():
-        response["msg"] = "Failed to remove Stack persistence: {}.".format(name)
+        response["msg"] = "Failed to remove Stack persistence: {}.".format(stack_id)
         return False, response
 
-    response["msg"] = "Stack: {} has been destroyed.".format(name)
+    response["msg"] = "Stack: {} has been destroyed.".format(stack_id)
     return True, response

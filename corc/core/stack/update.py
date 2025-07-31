@@ -19,7 +19,7 @@ from corc.core.storage.dictdatabase import DictDatabase
 from corc.core.stack.config import get_stack_config, get_stack_config_instances
 
 
-async def update(name, config=None, directory=None):
+async def update(stack_id, config=None, directory=None):
     response = {}
 
     if not config:
@@ -39,11 +39,11 @@ async def update(name, config=None, directory=None):
             )
             return False, response
 
-    stack_to_update = await stack_db.get(name)
+    stack_to_update = await stack_db.get(stack_id)
     if not stack_to_update:
         response["msg"] = (
             "Failed to find a Stack inside the database with name: {} to update.".format(
-                name
+                stack_id
             )
         )
         return False, response
@@ -67,7 +67,7 @@ async def update(name, config=None, directory=None):
         return False, instances_response
     stack_to_update["config"]["instances"] = instances_response
 
-    if not await stack_db.update(name, stack_to_update):
+    if not await stack_db.update(stack_id, stack_to_update):
         response["msg"] = (
             "Failed to save the updated Stack information to the database: {}".format(
                 stack_db.name
@@ -75,5 +75,5 @@ async def update(name, config=None, directory=None):
         )
         return False, response
 
-    response["msg"] = "The Stack: {} has been updated.".format(name)
+    response["msg"] = "The Stack: {} has been updated.".format(stack_id)
     return True, response

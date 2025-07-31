@@ -18,7 +18,7 @@ from corc.core.defaults import STACK
 from corc.core.storage.dictdatabase import DictDatabase
 
 
-async def remove(name, directory=None):
+async def remove(stack_id, directory=None):
     response = {}
 
     stack_db = DictDatabase(STACK, directory=directory)
@@ -31,13 +31,13 @@ async def remove(name, directory=None):
             )
             return False, response
 
-    if not await stack_db.get(name):
-        response["msg"] = f"The Stack: {name} does not exist in the database."
+    if not await stack_db.get(stack_id):
+        response["msg"] = f"The Stack: {stack_id} does not exist in the database."
         return True, response
 
-    if not await stack_db.remove(name):
-        response["msg"] = f"Failed to remove the Stack: {name}."
+    if not await stack_db.remove(stack_id):
+        response["msg"] = f"Failed to remove the Stack: {stack_id}."
         return False, response
 
-    response["msg"] = f"Removed Stack: {name}."
+    response["msg"] = f"Removed Stack: {stack_id}."
     return True, response

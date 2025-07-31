@@ -24,7 +24,7 @@ from corc.core.stack.plan.config import (
 )
 
 
-async def update(name, config=None, directory=None):
+async def update(plan_id, config=None, directory=None):
     response = {}
 
     if not config:
@@ -38,17 +38,15 @@ async def update(name, config=None, directory=None):
     if not await plan_db.exists():
         response["msg"] = (
             "The Plan: {} database does not exist in directory: {}.".format(
-                name, directory
+                plan_id, directory
             )
         )
         return False, response
 
-    plan_to_update = await plan_db.get(name)
+    plan_to_update = await plan_db.get(plan_id)
     if not plan_to_update:
         response["msg"] = (
-            "Failed to find a Plan inside the database with name: {} to update.".format(
-                name
-            )
+            "Failed to find a Plan inside the database: {} to update.".format(plan_id)
         )
         return False, response
 
@@ -74,7 +72,7 @@ async def update(name, config=None, directory=None):
                 return False, validate_response
             plan_to_update[component] = component_config
 
-    if not await plan_db.update(name, plan_to_update):
+    if not await plan_db.update(plan_id, plan_to_update):
         response["msg"] = (
             "Failed to save the updated Plan information: {} to the database: {}".format(
                 plan_to_update, plan_db.name
@@ -82,5 +80,5 @@ async def update(name, config=None, directory=None):
         )
         return False, response
 
-    response["msg"] = "The Plan: {} has been updated.".format(name)
+    response["msg"] = "The Plan: {} has been updated.".format(plan_id)
     return True, response

@@ -316,7 +316,7 @@ async def prepare_stack_instance(instance_name, instance_config, directory=None)
     return True, {"name": instance_name, "config": instance_config}
 
 
-async def deploy(name, directory=None):
+async def deploy(stack_id, directory=None):
     response = {}
 
     stack_db = DictDatabase(STACK, directory=directory)
@@ -329,9 +329,9 @@ async def deploy(name, directory=None):
             )
             return False, response
 
-    stack_to_deploy = await stack_db.get(name)
+    stack_to_deploy = await stack_db.get(stack_id)
     if not stack_to_deploy:
-        response["msg"] = "Failed to find a Stack with name: {} to deploy".format(name)
+        response["msg"] = "Failed to find a Stack: {} to deploy".format(stack_id)
         return False, response
 
     deploy_instances = stack_to_deploy["config"]["instances"]
@@ -382,8 +382,8 @@ async def deploy(name, directory=None):
                         "initialized": True,
                         "configured": False,
                     }
-                    if not await stack_db.update(name, stack_to_deploy):
-                        response["msg"] = "Failed to update stack: {}.".format(name)
+                    if not await stack_db.update(stack_id, stack_to_deploy):
+                        response["msg"] = "Failed to update stack: {}.".format(stack_id)
                         return False, response
             else:
                 error_print(
@@ -445,8 +445,8 @@ async def deploy(name, directory=None):
                         }
                     )
 
-                    if not await stack_db.update(name, stack_to_deploy):
-                        response["msg"] = "Failed to update stack: {}.".format(name)
+                    if not await stack_db.update(stack_id, stack_to_deploy):
+                        response["msg"] = "Failed to update stack: {}.".format(stack_id)
                         return False, response
             else:
                 error_print(
@@ -488,8 +488,8 @@ async def deploy(name, directory=None):
                             "provisioned": True,
                         }
                     )
-                    if not await stack_db.update(name, stack_to_deploy):
-                        response["msg"] = "Failed to update stack: {}.".format(name)
+                    if not await stack_db.update(stack_id, stack_to_deploy):
+                        response["msg"] = "Failed to update Stack: {}.".format(stack_id)
                         return False, response
             else:
                 error_print(
@@ -504,9 +504,9 @@ async def deploy(name, directory=None):
                 )
             )
 
-    if not await stack_db.update(name, stack_to_deploy):
-        response["msg"] = "Failed to update stack: {}.".format(name)
+    if not await stack_db.update(stack_id, stack_to_deploy):
+        response["msg"] = "Failed to update Stack: {}.".format(stack_id)
         return False, response
 
-    response["msg"] = "Stack: {} deployed successfully.".format(name)
+    response["msg"] = "Stack: {} deployed successfully.".format(stack_id)
     return True, response
