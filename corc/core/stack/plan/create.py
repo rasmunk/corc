@@ -65,13 +65,14 @@ async def create(name, config=None, directory=None):
 
     for component in [INITIALIZER, ORCHESTRATOR, CONFIGURER]:
         component_config = get_component_config(component, plan_config)
-        # Validate the plan components
-        validate_success, validate_response = validate_plan_component(
-            component, component_config
-        )
-        if not validate_success:
-            return False, validate_response
-        plan[component] = component_config
+        if component_config:
+            # Validate the plan components
+            validate_success, validate_response = validate_plan_component(
+                component, component_config
+            )
+            if not validate_success:
+                return False, validate_response
+            plan[component] = component_config
 
     plan_id = await plan_db.add(plan)
     if not plan_id:
