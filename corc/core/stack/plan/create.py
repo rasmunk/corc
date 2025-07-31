@@ -44,14 +44,7 @@ async def create(name, config=None, directory=None):
             )
             return False, response
 
-    if await plan_db.get(name):
-        response["msg"] = (
-            "The Plan: {} already exists and therefore can't be created.".format(name)
-        )
-        return False, response
-
     plan = {"name": name, "initializer": {}, "orchestrator": {}, "configurer": {}}
-
     # Load the plan configuration file
     if config_file:
         plan_config = await get_plan_config(config_file)
