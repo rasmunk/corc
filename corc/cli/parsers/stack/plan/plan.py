@@ -67,7 +67,7 @@ def create_group(parser):
     plan_group.add_argument(
         "-cf",
         "--config-file",
-        dest="{}_config_file".format(PLAN),
+        dest="{}_config".format(PLAN),
         help="The path to a file that contains a Plan configuration that should be associated with the Plan that is created.",
     )
     plan_group.add_argument(
@@ -87,7 +87,7 @@ def update_group(parser):
     plan_group.add_argument(
         "-cf",
         "--config-file",
-        dest="{}_config_file".format(PLAN),
+        dest="{}_config".format(PLAN),
         help="The path to a file that contains a Plan configuration that should be used to update the Plan with.",
     )
     plan_group.add_argument(

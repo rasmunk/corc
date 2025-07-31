@@ -24,8 +24,15 @@ from corc.core.stack.plan.config import (
 )
 
 
-async def update(name, config_file=None, directory=None):
+async def update(name, config=None, directory=None):
     response = {}
+
+    if not config:
+        config = {}
+
+    config_file = None
+    if isinstance(config, str):
+        config_file = config
 
     plan_db = DictDatabase(PLAN, directory=directory)
     if not await plan_db.exists():
@@ -45,22 +52,27 @@ async def update(name, config_file=None, directory=None):
         )
         return False, response
 
-    # Load the architecture file and deploy the plan
-    plan_config = await get_plan_config(config_file)
-    if not plan_config:
-        response["msg"] = "Failed to load the Plan configuration file: {}.".format(
-            config_file
-        )
-        return False, response
+    # Load the plan configuration file
+    if config_file:
+        plan_config = await get_plan_config(config_file)
+        if not plan_config:
+            response["msg"] = "Failed to load the Plan configuration file: {}.".format(
+                config_file
+            )
+            return False, response
+    else:
+        plan_config = config
 
     for component in [INITIALIZER, ORCHESTRATOR, CONFIGURER]:
         component_config = get_component_config(component, plan_config)
-        # Validate the plan components
-        validate_success, validate_response = validate_plan_component(
-            component, component_config
-        )
-        if not validate_success:
-            return False, validate_response
+        if component_config:
+            # Validate the plan components
+            validate_success, validate_response = validate_plan_component(
+                component, component_config
+            )
+            if not validate_success:
+                return False, validate_response
+            plan_to_update[component] = component_config
 
     if not await plan_db.update(name, plan_to_update):
         response["msg"] = (
