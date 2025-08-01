@@ -72,6 +72,10 @@ async def update(plan_id, name=None, config=None, directory=None):
                 return False, validate_response
             plan_to_update[component] = component_config
 
+    # Update the plan name
+    if name:
+        plan_to_update["name"] = name
+
     if not await plan_db.update(plan_id, plan_to_update):
         response["msg"] = (
             "Failed to save the updated Plan information: {} to the database: {}".format(

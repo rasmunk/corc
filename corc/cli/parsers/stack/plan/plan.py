@@ -45,7 +45,7 @@ def valid_list_group(parser):
 def apply_group(parser):
     apply_group = parser.add_argument_group(title="Plan apply arguments")
     apply_group.add_argument(
-        "id",
+        "plan_id",
         action=PositionalArgumentsAction,
         help="The id of the Plan that should be applied.",
     )

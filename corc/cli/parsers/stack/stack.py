@@ -69,7 +69,7 @@ def create_group(parser):
 def update_group(parser):
     stack_group = parser.add_argument_group(title="Stack update arguments")
     stack_group.add_argument(
-        "name", action=PositionalArgumentsAction, help="The name of the Stack."
+        "stack_id", action=PositionalArgumentsAction, help="The id of the Stack."
     )
     stack_group.add_argument(
         "-cf",
@@ -89,9 +89,9 @@ def update_group(parser):
 def remove_group(parser):
     stack_group = parser.add_argument_group(title="Stack remove arguments")
     stack_group.add_argument(
-        "name",
+        "stack_id",
         action=PositionalArgumentsAction,
-        help="The name of the Stack that should be removed.",
+        help="The id of the Stack that should be removed.",
     )
     stack_group.add_argument(
         "-d",
@@ -105,9 +105,9 @@ def remove_group(parser):
 def deploy_group(parser):
     stack_group = parser.add_argument_group(title="Stack deploy arguments")
     stack_group.add_argument(
-        "name",
+        "stack_id",
         action=PositionalArgumentsAction,
-        help="The name of the Stack that should be deployed.",
+        help="The id of the Stack that should be deployed.",
     )
     stack_group.add_argument(
         "-d",
@@ -121,9 +121,9 @@ def deploy_group(parser):
 def destroy_group(parser):
     stack_group = parser.add_argument_group(title="Stack to destroy")
     stack_group.add_argument(
-        "name",
+        "stack_id",
         action=PositionalArgumentsAction,
-        help="The name of the Stack that should be destroyed.",
+        help="The id of the Stack that should be destroyed.",
     )
     stack_group.add_argument(
         "-d",
@@ -137,9 +137,9 @@ def destroy_group(parser):
 def show_group(parser):
     stack_group = parser.add_argument_group(title="Stack show arguments")
     stack_group.add_argument(
-        "name",
+        "stack_id",
         action=PositionalArgumentsAction,
-        help="The name of the Stack.",
+        help="The id of the Stack.",
     )
     stack_group.add_argument(
         "-d",
