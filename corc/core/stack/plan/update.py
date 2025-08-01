@@ -24,7 +24,7 @@ from corc.core.stack.plan.config import (
 )
 
 
-async def update(plan_id, config=None, directory=None):
+async def update(plan_id, name=None, config=None, directory=None):
     response = {}
 
     if not config:

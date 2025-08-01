@@ -34,14 +34,6 @@ def valid_remove_group(parser):
     remove_group(parser)
 
 
-def valid_deploy_group(parser):
-    deploy_group(parser)
-
-
-def valid_destroy_group(parser):
-    destroy_group(parser)
-
-
 def valid_show_group(parser):
     show_group(parser)
 
@@ -82,7 +74,7 @@ def create_group(parser):
 def update_group(parser):
     plan_group = parser.add_argument_group(title="Plan update arguments")
     plan_group.add_argument(
-        "name", action=PositionalArgumentsAction, help="The name of the Plan."
+        "plan_id", action=PositionalArgumentsAction, help="The id of the Plan."
     )
     plan_group.add_argument(
         "-cf",
@@ -102,9 +94,9 @@ def update_group(parser):
 def remove_group(parser):
     plan_group = parser.add_argument_group(title="Plan remove arguments")
     plan_group.add_argument(
-        "name",
+        "plan_id",
         action=PositionalArgumentsAction,
-        help="The name of the Plan that should be removed.",
+        help="The id of the Plan that should be removed.",
     )
     plan_group.add_argument(
         "-d",
@@ -115,44 +107,12 @@ def remove_group(parser):
     )
 
 
-def deploy_group(parser):
-    plan_group = parser.add_argument_group(title="Plan deploy arguments")
-    plan_group.add_argument(
-        "name",
-        action=PositionalArgumentsAction,
-        help="The name of the Plan that should be deployed.",
-    )
-    plan_group.add_argument(
-        "-d",
-        "--directory",
-        dest="{}_directory".format(PLAN),
-        help="The directory path to where the Plan should be created.",
-        default=default_persistence_path,
-    )
-
-
-def destroy_group(parser):
-    plan_group = parser.add_argument_group(title="Plan to destroy")
-    plan_group.add_argument(
-        "name",
-        action=PositionalArgumentsAction,
-        help="The name of the Plan that should be destroyed.",
-    )
-    plan_group.add_argument(
-        "-d",
-        "--directory",
-        dest="{}_directory".format(PLAN),
-        help="The directory path to where the Plan should be destroyed.",
-        default=default_persistence_path,
-    )
-
-
 def show_group(parser):
     plan_group = parser.add_argument_group(title="Plan show arguments")
     plan_group.add_argument(
-        "name",
+        "plan_id",
         action=PositionalArgumentsAction,
-        help="The name of the Plan.",
+        help="The id of the Plan.",
     )
     plan_group.add_argument(
         "-d",
