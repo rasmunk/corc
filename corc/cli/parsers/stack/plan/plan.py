@@ -77,6 +77,12 @@ def update_group(parser):
         "plan_id", action=PositionalArgumentsAction, help="The id of the Plan."
     )
     plan_group.add_argument(
+        "-n",
+        "--name",
+        dest="{}_name".format(PLAN)
+        help="The name of the Plan",
+    ),
+    plan_group.add_argument(
         "-cf",
         "--config-file",
         dest="{}_config".format(PLAN),

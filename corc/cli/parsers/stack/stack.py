@@ -72,6 +72,12 @@ def update_group(parser):
         "stack_id", action=PositionalArgumentsAction, help="The id of the Stack."
     )
     stack_group.add_argument(
+        "-n",
+        "--name",
+        dest="{}_name".format(STACK),
+        help="The name of the Stack",
+    )
+    stack_group.add_argument(
         "-cf",
         "--config-file",
         dest="{}_config".format(STACK),
