@@ -79,7 +79,7 @@ def update_group(parser):
     plan_group.add_argument(
         "-n",
         "--name",
-        dest="{}_name".format(PLAN)
+        dest="{}_name".format(PLAN),
         help="The name of the Plan",
     ),
     plan_group.add_argument(
