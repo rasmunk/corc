@@ -102,9 +102,10 @@ class TestCliDictDatabase(unittest.IsolatedAsyncioTestCase):
             pool_name, directory=CURRENT_TEST_DIR
         )
         self.assertTrue(created_pool)
+        pool_id = created_response["id"]
 
         remove_pool_args = copy.deepcopy(self.base_args)
-        remove_pool_args.extend(["remove", pool_name, "--directory", CURRENT_TEST_DIR])
+        remove_pool_args.extend(["remove", pool_id, "--directory", CURRENT_TEST_DIR])
         remove_return_code = execute_func_in_future(main, remove_pool_args)
         self.assertEqual(remove_return_code, SUCCESS)
 
