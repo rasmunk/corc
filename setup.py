@@ -34,8 +34,9 @@ def read_req(name):
 
 
 version_ns = {}
-with open(os.path.join(cur_dir, "version.py")) as f:
-    exec(f.read(), {}, version_ns)
+version_path = os.path.join(cur_dir, "corc", "_version.py")
+version_content = read(version_path)
+exec(version_content, {}, version_ns)
 
 
 long_description = open("README.rst").read()
