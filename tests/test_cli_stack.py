@@ -26,6 +26,7 @@ from corc.cli.cli import main
 from corc.core.defaults import STACK
 from corc.utils.io import join, exists, makedirs, removedirs
 from corc.core.storage.dictdatabase import DictDatabase
+from corc.core.stack.create import create as create_stack
 
 # Because the main function spawns an event loop, we cannot execute the
 # main function directly in the current event loop.
@@ -192,17 +193,11 @@ class TestCliStack(unittest.IsolatedAsyncioTestCase):
         test_id = str(uuid.uuid4())
         name = f"{self.name}-{test_id}"
 
-        # Create stack instance to be removed
-        create_stack_args = copy.deepcopy(self.base_args)
-        create_stack_args.extend(["create", name, "--directory", CURRENT_TEST_DIR])
-
-        # Create the stack
-        stack_id = None
-        with patch("sys.stdout", new=StringIO()) as captured_stdout:
-            return_code = execute_func_in_future(main, create_stack_args)
-            self.assertEqual(return_code, SUCCESS)
-            created_response = json.loads(captured_stdout.getvalue())
-            stack_id = created_response["id"]
+        created_stack, created_response = await create_stack(
+            name, directory=CURRENT_TEST_DIR
+        )
+        self.assertTrue(created_stack)
+        stack_id = created_response["id"]
 
         remove_stack_args = copy.deepcopy(self.base_args)
         remove_stack_args.extend(["remove", stack_id, "--directory", CURRENT_TEST_DIR])
