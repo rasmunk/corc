@@ -57,9 +57,9 @@ def create_group(parser):
 def remove_group(parser):
     pool_group = parser.add_argument_group(title="Pool remove arguments")
     pool_group.add_argument(
-        "name",
+        "id",
         action=PositionalArgumentsAction,
-        help="The name of the pool that should be removed.",
+        help="The id of the pool that should be removed.",
     )
     pool_group.add_argument(
         "-d",
@@ -73,9 +73,9 @@ def remove_group(parser):
 def show_group(parser):
     pool_group = parser.add_argument_group(title="Pool show arguments")
     pool_group.add_argument(
-        "name",
+        "id",
         action=PositionalArgumentsAction,
-        help="The name of the pool.",
+        help="The id of the pool.",
     )
     pool_group.add_argument(
         "-d",
@@ -100,9 +100,9 @@ def ls_group(parser):
 def add_instance_group(parser):
     instance_group = parser.add_argument_group(title="Instance arguments")
     instance_group.add_argument(
-        "pool_name",
+        "id",
         action=PositionalArgumentsAction,
-        help="The name of the pool that the instance should be added to.",
+        help="The id of the pool that the instance should be added to.",
     )
     instance_group.add_argument(
         "name",
@@ -133,9 +133,9 @@ def add_instance_group(parser):
 def remove_instance_group(parser):
     instance_group = parser.add_argument_group(title="Instance arguments")
     instance_group.add_argument(
-        "pool_name",
+        "id",
         action=PositionalArgumentsAction,
-        help="The name of the pool that the instance should be removed from.",
+        help="The id of the pool that the instance should be removed from.",
     )
     instance_group.add_argument(
         "name",

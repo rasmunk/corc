@@ -45,7 +45,7 @@ def valid_list_group(parser):
 def apply_group(parser):
     apply_group = parser.add_argument_group(title="Plan apply arguments")
     apply_group.add_argument(
-        "plan_id",
+        "id",
         action=PositionalArgumentsAction,
         help="The id of the Plan that should be applied.",
     )
@@ -74,7 +74,7 @@ def create_group(parser):
 def update_group(parser):
     plan_group = parser.add_argument_group(title="Plan update arguments")
     plan_group.add_argument(
-        "plan_id", action=PositionalArgumentsAction, help="The id of the Plan."
+        "id", action=PositionalArgumentsAction, help="The id of the Plan."
     )
     plan_group.add_argument(
         "-n",
@@ -100,7 +100,7 @@ def update_group(parser):
 def remove_group(parser):
     plan_group = parser.add_argument_group(title="Plan remove arguments")
     plan_group.add_argument(
-        "plan_id",
+        "id",
         action=PositionalArgumentsAction,
         help="The id of the Plan that should be removed.",
     )
@@ -116,7 +116,7 @@ def remove_group(parser):
 def show_group(parser):
     plan_group = parser.add_argument_group(title="Plan show arguments")
     plan_group.add_argument(
-        "plan_id",
+        "id",
         action=PositionalArgumentsAction,
         help="The id of the Plan.",
     )
