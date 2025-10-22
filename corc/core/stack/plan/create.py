@@ -14,9 +14,12 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from corc.core.defaults import PLAN
+from corc.core.defaults import PLAN, INITIALIZER, CONFIGURER
 from corc.core.storage.dictdatabase import DictDatabase
-from corc.core.stack.plan.defaults import INITIALIZER, ORCHESTRATOR, CONFIGURER
+from corc.core.stack.plan.defaults import (
+    ORCHESTRATOR,
+    NETWORKER,
+)
 from corc.core.stack.plan.config import (
     get_plan_config,
     get_component_config,
@@ -44,7 +47,13 @@ async def create(name, config=None, directory=None):
             )
             return False, response
 
-    plan = {"name": name, "initializer": {}, "orchestrator": {}, "configurer": {}}
+    plan = {
+        "name": name,
+        "initializer": {},
+        "orchestrator": {},
+        "configurer": {},
+        NETWORKER: {},
+    }
     # Load the plan configuration file
     if config_file:
         plan_config = await get_plan_config(config_file)
@@ -56,7 +65,7 @@ async def create(name, config=None, directory=None):
     else:
         plan_config = config
 
-    for component in [INITIALIZER, ORCHESTRATOR, CONFIGURER]:
+    for component in [INITIALIZER, ORCHESTRATOR, CONFIGURER, NETWORKER]:
         component_config = get_component_config(component, plan_config)
         if component_config:
             # Validate the plan components

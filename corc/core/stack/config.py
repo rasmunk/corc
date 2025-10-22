@@ -15,9 +15,13 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 import jinja2
+from corc.core.defaults import INITIALIZER, CONFIGURER
 from corc.core.defaults import default_persistence_path
 from corc.utils.io import load_yaml, exists
-from corc.core.stack.plan.defaults import INITIALIZER, ORCHESTRATOR, CONFIGURER
+from corc.core.stack.plan.defaults import (
+    ORCHESTRATOR,
+    NETWORKER,
+)
 from corc.core.stack.plan.config import get_component_config
 from corc.core.stack.plan.show import show
 
@@ -136,9 +140,10 @@ async def prepare_instance_plan(instance_name, instance_config, plan):
     initializer = get_component_config(INITIALIZER, plan)
     orchestrator = get_component_config(ORCHESTRATOR, plan)
     configurer = get_component_config(CONFIGURER, plan)
+    networker = get_component_config(NETWORKER, plan)
 
     templated_instance_config = {"instance": {"name": instance_name}}
-    templated_initiailizer_config = await recursively_prepare_stack_instance(
+    templated_initializer_config = await recursively_prepare_stack_instance(
         templated_instance_config, initializer
     )
 
@@ -150,10 +155,15 @@ async def prepare_instance_plan(instance_name, instance_config, plan):
         templated_instance_config, configurer
     )
 
+    templated_networker_config = await recursively_prepare_stack_instance(
+        templated_instance_config, networker
+    )
+
     return True, {
-        INITIALIZER: templated_initiailizer_config,
+        INITIALIZER: templated_initializer_config,
         ORCHESTRATOR: templated_orchestrator_config,
         CONFIGURER: templated_configurer_config,
+        NETWORKER: templated_networker_config,
     }
 
 

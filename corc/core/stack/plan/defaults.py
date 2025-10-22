@@ -1,3 +1,2 @@
-INITIALIZER = "initializer"
 ORCHESTRATOR = "orchestrator"
-CONFIGURER = "configurer"
+NETWORKER = "networker"

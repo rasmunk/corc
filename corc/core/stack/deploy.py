@@ -21,7 +21,7 @@ import inspect
 import os
 from concurrent.futures.process import ProcessPoolExecutor
 from corc.utils.format import error_print
-from corc.core.defaults import STACK, default_persistence_path
+from corc.core.defaults import STACK, default_persistence_path, INITIALIZER, CONFIGURER
 from corc.core.storage.dictdatabase import DictDatabase
 from corc.core.helpers import import_from_module
 from corc.core.plugins.plugin import (
@@ -36,7 +36,7 @@ from corc.core.stack.config import (
     prepare_instance_plan,
     prepare_instance,
 )
-from corc.core.stack.plan.defaults import INITIALIZER, ORCHESTRATOR, CONFIGURER
+from corc.core.stack.plan.defaults import ORCHESTRATOR
 
 
 def init_plugin(plugin_name, plugin_type):
