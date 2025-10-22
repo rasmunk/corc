@@ -19,8 +19,7 @@ from corc.core.plugins.plugin import get_plugins, PLUGIN_ENTRYPOINT_BASE
 
 
 async def list_providers():
-    """Add a particular provider to corc."""
-    # Make the provider configuration directory
+    """list networking providers."""
     response = {}
     plugin_type = "{}.{}".format(PLUGIN_ENTRYPOINT_BASE, NETWORKING)
     installed_providers = get_plugins(plugin_type=plugin_type)
