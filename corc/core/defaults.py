@@ -52,6 +52,10 @@ CONFIGURER = "configurer"
 CONFIGURER_OPERATIONS = ["add_provider", "remove_provider", "list_providers"]
 CONFIGURER_CLI = {CONFIGURER: CONFIGURER_OPERATIONS}
 
+NETWORKING = "networking"
+NETWORKING_OPERATIONS = ["add_provider", "remove_provider", "list_providers"]
+NETWORKING_CLI = {NETWORKING: NETWORKING_OPERATIONS}
+
 POOL = "pool"
 POOL_OPERATIONS = ["create", "remove", "show", "ls", "add_instance", "remove_instance"]
 POOL_CLI = {POOL: POOL_OPERATIONS}
@@ -99,6 +103,7 @@ ORCHESTRATION_CLI = {ORCHESTRATION: ORCHESTRATION_OPERATIONS}
 CORC_CLI_STRUCTURE = [
     INITIALIZER_CLI,
     CONFIGURER_CLI,
+    NETWORKING_CLI,
     ORCHESTRATION_CLI,
     STACK_CLI,
     SWARM_CLI,
