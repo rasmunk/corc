@@ -49,9 +49,9 @@ async def create(name, config=None, directory=None):
 
     plan = {
         "name": name,
-        "initializer": {},
-        "orchestrator": {},
-        "configurer": {},
+        INITIALIZER: {},
+        ORCHESTRATOR: {},
+        CONFIGURER: {},
         NETWORKER: {},
     }
     # Load the plan configuration file
