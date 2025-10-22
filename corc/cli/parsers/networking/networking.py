@@ -19,6 +19,7 @@ from corc.core.networking.defaults import SUPPORTED_NETWORKING_PROVIDERS
 from corc.core.plugins.plugin import load
 from corc.cli.parsers.actions import PositionalArgumentsAction
 
+
 def add_provider_group(parser):
     # Add the general networking providers
     lower_supported_providers = (
@@ -29,6 +30,7 @@ def add_provider_group(parser):
         choices=lower_supported_providers,
         action=PositionalArgumentsAction,
     )
+
 
 def list_providers_group(parser):
     pass
