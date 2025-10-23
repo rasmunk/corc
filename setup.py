@@ -46,7 +46,7 @@ setup(
     description="A tool for managing cloud resources and scheduling compute tasks",
     long_description=long_description,
     author="Rasmus Munk",
-    author_email="munk1@live.dk",
+    author_email="systems@munk0.dk",
     packages=find_packages(),
     url="https://github.com/rasmunk/corc",
     license="GNU General Public License v2 (GPLv2)",
