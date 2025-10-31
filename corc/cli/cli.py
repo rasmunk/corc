@@ -18,6 +18,7 @@ import argparse
 import datetime
 import json
 import sys
+from corc._version import __version__
 from corc.core.defaults import PACKAGE_NAME, CORC_CLI_STRUCTURE
 from corc.cli.helpers import cli_exec, import_from_module
 from corc.utils.format import error_print
@@ -38,12 +39,23 @@ def to_str(o):
         return o.__str__()
 
 
+def add_base_cli_operations(parser):
+    parser.add_argument(
+        "--version",
+        "-V",
+        action="version",
+        version=__version__,
+        help="Print the version of the program",
+    )
+
+
 def main(args=None):
     parser = argparse.ArgumentParser(
         prog=PACKAGE_NAME, formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
-    commands = parser.add_subparsers(title="COMMAND")
+    add_base_cli_operations(parser)
 
+    commands = parser.add_subparsers(title="COMMAND")
     # Add corc functions to the CLI
     cli(commands)
     parsed_args = parser.parse_args(args)
