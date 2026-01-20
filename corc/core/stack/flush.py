@@ -33,9 +33,9 @@ async def flush(directory=None):
 
     if not await stack_db.flush():
         response["msg"] = (
-            f"Failed to flush the Stack database: {stack_db.name} in directory: {directory}."
+            f"Failed to flush the Stack Database: {stack_db.name} in directory: {directory}."
         )
         return False, response
 
-    response["msg"] = f"Flushed Stack: {stack_db.name}."
+    response["msg"] = f"Flushed Stack Database: {stack_db.name}."
     return True, response
