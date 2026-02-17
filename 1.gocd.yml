@@ -45,8 +45,11 @@ pipelines:
         password: "{{SECRET:[github][access_token]}}"
         destination: publish-python-scripts
     parameters:
-      ARGS: ''
       SRC_DIRECTORY: corc
+      BUILD_MAKE_TARGET: all
+      BUILD_MAKE_ARGS: ''
       TEST_DIRECTORY: corc
+      TEST_MAKE_TARGET: test
+      TEST_MAKE_ARGS: ''
       PUSH_DIRECTORY: publish-python-scripts
     template: bare_metal_pypi_package
