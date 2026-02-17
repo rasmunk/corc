@@ -14,7 +14,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-version_info = (0, 0, 3, "a1")
+version_info = (0, 0, 3, "a2")
 
 __version__ = ".".join(map(str, version_info[:3]))
 
