@@ -159,6 +159,12 @@ def show_group(parser):
 def ls_group(parser):
     stack_group = parser.add_argument_group(title="Stack list arguments")
     stack_group.add_argument(
+        "-r",
+        "--regex",
+        dest="{}_regex".format(STACK),
+        help="The regex to use when searching for Stacks.",
+    )
+    stack_group.add_argument(
         "-d",
         "--directory",
         dest="{}_directory".format(STACK),

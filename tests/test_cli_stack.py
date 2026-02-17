@@ -241,7 +241,39 @@ class TestCliStack(unittest.IsolatedAsyncioTestCase):
             self.assertIsInstance(output, dict)
             self.assertEqual(output["status"], "success")
             self.assertIn("stacks", output)
-            self.assertIsInstance(output["stacks"], dict)
+            self.assertIsInstance(output["stacks"], list)
+            self.assertIn(stack_id, output["stacks"])
+
+    async def test_dummy_stack_ls_regex(self):
+        test_id = str(uuid.uuid4())
+        name = f"{self.name}-{test_id}"
+
+        create_stack_args = copy.deepcopy(self.base_args)
+        create_stack_args.extend(["create", name, "--directory", CURRENT_TEST_DIR])
+
+        # Create the stack
+        stack_id = None
+        with patch("sys.stdout", new=StringIO()) as captured_stdout:
+            create_return_code = execute_func_in_future(main, create_stack_args)
+            self.assertEqual(create_return_code, SUCCESS)
+            created_response = json.loads(captured_stdout.getvalue())
+            stack_id = created_response["id"]
+
+        regex_search = f".*{stack_id}"
+        # Check that the stack exists
+        ls_stack_args = copy.deepcopy(self.base_args)
+        ls_stack_args.extend(
+            ["ls", "--regex", regex_search, "--directory", CURRENT_TEST_DIR]
+        )
+
+        with patch("sys.stdout", new=StringIO()) as captured_stdout:
+            ls_return_code = execute_func_in_future(main, ls_stack_args)
+            self.assertEqual(ls_return_code, SUCCESS)
+            output = json.loads(captured_stdout.getvalue())
+            self.assertIsInstance(output, dict)
+            self.assertEqual(output["status"], "success")
+            self.assertIn("stacks", output)
+            self.assertIsInstance(output["stacks"], list)
             self.assertIn(stack_id, output["stacks"])
 
     async def test_dummy_stack_deploy(self):
