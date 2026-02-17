@@ -302,7 +302,7 @@ class TestCliStack(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(stack["config"]["instances"], TEST_BASIC_INSTANCES_EXPECTED)
 
         deploy_stack_args = copy.deepcopy(self.base_args)
-        deploy_stack_args.extend(["deploy", name, "--directory", CURRENT_TEST_DIR])
+        deploy_stack_args.extend(["deploy", stack_id, "--directory", CURRENT_TEST_DIR])
 
         deploy_return_code = execute_func_in_future(main, deploy_stack_args)
         self.assertEqual(deploy_return_code, SUCCESS)
@@ -323,25 +323,31 @@ class TestCliStack(unittest.IsolatedAsyncioTestCase):
         create_stack_args.extend(["create", name, "--directory", CURRENT_TEST_DIR])
         create_stack_args.extend(["--config-file", TEST_BASIC_STACK_FILE])
 
-        create_return_code = execute_func_in_future(main, create_stack_args)
-        self.assertEqual(create_return_code, SUCCESS)
+        # Create the stack
+        stack_id = None
+        with patch("sys.stdout", new=StringIO()) as captured_stdout:
+            return_code = execute_func_in_future(main, create_stack_args)
+            self.assertEqual(return_code, SUCCESS)
+            created_response = json.loads(captured_stdout.getvalue())
+            stack_id = created_response["id"]
 
         # Check that the stack is created and is correctly configured
         stack_db = DictDatabase(STACK, directory=CURRENT_TEST_DIR)
         self.assertTrue(await stack_db.exists())
-        stack = await stack_db.get(name)
+
+        stack = await stack_db.get(stack_id)
         self.assertIsNotNone(stack)
-        self.assertEqual(stack["id"], name)
+        self.assertIsInstance(stack, dict)
 
         # Create stack instance to be removed
         deploy_stack_args = copy.deepcopy(self.base_args)
-        deploy_stack_args.extend(["deploy", name, "--directory", CURRENT_TEST_DIR])
+        deploy_stack_args.extend(["deploy", stack_id, "--directory", CURRENT_TEST_DIR])
 
         deploy_return_code = execute_func_in_future(main, deploy_stack_args)
         self.assertEqual(deploy_return_code, SUCCESS)
 
         remove_stack_args = copy.deepcopy(self.base_args)
-        remove_stack_args.extend(["destroy", name, "--directory", CURRENT_TEST_DIR])
+        remove_stack_args.extend(["destroy", stack_id, "--directory", CURRENT_TEST_DIR])
 
         remove_return_code = execute_func_in_future(main, remove_stack_args)
         self.assertEqual(remove_return_code, SUCCESS)
