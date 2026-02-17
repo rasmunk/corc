@@ -125,8 +125,11 @@ class TestCliDictDatabase(unittest.IsolatedAsyncioTestCase):
         with patch("sys.stdout", new=StringIO()) as captured_stdout:
             list_return_code = execute_func_in_future(main, list_pools_args)
             self.assertEqual(list_return_code, SUCCESS)
-            list_output = captured_stdout.getvalue()
-            self.assertListEqual(json.loads(list_output)["pools"], [])
+            output = json.loads(captured_stdout.getvalue())
+            self.assertIsInstance(output, dict)
+            self.assertIn("pools", output)
+            self.assertIsInstance(output["pools"], list)
+            self.assertListEqual(output["pools"], [])
 
     async def test_dummy_pool_create_multiple(self):
         test_id = str(uuid.uuid4())
