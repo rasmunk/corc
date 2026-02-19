@@ -335,13 +335,15 @@ async def deploy(stack_id, directory=None):
         return False, response
 
     deploy_instances = stack_to_deploy["config"]["instances"]
-    prepared_instances_configs = {}
 
+    # Prepare instances
+    prepared_instances_configs = {}
     prepare_configs_tasks = [
         prepare_stack_instance(instance_name, instance_details, directory=directory)
         for instance_name, instance_details in deploy_instances.items()
     ]
 
+    prepare_errors = []
     for prepare_success, prepare_response in await asyncio.gather(
         *prepare_configs_tasks
     ):
@@ -352,18 +354,25 @@ async def deploy(stack_id, directory=None):
             )
             prepared_instances_configs[instance_name] = instance_details
         else:
-            error_print(
+            prepare_errors.append(
                 "Failed to prepare instance: {} - {}".format(
                     prepare_response["name"], prepare_response["msg"]
                 )
             )
 
+    if prepare_errors:
+        response["errors"] = prepare_errors
+        response["msg"] = "Failed to prepare instance configurations for deployment"
+        return False, response
+
+    # Initialize instances
     initialize_tasks = [
         initialize_instance(instance_name, instance_details[INITIALIZER])
         for instance_name, instance_details in prepared_instances_configs.items()
         if INITIALIZER in instance_details
     ]
 
+    initialize_errors = []
     for initialize_success, initialize_response in await asyncio.gather(
         *initialize_tasks
     ):
@@ -386,17 +395,22 @@ async def deploy(stack_id, directory=None):
                         response["msg"] = "Failed to update stack: {}.".format(stack_id)
                         return False, response
             else:
-                error_print(
+                initialize_errors.append(
                     "The {} plugin did not respond with any result for instance: {}".format(
                         INITIALIZER, initialize_response["name"]
                     )
                 )
         else:
-            error_print(
+            initialize_errors.append(
                 "Failed to {} instance: {} - {}".format(
                     INITIALIZER, initialize_response["name"], initialize_response["msg"]
                 )
             )
+
+    if initialize_errors:
+        response["errors"] = initialize_errors
+        response["msg"] = "Failed to initialize instances for deployment"
+        return False, response
 
     loop = asyncio.get_running_loop()
     configurer_tasks = []
@@ -422,6 +436,7 @@ async def deploy(stack_id, directory=None):
                     )
                 )
 
+    configure_errors = []
     for configurer_success, configurer_response in await asyncio.gather(
         *configurer_tasks
     ):
@@ -449,19 +464,24 @@ async def deploy(stack_id, directory=None):
                         response["msg"] = "Failed to update stack: {}.".format(stack_id)
                         return False, response
             else:
-                error_print(
+                configure_errors.append(
                     "The {} plugin did not respond with any result for instance: {}".format(
                         CONFIGURER, configurer_response["name"]
                     )
                 )
         else:
-            error_print(
+            configure_errors.append(
                 "Failed to {} instance: {} - {}".format(
                     CONFIGURER,
                     configurer_response["name"],
                     configurer_response["msg"],
                 )
             )
+
+    if configure_errors:
+        response["errors"] = configure_errors
+        response["msg"] = "Failed to configure instances for deployment"
+        return False, response
 
     provision_tasks = [
         provision_instance(instance_name, instance_details[ORCHESTRATOR])
@@ -471,6 +491,7 @@ async def deploy(stack_id, directory=None):
         and stack_to_deploy["instances"][instance_name].get("initialized", False)
         and not stack_to_deploy["instances"][instance_name].get("provisioned", False)
     ]
+    provision_errors = []
     for provision_success, provision_response in await asyncio.gather(*provision_tasks):
         if provision_success:
             plugin_result = provision_response.get("result", {})
@@ -489,20 +510,25 @@ async def deploy(stack_id, directory=None):
                         }
                     )
                     if not await stack_db.update(stack_id, stack_to_deploy):
-                        response["msg"] = "Failed to update Stack: {}.".format(stack_id)
-                        return False, response
+                        provision_errors.append(
+                            "Failed to update Stack: {}.".format(stack_id)
+                        )
             else:
-                error_print(
+                provision_errors.append(
                     "The {} plugin did not respond with any result for instance: {}".format(
                         ORCHESTRATOR, provision_response["name"]
                     )
                 )
         else:
-            error_print(
+            provision_errors.append(
                 "Failed to {} instance: {} - {}".format(
                     ORCHESTRATOR, provision_response["name"], provision_response["msg"]
                 )
             )
+    if provision_errors:
+        response["errors"] = provision_errors
+        response["msg"] = "Failed to provision instances for deployment"
+        return False, response
 
     if not await stack_db.update(stack_id, stack_to_deploy):
         response["msg"] = "Failed to update Stack: {}.".format(stack_id)

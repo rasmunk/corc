@@ -150,13 +150,20 @@ async def destroy(stack_id, directory=None):
         destroy_instance(instance_id, instance_details["config"])
         for instance_id, instance_details in remove_instance_details.items()
     ]
+    remove_errors = []
     # Update the stack config and remove the instances
     for success, details in await asyncio.gather(*remove_tasks):
         if success:
             instance_name = remove_instance_details[details["id"]]["name"]
             stack["instances"].pop(instance_name)
         else:
-            print("Failed to shutdown Instance: {}.".format(details["id"]))
+            remove_errors.append(
+                "Failed to shutdown Instance: {}.".format(details["id"])
+            )
+
+    if remove_errors:
+        response["errors"] = remove_errors
+        response["msg"] = "Failed to remove Instances for Stack: {}".format(stack_id)
 
     # Persist the changes to the stack
     updated = await stack_db.update(stack_id, stack)
