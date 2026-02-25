@@ -288,7 +288,7 @@ async def prepare_stack_instance(instance_name, instance_config, directory=None)
                 "msg": "Failed to discover the plan: {}, error: {}".format(plan_name, get_plan_response["msg"]),
             }
 
-        plan = get_plan_response["plan"]
+        plan = get_plan_response
         success_prepare, response_prepare = await prepare_instance_plan(
             instance_name, instance_config, plan
         )
