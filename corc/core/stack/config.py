@@ -23,7 +23,7 @@ from corc.core.stack.plan.defaults import (
     NETWORKER,
 )
 from corc.core.stack.plan.config import get_component_config
-from corc.core.stack.plan.show import show
+from corc.core.stack.plan.ls import ls as plan_ls
 
 
 async def get_stack_config(config_file):
@@ -133,7 +133,14 @@ async def get_instance_config_plan_name(instance_config):
 async def get_plan(plan_name, directory=None):
     if not directory:
         directory = default_persistence_path
-    return await show(plan_name, directory=directory)
+    success, response = await plan_ls(directory=directory)
+    if not success:
+        return False, response
+
+    for plan_id, plan in response["plans"].items():
+        if plan["name"] == plan_name:
+            return True, plan
+    return False, {"msg": "Plan {} does not exist.".format(plan_name)}
 
 
 async def prepare_instance_plan(instance_name, instance_config, plan):
