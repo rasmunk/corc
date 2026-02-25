@@ -285,7 +285,7 @@ async def prepare_stack_instance(instance_name, instance_config, directory=None)
         if not get_plan_success:
             return False, {
                 "name": instance_name,
-                "msg": "Failed to discover the plan: {}.".format(plan_name),
+                "msg": "Failed to discover the plan: {}, error: {}".format(plan_name, get_plan_response["msg"]),
             }
 
         plan = get_plan_response["plan"]
