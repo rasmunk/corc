@@ -74,7 +74,7 @@ async def update(stack_id, name=None, config=None, instances=None, directory=Non
         stack_to_update["config"]["instances"] = new_config_instances
 
     # Update the instances state
-    if instances is not None:
+    if instances is not None and isinstance(instances, dict):
         stack_to_update["instances"] = instances
 
     # Update the stack name
