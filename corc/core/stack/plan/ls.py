@@ -14,11 +14,12 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
+import re
 from corc.core.defaults import PLAN
 from corc.core.storage.dictdatabase import DictDatabase
 
 
-async def ls(*args, directory=None):
+async def ls(regex=None, directory=None):
     response = {}
 
     plan_db = DictDatabase(PLAN, directory=directory)
@@ -36,6 +37,9 @@ async def ls(*args, directory=None):
         response["plans"] = {}
         response["msg"] = "No Plans found."
         return True, response
+
+    if regex:
+        plans = {plan_id: plan for plan_id, plan in plans.items() if re.search(regex, plan["name"])}
 
     response["plans"] = plans
     response["msg"] = "Found Plans."
