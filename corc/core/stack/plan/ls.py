@@ -41,6 +41,9 @@ async def ls(regex=None, directory=None):
     if regex:
         plans = {key:value for key, value in plans.items() if re.search(regex, key)}
 
+    if regex:
+        plans = {plan_id: plan for plan_id, plan in plans.items() if re.search(regex, plan["name"])}
+
     response["plans"] = plans
     response["msg"] = "Found Plans."
     return True, response

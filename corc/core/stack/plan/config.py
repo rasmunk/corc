@@ -30,11 +30,10 @@ def get_component_config(component, config):
 
 def validate_plan_component(component, config):
     provider = config.get("provider", None)
-    if not provider:
-        return False, {"msg": "Provider is required for the: {}.".format(component)}
+    if provider is None:
+        return False, {"msg": "invalid plan component: {}, missing the required 'provider' key".format(component)}
 
     settings = config.get("settings", None)
-    if not settings:
-        return False, {"msg": "Settings is required for the: {}.".format(component)}
-
+    if settings is None:
+        return False, {"msg": "invalid plan component: {}, missing the required 'settings' key".format(component)}
     return True, {}
