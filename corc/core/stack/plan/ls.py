@@ -37,9 +37,6 @@ async def ls(regex=None, directory=None):
         response["plans"] = {}
         response["msg"] = "No Plans found."
         return True, response
-    
-    if regex:
-        plans = {key:value for key, value in plans.items() if re.search(regex, key)}
 
     if regex:
         plans = {plan_id: plan for plan_id, plan in plans.items() if re.search(regex, plan["name"])}
